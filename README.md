@@ -15,5 +15,7 @@ Either via 'layman -a libressl' or by adding libressl-overlay.xml file to '/etc/
 
 [LibreSSL on Gentoo blog post](https://blog.hboeck.de/archives/851-LibreSSL-on-Gentoo.html)
 
+[Tested ebuilds with libressl](https://github.com/gentoo/libressl/wiki)
+
 ## Repoman status
 [![Repoman Status](https://travis-ci.org/gentoo/libressl.png)](https://travis-ci.org/gentoo/libressl)
