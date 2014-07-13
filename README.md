@@ -1,4 +1,4 @@
-# libressl testing repo
+# LibreSSL ebuilds testing repo
 
 This is highly experimental and may contain dirty patches.
 LibreSSL itself is not patched.
