@@ -10,3 +10,6 @@ LibreSSL itself is not patched.
 [Compatibility analysis](https://devsonacid.wordpress.com/2014/07/12/how-compatible-is-libressl/)
 
 [LibreSSL on Gentoo blog post](https://blog.hboeck.de/archives/851-LibreSSL-on-Gentoo.html)
+
+## Repoman status
+[![Repoman Status](https://travis-ci.org/gentoo/libressl.png)](https://travis-ci.org/gentoo/libressl)
