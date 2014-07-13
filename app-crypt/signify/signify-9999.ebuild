@@ -1,0 +1,32 @@
+# Copyright 1999-2014 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: $
+
+EAPI=5
+
+inherit git-2
+
+DESCRIPTION="OpenBSD tool to signs and verify signatures on files. Portable version."
+HOMEPAGE="https://github.com/aperezdc/signify"
+SRC_URI=""
+EGIT_REPO_URI="git@github.com:aperezdc/signify.git
+	https://github.com/aperezdc/signify.git"
+
+LICENSE="ISC public-domain"
+SLOT="0"
+KEYWORDS=""
+IUSE=""
+
+RDEPEND="dev-libs/libbsd"
+DEPEND="${RDEPEND}
+	virtual/pkgconfig"
+
+src_prepare() {
+	sed -i \
+		-e 's/$(CC) $(LDFLAGS)/$(CC) $(CFLAGS) $(LDFLAGS)/' \
+		Makefile || die
+}
+
+src_compile() {
+	emake CC="$(tc-getCC)"
+}
