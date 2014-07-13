@@ -3,6 +3,10 @@
 This is highly experimental and may contain dirty patches.
 LibreSSL itself is not patched.
 
+## How to install the overlay
+
+Either via 'layman -a libressl' or by adding libressl-overlay.xml file to '/etc/layman/overlays/'.
+
 ## links
 
 [Gentoo bug report](https://bugs.gentoo.org/show_bug.cgi?id=508750)
