@@ -100,7 +100,7 @@ src_prepare() {
 	# don't break .ssh/authorized_keys2 for fun
 	sed -i '/^AuthorizedKeysFile/s:^:#:' sshd_config || die
 
-	epatch "${FILESDIR}/openssh-arc4random.diff"
+	epatch "${FILESDIR}/openssh-arc4random-patch2.diff"
 
 	epatch "${FILESDIR}"/${P}.patch #508604
 
