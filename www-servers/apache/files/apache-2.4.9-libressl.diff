@@ -1,0 +1,14 @@
+--- httpd-2.4.9/modules/ssl/ssl_engine_init.c	2014-03-13 13:39:33.000000000 +0100
++++ httpd-2.4.9-1/modules/ssl/ssl_engine_init.c	2014-07-12 01:26:17.266272651 +0200
+@@ -275,9 +275,11 @@
+             return ssl_die(s);
+         }
+ 
++#ifdef ENGINE_CTRL_CHIL_SET_FORKCHECK
+         if (strEQ(mc->szCryptoDevice, "chil")) {
+             ENGINE_ctrl(e, ENGINE_CTRL_CHIL_SET_FORKCHECK, 1, 0, 0);
+         }
++#endif
+ 
+         if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
+             ap_log_error(APLOG_MARK, APLOG_EMERG, 0, s, APLOGNO(01889)
