@@ -80,7 +80,7 @@ src_prepare() {
 	epatch "${FILESDIR}/dovecot-sslfix-2.diff"
 	epatch "${FILESDIR}/dovecot-disable-ssl-compression.diff"
 	epatch "${FILESDIR}/dovecot-ecdh-auto.diff"
-	autoconf
+	eautoconf
 }
 
 src_configure() {
