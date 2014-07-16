@@ -1,0 +1,31 @@
+
+# HG changeset patch
+# User Teemu Huovila <teemu.huovila@dovecot.fi>
+# Date 1402305282 -10800
+# Node ID 7129fe8bc260642cb79c8bbad9d20ef47e82f3d2
+# Parent  6a9508d28d340091b0a2897e4e4b5ba826d39a17
+login-common: Fixed infinite loop in ssl proxy flushing.
+
+diff -r 6a9508d28d34 -r 7129fe8bc260 src/login-common/ssl-proxy-openssl.c
+--- a/src/login-common/ssl-proxy-openssl.c	Mon Jun 09 12:12:58 2014 +0300
++++ b/src/login-common/ssl-proxy-openssl.c	Mon Jun 09 12:14:42 2014 +0300
+@@ -79,6 +79,7 @@
+ 	unsigned int cert_received:1;
+ 	unsigned int cert_broken:1;
+ 	unsigned int client_proxy:1;
++	unsigned int flushing:1;
+ };
+ 
+ struct ssl_parameters {
+@@ -816,8 +817,9 @@
+ 
+ void ssl_proxy_destroy(struct ssl_proxy *proxy)
+ {
+-	if (proxy->destroyed)
++	if (proxy->destroyed || proxy->flushing)
+ 		return;
++	proxy->flushing = TRUE;
+ 	ssl_proxy_flush(proxy);
+ 	proxy->destroyed = TRUE;
+ 
+

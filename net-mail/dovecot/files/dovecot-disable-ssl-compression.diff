@@ -1,0 +1,12 @@
+--- dovecot-2.2.13/configure.ac	2014-05-11 21:26:41.000000000 +0200
++++ dovecot-2.2.13-1/configure.ac	2014-07-12 12:03:15.661340010 +0200
+@@ -1768,9 +1768,6 @@
+     AC_DEFINE(HAVE_OPENSSL,, Build with OpenSSL support)
+     have_ssl="yes (OpenSSL)"
+ 
+-    AC_CHECK_LIB(ssl, SSL_get_current_compression, [
+-      AC_DEFINE(HAVE_SSL_COMPRESSION,, Build with OpenSSL compression)
+-    ],, $SSL_LIBS)
+     AC_CHECK_LIB(ssl, SSL_get_servername, [
+       AC_DEFINE(HAVE_SSL_GET_SERVERNAME,, Build with TLS hostname support)
+     ],, $SSL_LIBS)

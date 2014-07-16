@@ -1,0 +1,19 @@
+# bug 508552
+--- doc/example-config/conf.d/10-ssl.conf	2013-11-24 13:37:39.000000000 +0000
++++ doc/example-config/conf.d/10-ssl.conf	2014-05-12 14:42:26.000000000 +0000
+@@ -51,6 +51,15 @@
+ # SSL ciphers to use
+ #ssl_cipher_list = ALL:!LOW:!SSLv2:!EXP:!aNULL
+ 
++# ##########################################
++# You are strongly encouraged to change the above two settings to
++#
++#ssl_protocols = !SSLv2 !SSLv3
++#ssl_cipher_list = ALL:!EXPORT:!LOW:!MEDIUM:!aNULL:+RC4:@STRENGTH
++#
++# if you are not required to support legacy mail clients.
++# ##########################################
++
+ # Prefer the server's order of ciphers over client's.
+ #ssl_prefer_server_ciphers = no
+ 
