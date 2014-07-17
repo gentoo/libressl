@@ -21,3 +21,6 @@ Either via 'layman -a libressl' or by adding libressl-overlay.xml file to '/etc/
 
 ## Repoman status
 [![Repoman Status](https://travis-ci.org/gentoo/libressl.png)](https://travis-ci.org/gentoo/libressl)
+
+## Contact
+[![Gitter chat](https://badges.gitter.im/gentoo/libressl.png)]
