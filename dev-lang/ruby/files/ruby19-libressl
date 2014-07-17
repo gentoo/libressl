@@ -1,0 +1,52 @@
+diff -Naur ruby-1.9.3-p547/ext/openssl/ossl_rand.c ruby-1.9.3-p547-1/ext/openssl/ossl_rand.c
+--- ruby-1.9.3-p547/ext/openssl/ossl_rand.c	2011-03-24 08:29:21.000000000 +0100
++++ ruby-1.9.3-p547-1/ext/openssl/ossl_rand.c	2014-07-17 22:27:30.724791416 +0200
+@@ -125,39 +125,6 @@
+     return str;
+ }
+ 
+-/*
+- *  call-seq:
+- *     egd(filename) -> true
+- *
+- */
+-static VALUE
+-ossl_rand_egd(VALUE self, VALUE filename)
+-{
+-    SafeStringValue(filename);
+-
+-    if(!RAND_egd(RSTRING_PTR(filename))) {
+-	ossl_raise(eRandomError, NULL);
+-    }
+-    return Qtrue;
+-}
+-
+-/*
+- *  call-seq:
+- *     egd_bytes(filename, length) -> true
+- *
+- */
+-static VALUE
+-ossl_rand_egd_bytes(VALUE self, VALUE filename, VALUE len)
+-{
+-    int n = NUM2INT(len);
+-
+-    SafeStringValue(filename);
+-
+-    if (!RAND_egd_bytes(RSTRING_PTR(filename), n)) {
+-	ossl_raise(eRandomError, NULL);
+-    }
+-    return Qtrue;
+-}
+ 
+ /*
+  *  call-seq:
+@@ -195,8 +162,6 @@
+     DEFMETH(mRandom, "write_random_file", ossl_rand_write_file, 1);
+     DEFMETH(mRandom, "random_bytes", ossl_rand_bytes, 1);
+     DEFMETH(mRandom, "pseudo_bytes", ossl_rand_pseudo_bytes, 1);
+-    DEFMETH(mRandom, "egd", ossl_rand_egd, 1);
+-    DEFMETH(mRandom, "egd_bytes", ossl_rand_egd_bytes, 2);
+     DEFMETH(mRandom, "status?", ossl_rand_status, 0)
+ }
+ 
