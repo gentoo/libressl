@@ -6,7 +6,7 @@ EAPI=5
 
 PYTHON_COMPAT=( python{2_6,2_7} )
 
-inherit distutils-r1
+inherit distutils-r1 eutils
 
 MY_PN="M2Crypto"
 
@@ -33,6 +33,9 @@ RESTRICT=test
 python_prepare_all() {
 	# use pre-swigged sources
 	sed -i -e '/sources/s:\.i:_wrap.c:' setup.py || die
+
+	# Remove SSLv2 function to allow build with LibreSSL
+	epatch "${FILESDIR}"/${PVR}-libressl-remove-ssl2.patch
 
 	distutils-r1_python_prepare_all
 }
