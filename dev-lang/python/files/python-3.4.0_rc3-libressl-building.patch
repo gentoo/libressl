@@ -1,0 +1,15 @@
+diff -Naur a/Modules/_ssl.c b/Modules/_ssl.c
+--- a/Modules/_ssl.c	2014-07-20 22:33:11.955509748 +0200
++++ b/Modules/_ssl.c	2014-07-20 22:35:25.431453314 +0200
+@@ -1975,7 +1975,11 @@
+                           PyUnicode_FSConverter, &path))
+         return NULL;
+ 
++#ifdef LIBRESSL_VERSION_NUMBER
++    bytes = -1;
++#else
+     bytes = RAND_egd(PyBytes_AsString(path));
++#endif
+     Py_DECREF(path);
+     if (bytes == -1) {
+         PyErr_SetString(PySSLErrorObject,

@@ -1,0 +1,15 @@
+diff -Naur a/Modules/_ssl.c b/Modules/_ssl.c
+--- a/Modules/_ssl.c	2014-07-20 19:44:20.130398557 +0200
++++ b/Modules/_ssl.c	2014-07-20 19:45:28.250029521 +0200
+@@ -1607,7 +1607,11 @@
+         return PyErr_Format(PyExc_TypeError,
+                             "RAND_egd() expected string, found %s",
+                             Py_TYPE(arg)->tp_name);
++#ifdef LIBRESSL_VERSION_NUMBER
++    bytes = -1;
++#else
+     bytes = RAND_egd(PyString_AS_STRING(arg));
++#endif
+     if (bytes == -1) {
+         PyErr_SetString(PySSLErrorObject,
+                         "EGD connection failed or EGD did not return "
