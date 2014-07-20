@@ -48,6 +48,9 @@ src_prepare() {
 	# tcl-8.6 compatibility
 	sed -i -e 's/interp->result/Tcl_GetStringResult(interp)/' \
 		kadmin/testing/util/tcl_kadm5.c || die
+
+	# allow using libressl
+	epatch "${FILESDIR}/${P}-allow-libressl.patch"
 }
 
 src_configure() {

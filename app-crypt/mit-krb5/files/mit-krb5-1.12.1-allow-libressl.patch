@@ -1,0 +1,35 @@
+diff -Naur a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c
+--- a/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c	2014-07-20 17:29:45.597475391 +0200
++++ b/src/plugins/preauth/pkinit/pkinit_crypto_openssl.c	2014-07-20 17:43:02.639824108 +0200
+@@ -173,7 +173,21 @@
+ pkinit_pkcs11_code_to_text(int err);
+ 
+ 
+-#if OPENSSL_VERSION_NUMBER >= 0x10000000L
++#ifdef USE_FALLBACK
++#error "This patch use an already defined preprocessor name"
++#endif
++
++#define USE_FALLBACK 0
++
++#ifdef LIBRESSL_VERSION_NUMBER
++#define USE_FALLBACK 1
++#endif
++
++#if OPENSSL_VERSION_NUMBER < 0x10000000L
++#define USE_FALLBACK 1
++#endif
++
++#if USE_FALLBACK == 0
+ /* Use CMS support present in OpenSSL 1.0 and later. */
+ #include <openssl/cms.h>
+ #define pkinit_CMS_get0_content_signed(_cms) CMS_get0_content(_cms)
+@@ -208,6 +222,8 @@
+     (*_x509_pp) = PKCS7_cert_from_signer_info(_p7,_si)
+ #endif
+ 
++#undef USE_FALLBACK
++
+ static struct pkcs11_errstrings {
+     short code;
+     char *text;
