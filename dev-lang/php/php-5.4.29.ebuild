@@ -313,6 +313,9 @@ src_prepare() {
 			|| die "Failed to fix heimdal crypt library reference"
 	fi
 
+	# Allow building with LibreSSL
+	epatch "${FILESDIR}"/libress-building.patch
+
 	#Add user patches #357637
 	epatch_user
 

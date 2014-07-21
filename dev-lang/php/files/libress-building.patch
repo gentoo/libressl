@@ -1,0 +1,15 @@
+diff -Naur a/ext/openssl/openssl.c b/ext/openssl/openssl.c
+--- a/ext/openssl/openssl.c	2014-07-21 10:56:27.811190010 +0200
++++ b/ext/openssl/openssl.c	2014-07-21 10:56:24.317875602 +0200
+@@ -926,7 +926,11 @@
+ 
+ 	if (file == NULL) {
+ 		file = RAND_file_name(buffer, sizeof(buffer));
++#ifdef LIBRESSL_VERSION_NUMBER
++	} else if (0) {
++#else
+ 	} else if (RAND_egd(file) > 0) {
++#endif
+ 		/* if the given filename is an EGD socket, don't
+ 		 * write anything back to it */
+ 		*egdsocket = 1;
