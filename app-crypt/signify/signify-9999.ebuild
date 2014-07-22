@@ -4,7 +4,7 @@
 
 EAPI=5
 
-inherit git-2
+inherit eutils git-2
 
 DESCRIPTION="OpenBSD tool to signs and verify signatures on files. Portable version."
 HOMEPAGE="https://github.com/aperezdc/signify"
@@ -29,4 +29,9 @@ src_prepare() {
 
 src_compile() {
 	emake CC="$(tc-getCC)"
+}
+
+src_install() {
+	emake DESTDIR="${D}" PREFIX="/usr" install
+	einstalldocs
 }
