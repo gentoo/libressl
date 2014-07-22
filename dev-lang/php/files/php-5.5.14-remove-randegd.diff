@@ -1,0 +1,15 @@
+diff -Naur php-5.5.14/ext/openssl/openssl.c php-5.5.14-1/ext/openssl/openssl.c
+--- php-5.5.14/ext/openssl/openssl.c	2014-06-25 15:06:23.000000000 +0200
++++ php-5.5.14-1/ext/openssl/openssl.c	2014-07-22 23:39:08.489525534 +0200
+@@ -926,11 +926,6 @@
+ 
+ 	if (file == NULL) {
+ 		file = RAND_file_name(buffer, sizeof(buffer));
+-	} else if (RAND_egd(file) > 0) {
+-		/* if the given filename is an EGD socket, don't
+-		 * write anything back to it */
+-		*egdsocket = 1;
+-		return SUCCESS;
+ 	}
+ 	if (file == NULL || !RAND_load_file(file, -1)) {
+ 		if (RAND_status() == 0) {
