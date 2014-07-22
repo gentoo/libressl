@@ -1,0 +1,76 @@
+diff -Naur cryptography-0.5.2/cryptography/hazmat/bindings/openssl/engine.py cryptography-0.5.2-1/cryptography/hazmat/bindings/openssl/engine.py
+--- cryptography-0.5.2/cryptography/hazmat/bindings/openssl/engine.py	2014-07-10 02:54:35.000000000 +0200
++++ cryptography-0.5.2-1/cryptography/hazmat/bindings/openssl/engine.py	2014-07-22 23:06:43.076997776 +0200
+@@ -58,7 +58,6 @@
+ int ENGINE_finish(ENGINE *);
+ void ENGINE_load_openssl(void);
+ void ENGINE_load_dynamic(void);
+-void ENGINE_load_cryptodev(void);
+ void ENGINE_load_builtin_engines(void);
+ void ENGINE_cleanup(void);
+ ENGINE *ENGINE_get_default_RSA(void);
+diff -Naur cryptography-0.5.2/cryptography/hazmat/bindings/openssl/rand.py cryptography-0.5.2-1/cryptography/hazmat/bindings/openssl/rand.py
+--- cryptography-0.5.2/cryptography/hazmat/bindings/openssl/rand.py	2014-07-10 02:54:35.000000000 +0200
++++ cryptography-0.5.2-1/cryptography/hazmat/bindings/openssl/rand.py	2014-07-22 23:02:10.251408565 +0200
+@@ -25,9 +25,6 @@
+ void RAND_seed(const void *, int);
+ void RAND_add(const void *, int, double);
+ int RAND_status(void);
+-int RAND_egd(const char *);
+-int RAND_egd_bytes(const char *, int);
+-int RAND_query_egd_bytes(const char *, unsigned char *, int);
+ const char *RAND_file_name(char *, size_t);
+ int RAND_load_file(const char *, long);
+ int RAND_write_file(const char *);
+diff -Naur cryptography-0.5.2/cryptography/hazmat/bindings/openssl/ssl.py cryptography-0.5.2-1/cryptography/hazmat/bindings/openssl/ssl.py
+--- cryptography-0.5.2/cryptography/hazmat/bindings/openssl/ssl.py	2014-07-10 02:54:35.000000000 +0200
++++ cryptography-0.5.2-1/cryptography/hazmat/bindings/openssl/ssl.py	2014-07-22 23:05:18.648053283 +0200
+@@ -157,7 +157,6 @@
+ 
+ typedef ... SSL_CIPHER;
+ typedef ... Cryptography_STACK_OF_SSL_CIPHER;
+-typedef ... COMP_METHOD;
+ """
+ 
+ FUNCTIONS = """
+@@ -197,10 +196,6 @@
+ const char *SSL_get_cipher_list(const SSL *, int);
+ Cryptography_STACK_OF_SSL_CIPHER *SSL_get_ciphers(const SSL *);
+ 
+-const COMP_METHOD *SSL_get_current_compression(SSL *);
+-const COMP_METHOD *SSL_get_current_expansion(SSL *);
+-const char *SSL_COMP_get_name(const COMP_METHOD *);
+-
+ /*  context */
+ void SSL_CTX_free(SSL_CTX *);
+ long SSL_CTX_set_timeout(SSL_CTX *, long);
+@@ -520,7 +515,7 @@
+ #endif
+ 
+ /* ALPN was added in OpenSSL 1.0.2. */
+-#if OPENSSL_VERSION_NUMBER < 0x10002001L
++#if OPENSSL_VERSION_NUMBER < 0x10002001L || OPENSSL_VERSION_NUMBER >= 0x20000000L
+ int (*SSL_CTX_set_alpn_protos)(SSL_CTX *,
+                                const unsigned char*,
+                                unsigned) = NULL;
+diff -Naur cryptography-0.5.2/cryptography/hazmat/bindings/openssl/x509_vfy.py cryptography-0.5.2-1/cryptography/hazmat/bindings/openssl/x509_vfy.py
+--- cryptography-0.5.2/cryptography/hazmat/bindings/openssl/x509_vfy.py	2014-07-10 02:54:35.000000000 +0200
++++ cryptography-0.5.2-1/cryptography/hazmat/bindings/openssl/x509_vfy.py	2014-07-22 23:01:18.596054346 +0200
+@@ -207,7 +207,7 @@
+ #endif
+ 
+ /* OpenSSL 1.0.2+ verification error codes */
+-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
++#ifdef X509_V_ERR_EMAIL_MISMATCH
+ static const long Cryptography_HAS_102_VERIFICATION_ERROR_CODES = 1;
+ #else
+ static const long Cryptography_HAS_102_VERIFICATION_ERROR_CODES = 0;
+@@ -223,7 +223,7 @@
+ #endif
+ 
+ /* OpenSSL 1.0.2+ verification parameters */
+-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
++#ifdef X509_V_FLAG_PARTIAL_CHAIN
+ static const long Cryptography_HAS_102_VERIFICATION_PARAMS = 1;
+ #else
+ static const long Cryptography_HAS_102_VERIFICATION_PARAMS = 0;
