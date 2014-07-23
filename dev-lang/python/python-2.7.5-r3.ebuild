@@ -104,6 +104,9 @@ src_prepare() {
 	# Fix for cross-compiling.
 	epatch "${FILESDIR}/python-2.7.5-nonfatal-compileall.patch"
 
+	# Allow building with LibreSSL
+	epatch "${FILESDIR}/${PF}-libressl-building.patch"
+
 	sed -i -e "s:@@GENTOO_LIBDIR@@:$(get_libdir):g" \
 		Lib/distutils/command/install.py \
 		Lib/distutils/sysconfig.py \

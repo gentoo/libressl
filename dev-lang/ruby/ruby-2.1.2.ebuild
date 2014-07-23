@@ -76,6 +76,9 @@ src_prepare() {
 	sed -i -e "s:\(RUBY_LIB_PREFIX=\"\${prefix}/\)lib:\1$(get_libdir):" \
 		configure.in || die "sed failed"
 
+	# Allow to build with LibreSSL
+	epatch "${FILESDIR}"/ruby19-libressl
+
 	eautoreconf
 }
 

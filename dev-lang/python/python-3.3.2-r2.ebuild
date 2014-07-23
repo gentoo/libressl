@@ -73,6 +73,9 @@ src_prepare() {
 	epatch "${FILESDIR}/python-3.3-CVE-2013-2099.patch"
 	epatch "${FILESDIR}/CVE-2013-4238_py33.patch"
 
+	# Allow building with LibreSSL
+	epatch "${FILESDIR}/${PF}-libressl-building.patch"
+
 	sed -i -e "s:@@GENTOO_LIBDIR@@:$(get_libdir):g" \
 		Lib/distutils/command/install.py \
 		Lib/distutils/sysconfig.py \
