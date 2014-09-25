@@ -17,7 +17,7 @@ SLOT="0"
 KEYWORDS=""
 IUSE=""
 
-RDEPEND="dev-libs/libbsd"
+RDEPEND=">=dev-libs/libbsd-0.7.0"
 DEPEND="${RDEPEND}
 	virtual/pkgconfig"
 
