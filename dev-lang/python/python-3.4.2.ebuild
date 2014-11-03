@@ -1,25 +1,25 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-lang/python/python-3.3.2-r2.ebuild,v 1.21 2014/01/18 11:37:42 vapier Exp $
+# $Header: $
 
-EAPI="3"
+EAPI="4"
 WANT_AUTOMAKE="none"
 WANT_LIBTOOL="none"
 
 inherit autotools eutils flag-o-matic multilib pax-utils python-utils-r1 toolchain-funcs multiprocessing
 
-MY_P="Python-${PV}"
-PATCHSET_REVISION="2"
+MY_P="Python-${PV/_/}"
+PATCHSET_VERSION="3.4.2-0"
 
 DESCRIPTION="An interpreted, interactive, object-oriented programming language"
 HOMEPAGE="http://www.python.org/"
-SRC_URI="http://www.python.org/ftp/python/${PV}/${MY_P}.tar.xz
-	mirror://gentoo/python-gentoo-patches-${PV}-${PATCHSET_REVISION}.tar.xz"
+SRC_URI="http://www.python.org/ftp/python/${PV%_rc*}/${MY_P}.tar.xz
+	http://dev.gentoo.org/~floppym/python/python-gentoo-patches-${PATCHSET_VERSION}.tar.xz"
 
 LICENSE="PSF-2"
-SLOT="3.3"
-KEYWORDS="alpha amd64 arm arm64 hppa ia64 m68k ~mips ppc ppc64 s390 sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
-IUSE="build doc elibc_uclibc examples gdbm hardened ipv6 +ncurses +readline sqlite +ssl +threads tk wininst +xml"
+SLOT="3.4"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
+IUSE="build elibc_uclibc examples gdbm hardened ipv6 +ncurses +readline sqlite +ssl +threads tk wininst +xml"
 
 # Do not add a dependency on dev-lang/python to this ebuild.
 # If you need to apply a patch which requires python for bootstrapping, please
@@ -42,6 +42,7 @@ RDEPEND="app-arch/bzip2
 		tk? (
 			>=dev-lang/tk-8.0
 			dev-tcltk/blt
+			dev-tcltk/tix
 		)
 		xml? ( >=dev-libs/expat-2.1 )
 	)
@@ -50,14 +51,14 @@ DEPEND="${RDEPEND}
 	virtual/pkgconfig
 	>=sys-devel/autoconf-2.65
 	!sys-devel/gcc[libffi]"
-RDEPEND+=" !build? ( app-misc/mime-types )
-	doc? ( dev-python/python-docs:${SLOT} )"
+RDEPEND+=" !build? ( app-misc/mime-types )"
 PDEPEND="app-admin/eselect-python
 	app-admin/python-updater"
 
 S="${WORKDIR}/${MY_P}"
 
 src_prepare() {
+	epatch "${FILESDIR}/python34-randegd.diff"
 	# Ensure that internal copies of expat, libffi and zlib are not used.
 	rm -fr Modules/expat
 	rm -fr Modules/_ctypes/libffi*
@@ -65,13 +66,10 @@ src_prepare() {
 
 	if tc-is-cross-compiler; then
 		# Invokes BUILDPYTHON, which is built for the host arch
-		local EPATCH_EXCLUDE="05_all_regenerate_platform-specific_modules.patch"
+		local EPATCH_EXCLUDE="*_regenerate_platform-specific_modules.patch"
 	fi
 
-	EPATCH_SUFFIX="patch" epatch "${WORKDIR}/${PV}-${PATCHSET_REVISION}"
-
-	epatch "${FILESDIR}/python-3.3-CVE-2013-2099.patch"
-	epatch "${FILESDIR}/CVE-2013-4238_py33.patch"
+	EPATCH_SUFFIX="patch" epatch "${WORKDIR}/patches"
 
 	sed -i -e "s:@@GENTOO_LIBDIR@@:$(get_libdir):g" \
 		Lib/distutils/command/install.py \
@@ -167,7 +165,8 @@ src_configure() {
 		--with-libc="" \
 		--enable-loadable-sqlite-extensions \
 		--with-system-expat \
-		--with-system-ffi
+		--with-system-ffi \
+		--without-ensurepip
 
 	if use threads && grep -q "#define POSIX_SEMAPHORES_NOT_ENABLED 1" pyconfig.h; then
 		eerror "configure has detected that the sem_open function is broken."
@@ -181,7 +180,7 @@ src_compile() {
 	touch Include/graminit.h Python/graminit.c || die
 
 	cd "${BUILD_DIR}" || die
-	emake CPPFLAGS="" CFLAGS="" LDFLAGS="" || die "emake failed"
+	emake CPPFLAGS="" CFLAGS="" LDFLAGS=""
 
 	# Work around bug 329499. See also bug 413751 and 457194.
 	if has_version dev-libs/libffi[pax_kernel]; then
@@ -207,8 +206,9 @@ src_test() {
 		mv "${S}"/Lib/test/test_${test}.py "${T}"
 	done
 
-	PYTHONDONTWRITEBYTECODE="" emake test EXTRATESTOPTS="-u -network" FLAGS="" CFLAGS="" LDFLAGS="" < /dev/tty
-	local result="$?"
+	local -x PYTHONDONTWRITEBYTECODE=
+	emake test EXTRATESTOPTS="-u-network" CPPFLAGS= CFLAGS= LDFLAGS= < /dev/tty
+	local result=$?
 
 	for test in ${skipped_tests}; do
 		mv "${T}/test_${test}.py" "${S}"/Lib/test
@@ -223,7 +223,7 @@ src_test() {
 	elog "cd '${EPREFIX}/usr/$(get_libdir)/python${SLOT}/test'"
 	elog "and run the tests separately."
 
-	if [[ "${result}" -ne 0 ]]; then
+	if [[ ${result} -ne 0 ]]; then
 		die "emake test failed"
 	fi
 }
@@ -233,7 +233,7 @@ src_install() {
 
 	cd "${BUILD_DIR}" || die
 
-	emake DESTDIR="${D}" altinstall || die "emake altinstall failed"
+	emake DESTDIR="${D}" altinstall
 
 	sed \
 		-e "s/\(CONFIGURE_LDFLAGS=\).*/\1/" \
@@ -241,7 +241,7 @@ src_install() {
 		-i "${libdir}/config-${SLOT}/Makefile" || die "sed failed"
 
 	# Backwards compat with Gentoo divergence.
-	dosym python${SLOT}-config /usr/bin/python-config-${SLOT} || die
+	dosym python${SLOT}-config /usr/bin/python-config-${SLOT}
 
 	# Fix collisions between different slots of Python.
 	rm -f "${ED}usr/$(get_libdir)/libpython3.so"
@@ -257,20 +257,20 @@ src_install() {
 	use threads || rm -fr "${libdir}/multiprocessing"
 	use wininst || rm -f "${libdir}/distutils/command/"wininst-*.exe
 
-	dodoc "${S}"/Misc/{ACKS,HISTORY,NEWS} || die "dodoc failed"
+	dodoc "${S}"/Misc/{ACKS,HISTORY,NEWS}
 
 	if use examples; then
 		insinto /usr/share/doc/${PF}/examples
 		find "${S}"/Tools -name __pycache__ -print0 | xargs -0 rm -fr
-		doins -r "${S}"/Tools || die "doins failed"
+		doins -r "${S}"/Tools
 	fi
 	insinto /usr/share/gdb/auto-load/usr/$(get_libdir) #443510
 	local libname=$(printf 'e:\n\t@echo $(INSTSONAME)\ninclude Makefile\n' | \
 		emake --no-print-directory -s -f - 2>/dev/null)
 	newins "${S}"/Tools/gdb/libpython.py "${libname}"-gdb.py
 
-	newconfd "${FILESDIR}/pydoc.conf" pydoc-${SLOT} || die "newconfd failed"
-	newinitd "${FILESDIR}/pydoc.init" pydoc-${SLOT} || die "newinitd failed"
+	newconfd "${FILESDIR}/pydoc.conf" pydoc-${SLOT}
+	newinitd "${FILESDIR}/pydoc.init" pydoc-${SLOT}
 	sed \
 		-e "s:@PYDOC_PORT_VARIABLE@:PYDOC${SLOT/./_}_PORT:" \
 		-e "s:@PYDOC@:pydoc${SLOT}:" \
@@ -312,8 +312,6 @@ pkg_postinst() {
 		ewarn "You have just upgraded from an older version of Python."
 		ewarn
 		ewarn "Please adjust PYTHON_TARGETS (if so desired), and run emerge with the --newuse or --changed-use option to rebuild packages installing python modules."
-		ewarn
-		ewarn "For legacy packages, you should switch active version of Python and run 'python-updater [options]' to rebuild Python modules."
 	fi
 }
 
