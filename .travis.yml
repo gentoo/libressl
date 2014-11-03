@@ -25,4 +25,4 @@ before_script:
     - ln -s /usr/portage/profiles/base/ /etc/portage/make.profile
     - cd travis-overlay
 script:
-    - "./../portage-2.2.10/bin/repoman full -i -d"
+    - "./../portage-2.2.12/bin/repoman full -i -d"
