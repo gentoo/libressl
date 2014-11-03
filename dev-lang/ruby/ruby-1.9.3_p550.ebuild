@@ -1,8 +1,6 @@
-# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-lang/ruby/ruby-1.9.3_p545.ebuild,v 1.2 2014/04/09 08:57:36 graaff Exp $
 
-EAPI=4
+EAPI="5"
 
 #PATCHSET=1
 
@@ -34,7 +32,7 @@ SRC_URI="mirror://ruby/1.9/${MY_P}.tar.bz2
 		 http://dev.gentoo.org/~flameeyes/ruby-team/${PN}-patches-${PATCHSET}.tar.bz2"
 
 LICENSE="|| ( Ruby-BSD BSD-2 )"
-KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd"
+KEYWORDS="*"
 IUSE="berkdb debug doc examples gdbm ipv6 +rdoc rubytests socks5 ssl xemacs ncurses +readline +yaml" #libedit
 
 # libedit support is removed everywhere because of this upstream bug:
@@ -58,11 +56,14 @@ RDEPEND="
 
 DEPEND="${RDEPEND}"
 PDEPEND="
-	>=dev-ruby/rubygems-1.8.10-r1[ruby_targets_ruby19]
+	virtual/rubygems:ruby19
 	rdoc? ( >=dev-ruby/rdoc-3.9.4[ruby_targets_ruby19] )
 	xemacs? ( app-xemacs/ruby-modes )"
 
 src_prepare() {
+	# Add LibreSSL Support
+	epatch "${FILESDIR}/ruby19-libressl"
+
 	EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
 		epatch "${WORKDIR}/patches"
 
