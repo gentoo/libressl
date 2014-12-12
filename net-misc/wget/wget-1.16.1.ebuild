@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-misc/wget/wget-1.15-r1.ebuild,v 1.1 2014/05/16 10:59:20 polynomial-c Exp $
+# $Header: /var/cvsroot/gentoo-x86/net-misc/wget/wget-1.16.1.ebuild,v 1.2 2014/12/08 17:55:39 polynomial-c Exp $
 
 EAPI="4"
 
@@ -35,9 +35,7 @@ REQUIRED_USE="ntlm? ( !gnutls ssl ) gnutls? ( ssl )"
 DOCS=( AUTHORS MAILING-LIST NEWS README doc/sample.wgetrc )
 
 src_prepare() {
-	epatch "${FILESDIR}"/${PN}-1.15-pkg-config.patch \
-		"${FILESDIR}"/${PN}-1.15-test_fix.patch \
-		"${FILESDIR}"/${PN}-1.14-libressl.patch
+	epatch "${FILESDIR}"/${PN}-1.14-libressl.patch
 	eautoreconf
 }
 
@@ -55,6 +53,7 @@ src_configure() {
 	fi
 	econf \
 		--disable-rpath \
+		--disable-assert \
 		$(use_with ssl ssl $(usex gnutls gnutls openssl)) \
 		$(use_enable ssl opie) \
 		$(use_enable ssl digest) \
