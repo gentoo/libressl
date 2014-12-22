@@ -1,8 +1,8 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/mail-filter/spamassassin/spamassassin-3.3.2-r4.ebuild,v 1.1 2013/12/28 13:56:06 pacho Exp $
+# $Header: /var/cvsroot/gentoo-x86/mail-filter/spamassassin/spamassassin-3.3.2-r5.ebuild,v 1.10 2014/09/24 19:39:16 maekke Exp $
 
-EAPI=4
+EAPI=5
 
 inherit perl-module toolchain-funcs eutils systemd
 
@@ -14,13 +14,13 @@ SRC_URI="mirror://apache/spamassassin/source/${MY_P}.tar.bz2"
 
 LICENSE="Apache-2.0 GPL-2"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~x86-fbsd ~amd64-linux ~x86-linux ~x86-macos"
+KEYWORDS="alpha amd64 arm hppa ia64 ppc ppc64 ~s390 ~sh sparc x86 ~x86-fbsd ~amd64-linux ~x86-linux ~x86-macos"
 # need keyword request for Mail-SPF ppc ppc64
 IUSE="berkdb qmail ssl doc ldap mysql postgres sqlite ipv6"
 
 DEPEND=">=dev-lang/perl-5.8.8-r8
 	virtual/perl-MIME-Base64
-	>=virtual/perl-PodParser-1.32
+	>=virtual/perl-Pod-Parser-1.32
 	virtual/perl-Storable
 	virtual/perl-Time-HiRes
 	>=dev-perl/HTML-Parser-3.43
@@ -74,6 +74,9 @@ src_prepare() {
 
 	# https://issues.apache.org/SpamAssassin/show_bug.cgi?id=6626
 	epatch "${FILESDIR}/${P}-innodb.patch"
+
+	# https://issues.apache.org/SpamAssassin/show_bug.cgi?id=6937#c2
+	epatch "${FILESDIR}/${P}-perl518.patch"
 }
 
 src_configure() {
