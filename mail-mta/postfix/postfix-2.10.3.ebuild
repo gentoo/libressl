@@ -70,7 +70,7 @@ src_prepare() {
 	if use vda; then
 		epatch "${DISTDIR}"/${VDA_P}.patch
 	fi
-	
+
 	sed -i -e "/^#define ALIAS_DB_MAP/s|:/etc/aliases|:/etc/mail/aliases|" \
 		src/util/sys_defs.h || die "sed failed"
 
