@@ -4,6 +4,8 @@
 
 EAPI=5
 
+inherit multilib-build
+
 DESCRIPTION="This is a fake ebuild to support libressl"
 HOMEPAGE="http://www.openssl.org/"
 SRC_URI=""
@@ -13,5 +15,5 @@ SLOT="0"
 KEYWORDS="amd64 x86"
 IUSE="static-libs bindist"
 
-DEPEND=">=dev-libs/libressl-2.0.0[static-libs?]"
+DEPEND=">=dev-libs/libressl-2.0.0[static-libs?,${MULTILIB_USEDEP}]"
 RDEPEND="${DEPEND}"
