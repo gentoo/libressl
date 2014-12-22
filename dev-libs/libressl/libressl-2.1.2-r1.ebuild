@@ -55,5 +55,5 @@ multilib_src_install_all() {
 
 	# Include default config for openssl from openssl 1.0.1j
 	insinto /etc/ssl
-	newins "${FILESDIR}/openssl.cnf" openssl.cnf
+	newins "${S}/apps/openssl.cnf" openssl.cnf
 }
