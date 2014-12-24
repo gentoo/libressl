@@ -1,0 +1,76 @@
+--- Python-2.7.9/Lib/socket.py.orig  2014-05-31 20:58:39.000000000 +0200
++++ Python-2.7.9/Lib/socket.py        2014-07-17 19:18:49.804322398 +0200
+@@ -67,7 +67,6 @@
+     from _ssl import SSLError as sslerror
+     from _ssl import \
+          RAND_add, \
+-         RAND_egd, \
+          RAND_status, \
+          SSL_ERROR_ZERO_RETURN, \
+          SSL_ERROR_WANT_READ, \
+--- Python-2.7.9/Lib/test/test_ssl.py.orig	2014-12-24 19:08:31.000000000 -0200
++++ Python-2.7.9/Lib/test/test_ssl.py	2014-12-24 19:09:52.000000000 -0200
+@@ -169,8 +169,6 @@
+             sys.stdout.write("\n RAND_status is %d (%s)\n"
+                              % (v, (v and "sufficient randomness") or
+                                 "insufficient randomness"))
+-        self.assertRaises(TypeError, ssl.RAND_egd, 1)
+-        self.assertRaises(TypeError, ssl.RAND_egd, 'foo', 1)
+         ssl.RAND_add("this is a random string", 75.0)
+ 
+     def test_parse_cert(self):
+--- Python-2.7.9/Lib/ssl.py.orig	2014-12-10 13:59:40.000000000 -0200
++++ Python-2.7.9/Lib/ssl.py	2014-12-24 19:10:26.000000000 -0200
+@@ -106,7 +106,7 @@
+ from _ssl import (VERIFY_DEFAULT, VERIFY_CRL_CHECK_LEAF, VERIFY_CRL_CHECK_CHAIN,
+     VERIFY_X509_STRICT)
+ from _ssl import txt2obj as _txt2obj, nid2obj as _nid2obj
+-from _ssl import RAND_status, RAND_egd, RAND_add
++from _ssl import RAND_status, RAND_add
+ 
+ def _import_symbols(prefix):
+     for n in dir(_ssl):
+--- Python-2.7.9/Modules/_ssl.c.orig	2014-12-24 19:08:31.000000000 -0200
++++ Python-2.7.9/Modules/_ssl.c	2014-12-24 19:11:11.000000000 -0200
+@@ -3301,32 +3301,6 @@
+ It is necessary to seed the PRNG with RAND_add() on some platforms before\n\
+ using the ssl() function.");
+ 
+-static PyObject *
+-PySSL_RAND_egd(PyObject *self, PyObject *arg)
+-{
+-    int bytes;
+-
+-    if (!PyString_Check(arg))
+-        return PyErr_Format(PyExc_TypeError,
+-                            "RAND_egd() expected string, found %s",
+-                            Py_TYPE(arg)->tp_name);
+-    bytes = RAND_egd(PyString_AS_STRING(arg));
+-    if (bytes == -1) {
+-        PyErr_SetString(PySSLErrorObject,
+-                        "EGD connection failed or EGD did not return "
+-                        "enough data to seed the PRNG");
+-        return NULL;
+-    }
+-    return PyInt_FromLong(bytes);
+-}
+-
+-PyDoc_STRVAR(PySSL_RAND_egd_doc,
+-"RAND_egd(path) -> bytes\n\
+-\n\
+-Queries the entropy gather daemon (EGD) on the socket named by 'path'.\n\
+-Returns number of bytes read.  Raises SSLError if connection to EGD\n\
+-fails or if it does not provide enough data to seed PRNG.");
+-
+ #endif /* HAVE_OPENSSL_RAND */
+ 
+ 
+@@ -3720,8 +3694,6 @@
+ #ifdef HAVE_OPENSSL_RAND
+     {"RAND_add",            PySSL_RAND_add, METH_VARARGS,
+      PySSL_RAND_add_doc},
+-    {"RAND_egd",            PySSL_RAND_egd, METH_VARARGS,
+-     PySSL_RAND_egd_doc},
+     {"RAND_status",         (PyCFunction)PySSL_RAND_status, METH_NOARGS,
+      PySSL_RAND_status_doc},
+ #endif
