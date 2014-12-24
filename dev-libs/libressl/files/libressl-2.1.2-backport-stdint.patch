@@ -1,0 +1,11 @@
+--- libressl-2.1.2/include/openssl/ssl.h.orig	2014-12-24 21:25:26.000000000 -0200
++++ libressl-2.1.2/include/openssl/ssl.h	2014-12-24 21:25:35.000000000 -0200
+@@ -143,6 +143,8 @@
+ #ifndef HEADER_SSL_H 
+ #define HEADER_SSL_H 
+ 
++#include <stdint.h>
++
+ #include <openssl/opensslconf.h>
+ #include <openssl/hmac.h>
+ #include <openssl/pem.h>
