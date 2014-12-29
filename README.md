@@ -1,7 +1,7 @@
 # LibreSSL ebuilds testing repo
 
 This is highly experimental and may contain dirty patches.
-LibreSSL itself is not patched.
+LibreSSL itself is generally not patched (exceptions are trivial backports from upstream revisions).
 
 ## How to install the overlay
 
