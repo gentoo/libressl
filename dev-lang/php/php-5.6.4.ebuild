@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-lang/php/php-5.6.0.ebuild,v 1.1 2014/08/28 14:05:32 olemarkus Exp $
+# $Header: /var/cvsroot/gentoo-x86/dev-lang/php/php-5.6.4.ebuild,v 1.2 2014/12/28 15:27:17 titanofold Exp $
 
 EAPI=5
 
@@ -116,7 +116,7 @@ DEPEND="
 	nls? ( sys-devel/gettext )
 	oci8-instant-client? ( dev-db/oracle-instantclient-basic )
 	odbc? ( >=dev-db/unixODBC-1.8.13 )
-	postgres? ( dev-db/postgresql-base )
+	postgres? ( dev-db/postgresql )
 	qdbm? ( dev-db/qdbm )
 	readline? ( sys-libs/readline )
 	recode? ( app-text/recode )

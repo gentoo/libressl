@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-lang/php/php-5.5.14.ebuild,v 1.10 2014/07/05 11:29:09 ago Exp $
+# $Header: /var/cvsroot/gentoo-x86/dev-lang/php/php-5.5.20.ebuild,v 1.11 2014/12/28 15:27:17 titanofold Exp $
 
 EAPI=5
 
@@ -49,7 +49,7 @@ PHP_FPM_CONF_VER="1"
 
 SRC_URI="${PHP_SRC_URI}"
 
-DESCRIPTION="The PHP language runtime engine: CLI, CGI, FPM/FastCGI, Apache2 and embed SAPIs."
+DESCRIPTION="The PHP language runtime engine: CLI, CGI, FPM/FastCGI, Apache2 and embed SAPIs"
 HOMEPAGE="http://php.net/"
 LICENSE="PHP-3"
 
@@ -72,13 +72,14 @@ IUSE="${IUSE} bcmath berkdb bzip2 calendar cdb cjk
 	oci8-instant-client odbc +opcache pcntl pdo +phar +posix postgres qdbm
 	readline recode selinux +session sharedmem
 	+simplexml snmp soap sockets spell sqlite ssl
-	sybase-ct sysvipc systemd tidy +tokenizer truetype unicode wddx
+	sybase-ct sysvipc systemd tidy +tokenizer truetype unicode vpx wddx
 	+xml xmlreader xmlwriter xmlrpc xpm xslt zip zlib"
 
 DEPEND="
 	>=app-admin/eselect-php-0.7.1-r3[apache2?,fpm?]
 	>=dev-libs/libpcre-8.32[unicode]
-	apache2? ( www-servers/apache[threads=] )
+	apache2? ( || ( >=www-servers/apache-2.4[apache2_modules_unixd,threads=]
+		<www-servers/apache-2.4[threads=] ) )
 	berkdb? ( =sys-libs/db-4* )
 	bzip2? ( app-arch/bzip2 )
 	cdb? ( || ( dev-db/cdb dev-db/tinycdb ) )
@@ -115,7 +116,7 @@ DEPEND="
 	nls? ( sys-devel/gettext )
 	oci8-instant-client? ( dev-db/oracle-instantclient-basic )
 	odbc? ( >=dev-db/unixODBC-1.8.13 )
-	postgres? ( dev-db/postgresql-base )
+	postgres? ( dev-db/postgresql )
 	qdbm? ( dev-db/qdbm )
 	readline? ( sys-libs/readline )
 	recode? ( app-text/recode )
@@ -135,6 +136,7 @@ DEPEND="
 			virtual/jpeg:0 media-libs/libpng:0= sys-libs/zlib )
 	)
 	unicode? ( dev-libs/oniguruma )
+	vpx? ( media-libs/libvpx )
 	wddx? ( >=dev-libs/libxml2-2.6.8 )
 	xml? ( >=dev-libs/libxml2-2.6.8 )
 	xmlrpc? ( >=dev-libs/libxml2-2.6.8 virtual/libiconv )
@@ -155,6 +157,7 @@ php="=${CATEGORY}/${PF}"
 
 REQUIRED_USE="
 	truetype? ( gd )
+	vpx? ( gd )
 	cjk? ( gd )
 	exif? ( gd )
 
@@ -273,7 +276,7 @@ php_set_ini_dir() {
 }
 
 src_prepare() {
-        epatch "${FILESDIR}/php-5.5.14-remove-randegd.diff"
+	epatch "${FILESDIR}/php-5.5.14-remove-randegd.diff"
 	# USE=sharedmem (session/mod_mm to be exact) tries to mmap() this path
 	# ([empty session.save_path]/session_mm_[sapi][gid].sem)
 	# there is no easy way to circumvent that, all php calls during
@@ -420,7 +423,8 @@ src_configure() {
 	$(use_enable cjk gd-jis-conv )
 	$(use_with gd jpeg-dir ${EPREFIX}/usr)
 	$(use_with gd png-dir ${EPREFIX}/usr)
-	$(use_with xpm xpm-dir ${EPREFIX}/usr)"
+	$(use_with xpm xpm-dir ${EPREFIX}/usr)
+	$(use_with vpx vpx-dir ${EPREFIX}/usr)"
 	# enable gd last, so configure can pick up the previous settings
 	my_conf+="
 	$(use_with gd gd)"
