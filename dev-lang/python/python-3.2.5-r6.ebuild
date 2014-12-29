@@ -65,7 +65,7 @@ pkg_setup() {
 }
 
 src_prepare() {
-	epatch "${FILESDIR}/python3-randegd.diff"
+	epatch "${FILESDIR}/python32-randegd.patch"
 
 	# Ensure that internal copies of expat, libffi and zlib are not used.
 	rm -r Modules/expat
