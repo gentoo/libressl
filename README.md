@@ -5,7 +5,10 @@ LibreSSL itself is generally not patched (exceptions are trivial backports from 
 
 ## How to install the overlay
 
-Either via 'layman -a libressl' or by adding libressl-overlay.xml file to '/etc/layman/overlays/'.
+With paludis: see [Paludis repository configuration](http://paludis.exherbo.org/configuration/repositories/index.html)
+
+With layman:
+```layman -f -o https://raw.githubusercontent.com/gentoo/libressl/master/libressl-overlay.xml -a libressl``` or ```layman -a libressl```
 
 ## links
 
