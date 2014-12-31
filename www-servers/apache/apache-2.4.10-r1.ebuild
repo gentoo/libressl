@@ -135,7 +135,6 @@ pkg_setup() {
 
 src_prepare() {
 	epatch "${FILESDIR}/apache-2.4.9-libressl.diff"
-	epatch "${FILESDIR}/apache-libressl2.diff"
 	apache-2_src_prepare
 }
 
