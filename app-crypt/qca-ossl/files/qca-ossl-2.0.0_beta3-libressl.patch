@@ -1,0 +1,59 @@
+Authors: Julian Ospald <hasufell@gentoo.org>, Heiko Becker <heirecka@exherbo.org>
+Date: Thu Jan  1 20:22:29 UTC 2015
+Subject: allow compiling against libressl
+
+This includes an upstream fix
+http://quickgit.kde.org/?p=qca.git&a=commitdiff&h=593de6855a4f4dc26cface3e96de8889f90cb4bb
+
+
+--- qca-ossl-2.0.0-beta3/configure
++++ qca-ossl-2.0.0-beta3/configure
+@@ -668,25 +668,17 @@
+ 
+ 		s = conf->getenv("QC_WITH_OPENSSL_INC");
+ 		if(!s.isEmpty()) {
+-			if(!conf->checkHeader(s, "openssl/ssl.h"))
+-				return false;
+ 			inc = s;
+ 		}
+ 		else {
+-			if(!conf->findHeader("openssl/ssl.h", QStringList(), &s))
+-				return false;
+ 			inc = s;
+ 		}
+ 
+ 		s = conf->getenv("QC_WITH_OPENSSL_LIB");
+ 		if(!s.isEmpty()) {
+-			if(!conf->checkLibrary(s, "ssl"))
+-				return false;
+ 			lib = s;
+ 		}
+ 		else {
+-			if(!conf->findLibrary("ssl", &s))
+-				return false;
+ 			lib = s;
+ 		}
+ 
+--- qca-ossl-2.0.0-beta3/qca-ossl.cpp
++++ qca-ossl-2.0.0-beta3/qca-ossl.cpp
+@@ -5133,9 +5133,11 @@
+ 		OpenSSL_add_ssl_algorithms();
+ 		SSL_CTX *ctx = 0;
+ 		switch (version) {
++#ifndef LIBRESSL_VERSION_NUMBER
+ 		case TLS::SSL_v2:
+ 			ctx = SSL_CTX_new(SSLv2_client_method());
+ 			break;
++#endif
+ 		case TLS::SSL_v3:
+ 			ctx = SSL_CTX_new(SSLv3_client_method());
+ 			break;
+@@ -5801,7 +5801,7 @@
+ 	{
+ 		SessionInfo sessInfo;
+ 
+-		sessInfo.isCompressed = (0 != ssl->session->compress_meth);
++		sessInfo.isCompressed = (0 != SSL_SESSION_get_compress_id(ssl->session));
+ 
+ 		if (ssl->version == TLS1_VERSION)
+ 			sessInfo.version = TLS::TLS_v1;
