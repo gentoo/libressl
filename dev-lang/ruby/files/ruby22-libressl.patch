@@ -1,0 +1,58 @@
+diff -Naur ruby-2.2.0.orig/ext/openssl/ossl_rand.c ruby-2.2.0/ext/openssl/ossl_rand.c
+--- ruby-2.2.0.orig/ext/openssl/ossl_rand.c	2015-01-09 08:35:37.229944895 -0800
++++ ruby-2.2.0/ext/openssl/ossl_rand.c	2015-01-09 08:36:39.296610160 -0800
+@@ -150,45 +150,6 @@
+ 
+-/*
+- *  call-seq:
+- *     egd(filename) -> true
+- *
+- * Same as ::egd_bytes but queries 255 bytes by default.
+- */
+-static VALUE
+-ossl_rand_egd(VALUE self, VALUE filename)
+-{
+-    SafeStringValue(filename);
+-
+-    if(!RAND_egd(RSTRING_PTR(filename))) {
+-	ossl_raise(eRandomError, NULL);
+-    }
+-    return Qtrue;
+-}
+-
+-/*
+- *  call-seq:
+- *     egd_bytes(filename, length) -> true
+- *
+- * Queries the entropy gathering daemon EGD on socket path given by +filename+.
+- *
+- * Fetches +length+ number of bytes and uses ::add to seed the OpenSSL built-in
+- * PRNG.
+- */
+-static VALUE
+-ossl_rand_egd_bytes(VALUE self, VALUE filename, VALUE len)
+-{
+-    int n = NUM2INT(len);
+-
+-    SafeStringValue(filename);
+-
+-    if (!RAND_egd_bytes(RSTRING_PTR(filename), n)) {
+-	ossl_raise(eRandomError, NULL);
+-    }
+-    return Qtrue;
+-}
+-
+ /*
+  *  call-seq:
+  *     status? => true | false
+  *
+  * Return true if the PRNG has been seeded with enough data, false otherwise.
+@@ -219,8 +180,6 @@
+     rb_define_module_function(mRandom, "write_random_file", ossl_rand_write_file, 1);
+     rb_define_module_function(mRandom, "random_bytes", ossl_rand_bytes, 1);
+     rb_define_module_function(mRandom, "pseudo_bytes", ossl_rand_pseudo_bytes, 1);
+-    rb_define_module_function(mRandom, "egd", ossl_rand_egd, 1);
+-    rb_define_module_function(mRandom, "egd_bytes", ossl_rand_egd_bytes, 2);
+     rb_define_module_function(mRandom, "status?", ossl_rand_status, 0);
+ }
+ 
