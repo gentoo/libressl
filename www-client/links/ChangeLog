@@ -1,6 +1,11 @@
 # ChangeLog for www-client/links
-# Copyright 1999-2014 Gentoo Foundation; Distributed under the GPL v2
-# $Header: /var/cvsroot/gentoo-x86/www-client/links/ChangeLog,v 1.203 2014/02/07 23:55:36 creffett Exp $
+# Copyright 1999-2015 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/www-client/links/ChangeLog,v 1.204 2015/01/06 16:11:29 radhermit Exp $
+
+*links-2.9 (06 Jan 2015)
+
+  06 Jan 2015; Tim Harder <radhermit@gentoo.org> +links-2.9.ebuild:
+  Version bump.
 
   07 Feb 2014; Chris Reffett <creffett@gentoo.org> metadata.xml:
   Remove unused USE description
