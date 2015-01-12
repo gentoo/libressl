@@ -1,0 +1,22 @@
+diff -Nupr syslog-ng-3.4.8.orig/lib/crypto.h syslog-ng-3.4.8/lib/crypto.h
+--- syslog-ng-3.4.8.orig/lib/crypto.h	2014-03-21 13:45:31.000000000 +0100
++++ syslog-ng-3.4.8/lib/crypto.h	2015-01-12 13:46:13.906592944 +0100
+@@ -1,6 +1,7 @@
+ #ifndef CRYPTO_H_INCLUDED
+ #define CRYPTO_H_INCLUDED
+ 
++#include <stdint.h>
+ #include "syslog-ng.h"
+ 
+ #endif
+diff -Nupr syslog-ng-3.4.8.orig/lib/tlscontext.h syslog-ng-3.4.8/lib/tlscontext.h
+--- syslog-ng-3.4.8.orig/lib/tlscontext.h	2014-06-06 12:50:49.000000000 +0200
++++ syslog-ng-3.4.8/lib/tlscontext.h	2015-01-12 13:45:32.548047992 +0100
+@@ -28,6 +28,7 @@
+ 
+ #if ENABLE_SSL
+ 
++#include <stdint.h>
+ #include <openssl/ssl.h>
+ 
+ typedef enum

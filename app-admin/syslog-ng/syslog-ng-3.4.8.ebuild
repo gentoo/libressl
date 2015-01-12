@@ -36,6 +36,7 @@ DEPEND="${RDEPEND}
 S=${WORKDIR}/${PN}-${MY_PV}
 
 src_prepare() {
+	epatch "${FILESDIR}"/syslog-3.4.8-stdint.patch
 	cp "${FILESDIR}"/*logrotate*.in "${TMPDIR}" || die
 	cd "${TMPDIR}" || die
 
