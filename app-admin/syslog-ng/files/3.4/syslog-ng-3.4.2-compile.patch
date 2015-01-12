@@ -1,0 +1,10 @@
+--- syslog-ng-3.4.1/lib/persist-state.c
++++ syslog-ng-3.4-master/lib/persist-state.c
+@@ -26,6 +26,7 @@
+ #include "serialize.h"
+ #include "messages.h"
+ #include "mainloop.h"
++#include "misc.h"
+ 
+ #include <sys/types.h>
+ #include <unistd.h>
