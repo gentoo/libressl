@@ -75,20 +75,6 @@ diff --git a/Lib/test/test_ssl.py b/Lib/test/test_ssl.py
          ssl.RAND_add("this is a random string", 75.0)
  
      def test_parse_cert(self):
-diff --git a/Misc/NEWS b/Misc/NEWS
---- a/Misc/NEWS
-+++ b/Misc/NEWS
-@@ -15,6 +15,10 @@ Core and Builtins
- Library
- -------
- 
-+- Issue #21356: Make ssl.RAND_egd() optional to support LibreSSL. The
-+  availability of the function is checked during the compilation. Patch written
-+  by Bernard Spil.
-+
- - Backport the context argument to ftplib.FTP_TLS.
- 
- - Issue #23111: Maximize compatibility in protocol versions of ftplib.FTP_TLS.
 diff --git a/Modules/_ssl.c b/Modules/_ssl.c
 --- a/Modules/_ssl.c
 +++ b/Modules/_ssl.c
