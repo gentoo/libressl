@@ -1,6 +1,63 @@
 # ChangeLog for dev-python/cryptography
-# Copyright 1999-2014 Gentoo Foundation; Distributed under the GPL v2
-# $Header: /var/cvsroot/gentoo-x86/dev-python/cryptography/ChangeLog,v 1.19 2014/07/11 00:04:34 radhermit Exp $
+# Copyright 1999-2015 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/dev-python/cryptography/ChangeLog,v 1.32 2015/01/14 00:47:04 idella4 Exp $
+
+*cryptography-0.7.1-r1 (14 Jan 2015)
+
+  14 Jan 2015; Ian Delaney <idella4@gentoo.org> +cryptography-0.7.1-r1.ebuild,
+  +cryptography-0.7.ebuild, +files/0.7-setup.patch, -cryptography-0.7.1.ebuild:
+  revbump; re-add pypy support, update and tidy deps, patch (from upstream) to
+  correct their own oversight in setup.py re use of enum34, ebuild cross checked
+  and tested by Arfrever.
+
+*cryptography-0.7.1 (13 Jan 2015)
+
+  13 Jan 2015; Patrick Lauer <patrick@gentoo.org> +cryptography-0.7.1.ebuild:
+  Bump, drop minor arches due to enum34 keywords missing, drop pypy because
+  keywords missing, drop py34 target because setup.py too confused about life
+
+  24 Dec 2014; Markus Meier <maekke@gentoo.org> cryptography-0.6.1.ebuild:
+  arm stable, bug #530294
+
+  09 Dec 2014; Jeroen Roovers <jer@gentoo.org> cryptography-0.6.1.ebuild:
+  Stable for HPPA (bug #530294).
+
+  16 Nov 2014; Mike Gilbert <floppym@gentoo.org> cryptography-0.5.4.ebuild,
+  cryptography-0.6.1.ebuild:
+  Fix dependency on dev-python/cffi.
+
+  26 Oct 2014; Fabian Groffen <grobian@gentoo.org> cryptography-0.6.1.ebuild:
+  Added Prefix keywords, bug #503094
+
+  18 Oct 2014; Tim Harder <radhermit@gentoo.org> cryptography-0.6.1.ebuild:
+  Setuptools is now a runtime dep.
+
+*cryptography-0.6.1 (18 Oct 2014)
+
+  18 Oct 2014; Tim Harder <radhermit@gentoo.org> +cryptography-0.6.1.ebuild:
+  Version bump, restrict tests until cffi fixes its compile on import issues,
+  and drop python3_2 support.
+
+  07 Oct 2014; Tim Harder <radhermit@gentoo.org> -cryptography-0.4-r1.ebuild,
+  -cryptography-0.4-r2.ebuild, -cryptography-0.5.1.ebuild,
+  -cryptography-0.5.2.ebuild, -cryptography-0.5.3.ebuild, -files/asn1.patch:
+  Remove old.
+
+*cryptography-0.5.4 (24 Aug 2014)
+
+  24 Aug 2014; Tim Harder <radhermit@gentoo.org> +cryptography-0.5.4.ebuild:
+  Version bump.
+
+  13 Aug 2014; Anthony G. Basile <blueness@gentoo.org>
+  cryptography-0.4-r1.ebuild, cryptography-0.4-r2.ebuild,
+  cryptography-0.5.1.ebuild, cryptography-0.5.2.ebuild,
+  cryptography-0.5.3.ebuild:
+  Keyword ~ppc and ~ppc64, bug #503094
+
+*cryptography-0.5.3 (08 Aug 2014)
+
+  08 Aug 2014; Tim Harder <radhermit@gentoo.org> +cryptography-0.5.3.ebuild:
+  Version bump.
 
 *cryptography-0.5.2 (11 Jul 2014)
 
