@@ -1,0 +1,35 @@
+diff -Naur luasec.orig/src/ssl.c luasec/src/ssl.c
+--- luasec.orig/src/ssl.c	2015-01-16 09:15:12.537444454 -0800
++++ luasec/src/ssl.c	2015-01-16 09:12:11.580772396 -0800
+@@ -400,24 +400,30 @@
+   }
+   return 1;
+ }
+-  
++
+ /**
+  * Return the compression method used.
+  */
+ static int meth_compression(lua_State *L)
+ {
++#if !defined(OPENSSL_NO_COMP)
+   const COMP_METHOD *comp;
++#endif
+   p_ssl ssl = (p_ssl)luaL_checkudata(L, 1, "SSL:Connection");
+   if (ssl->state != LSEC_STATE_CONNECTED) {
+     lua_pushnil(L);
+     lua_pushstring(L, "closed");
+     return 2;
+   }
++#if !defined(OPENSSL_NO_COMP)
+   comp = SSL_get_current_compression(ssl->ssl);
+   if (comp)
+     lua_pushstring(L, SSL_COMP_get_name(comp));
+   else
+     lua_pushnil(L);
++#else
++  lua_pushnil(L);
++#endif
+   return 1;
+ }
+ 
