@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/net-libs/libesmtp/libesmtp-1.0.6.ebuild,v 1.11 2014/06/09 23:50:22 vapier Exp $
 
-EAPI=3
+EAPI=5
 inherit libtool
 
 DESCRIPTION="lib that implements the client side of the SMTP protocol"
@@ -12,9 +12,13 @@ SRC_URI="http://www.stafford.uklinux.net/${PN}/${P}.tar.bz2"
 LICENSE="LGPL-2.1 GPL-2"
 SLOT="0"
 KEYWORDS="alpha amd64 arm arm64 hppa ia64 ppc ppc64 s390 sh sparc x86 ~amd64-linux ~x86-linux ~x86-macos"
-IUSE="debug ssl static-libs threads ntlm"
+IUSE="debug libressl ssl static-libs threads ntlm"
 
-RDEPEND="ssl? ( dev-libs/openssl )"
+RDEPEND="
+	ssl? (
+		!libressl? ( dev-libs/openssl:0 )
+		libressl? ( dev-libs/libressl:= )
+	)"
 DEPEND="${RDEPEND}"
 
 src_prepare() {

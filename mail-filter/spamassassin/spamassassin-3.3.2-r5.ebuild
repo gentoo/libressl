@@ -16,7 +16,7 @@ LICENSE="Apache-2.0 GPL-2"
 SLOT="0"
 KEYWORDS="alpha amd64 arm hppa ia64 ppc ppc64 ~s390 ~sh sparc x86 ~x86-fbsd ~amd64-linux ~x86-linux ~x86-macos"
 # need keyword request for Mail-SPF ppc ppc64
-IUSE="berkdb qmail ssl doc ldap mysql postgres sqlite ipv6"
+IUSE="berkdb libressl qmail ssl doc ldap mysql postgres sqlite ipv6"
 
 DEPEND=">=dev-lang/perl-5.8.8-r8
 	virtual/perl-MIME-Base64
@@ -36,7 +36,8 @@ DEPEND=">=dev-lang/perl-5.8.8-r8
 	dev-perl/NetAddr-IP
 	ssl? (
 		dev-perl/IO-Socket-SSL
-		dev-libs/openssl
+		!libressl? ( dev-libs/openssl:0 )
+		libressl? ( dev-libs/libressl:= )
 	)
 	berkdb? (
 		virtual/perl-DB_File

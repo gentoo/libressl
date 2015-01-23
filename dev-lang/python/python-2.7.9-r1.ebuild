@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/dev-lang/python/python-2.7.9-r1.ebuild,v 1.1 2014/12/24 19:08:09 floppym Exp $
 
-EAPI="4"
+EAPI=5
 WANT_AUTOMAKE="none"
 WANT_LIBTOOL="none"
 
@@ -19,7 +19,7 @@ SRC_URI="http://www.python.org/ftp/python/${PV}/${MY_P}.tar.xz
 LICENSE="PSF-2"
 SLOT="2.7"
 KEYWORDS="~alpha amd64 ~arm ~arm64 hppa ia64 ~m68k ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd"
-IUSE="-berkdb build doc elibc_uclibc examples gdbm hardened ipv6 +ncurses +readline sqlite +ssl +threads tk +wide-unicode wininst +xml"
+IUSE="-berkdb build doc elibc_uclibc examples gdbm hardened ipv6 libressl +ncurses +readline sqlite +ssl +threads tk +wide-unicode wininst +xml"
 
 # Do not add a dependency on dev-lang/python to this ebuild.
 # If you need to apply a patch which requires python for bootstrapping, please
@@ -50,7 +50,10 @@ RDEPEND="app-arch/bzip2
 			readline? ( >=sys-libs/readline-4.1 )
 		)
 		sqlite? ( >=dev-db/sqlite-3.3.8:3 )
-		ssl? ( dev-libs/openssl )
+		ssl? (
+			!libressl? ( dev-libs/openssl:0 )
+			libressl? ( dev-libs/libressl:= )
+		)
 		tk? (
 			>=dev-lang/tk-8.0
 			dev-tcltk/blt

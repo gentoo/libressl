@@ -32,7 +32,7 @@ IUSE_DOVECOT_STORAGE="cydir imapc +maildir mbox mdbox pop3c sdbox"
 IUSE_DOVECOT_COMPRESS="bzip2 lzma lz4 zlib"
 IUSE_DOVECOT_OTHER="caps doc ipv6 lucene managesieve selinux sieve solr +ssl static-libs suid tcpd"
 
-IUSE="${IUSE_DOVECOT_AUTH} ${IUSE_DOVECOT_STORAGE} ${IUSE_DOVECOT_COMPRESS} ${IUSE_DOVECOT_OTHER}"
+IUSE="${IUSE_DOVECOT_AUTH} ${IUSE_DOVECOT_STORAGE} ${IUSE_DOVECOT_COMPRESS} ${IUSE_DOVECOT_OTHER} libressl"
 
 DEPEND="bzip2? ( app-arch/bzip2 )
 	caps? ( sys-libs/libcap )
@@ -47,7 +47,10 @@ DEPEND="bzip2? ( app-arch/bzip2 )
 	selinux? ( sec-policy/selinux-dovecot )
 	solr? ( net-misc/curl dev-libs/expat )
 	sqlite? ( dev-db/sqlite )
-	ssl? ( dev-libs/openssl )
+	ssl? (
+		!libressl? ( dev-libs/openssl:0 )
+		libressl? ( dev-libs/libressl:= )
+	)
 	tcpd? ( sys-apps/tcp-wrappers )
 	vpopmail? ( net-mail/vpopmail )
 	zlib? ( sys-libs/zlib )
