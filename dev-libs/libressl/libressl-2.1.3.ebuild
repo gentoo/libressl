@@ -11,7 +11,7 @@ HOMEPAGE="http://www.libressl.org/"
 SRC_URI="http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/${P}.tar.gz"
 
 LICENSE="ISC openssl"
-SLOT="0"
+SLOT="0/30"
 KEYWORDS="amd64 ~mips ppc ppc64 x86"
 IUSE="+asm libtls static-libs"
 
