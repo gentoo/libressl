@@ -13,13 +13,14 @@ SRC_URI="https://github.com/brunoos/luasec/archive/${P}.tar.gz"
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~x86"
-IUSE=""
+IUSE="libressl"
 
 S=${WORKDIR}/${PN}-${P}
 
 RDEPEND=">=dev-lang/lua-5.1[deprecated]
 		dev-lua/luasocket
-		dev-libs/openssl"
+		!libressl? ( dev-libs/openssl:0 )
+		libressl? ( dev-libs/libressl:= )"
 DEPEND="${RDEPEND}
 	virtual/pkgconfig"
 

@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/dev-lang/ruby/ruby-1.9.3_p551.ebuild,v 1.10 2014/12/06 16:51:35 ago Exp $
 
-EAPI=4
+EAPI=5
 
 #PATCHSET=1
 
@@ -35,7 +35,7 @@ SRC_URI="mirror://ruby/1.9/${MY_P}.tar.bz2
 
 LICENSE="|| ( Ruby-BSD BSD-2 )"
 KEYWORDS="alpha amd64 arm hppa ia64 ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~x86-fbsd"
-IUSE="berkdb debug doc examples gdbm ipv6 +rdoc rubytests socks5 ssl xemacs ncurses +readline +yaml" #libedit
+IUSE="berkdb debug doc examples gdbm ipv6 libressl +rdoc rubytests socks5 ssl xemacs ncurses +readline +yaml" #libedit
 
 # libedit support is removed everywhere because of this upstream bug:
 # http://redmine.ruby-lang.org/issues/show/3698
@@ -43,7 +43,10 @@ IUSE="berkdb debug doc examples gdbm ipv6 +rdoc rubytests socks5 ssl xemacs ncur
 RDEPEND="
 	berkdb? ( sys-libs/db )
 	gdbm? ( sys-libs/gdbm )
-	ssl? ( dev-libs/openssl )
+	ssl? (
+		!libressl? ( dev-libs/openssl:0 )
+		libressl? ( dev-libs/libressl:= )
+	)
 	socks5? ( >=net-proxy/dante-1.1.13 )
 	ncurses? ( sys-libs/ncurses )
 	readline?  ( sys-libs/readline )

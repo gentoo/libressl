@@ -12,7 +12,7 @@ SRC_URI="mirror://sourceforge/w3m/${P}.tar.gz"
 LICENSE="w3m"
 SLOT="0"
 KEYWORDS="~alpha amd64 ~arm ~ia64 ~ppc ~ppc64 ~sparc x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~x64-solaris"
-IUSE="X fbcon gpm gtk imlib lynxkeymap migemo nls nntp ssl unicode vanilla xface linguas_ja"
+IUSE="X fbcon gpm gtk imlib libressl lynxkeymap migemo nls nntp ssl unicode vanilla xface linguas_ja"
 
 # We cannot build w3m with gtk+2 w/o X because gtk+2 ebuild doesn't
 # allow us to build w/o X, so we have to give up framebuffer w3mimg....
@@ -27,7 +27,10 @@ RDEPEND=">=sys-libs/ncurses-5.2-r3
 	xface? ( media-libs/compface )
 	gpm? ( >=sys-libs/gpm-1.19.3-r5 )
 	migemo? ( >=app-text/migemo-0.40 )
-	ssl? ( >=dev-libs/openssl-0.9.6b )"
+	ssl? (
+		!libressl? ( >=dev-libs/openssl-0.9.6b:0 )
+		libressl? ( dev-libs/libressl:= )
+	)"
 DEPEND="${RDEPEND}
 	virtual/pkgconfig"
 

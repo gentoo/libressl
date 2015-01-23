@@ -67,7 +67,7 @@ IUSE="${IUSE} bcmath berkdb bzip2 calendar cdb cjk
 	crypt +ctype curl debug
 	enchant exif frontbase +fileinfo +filter firebird
 	flatfile ftp gd gdbm gmp +hash +iconv imap inifile
-	intl iodbc ipv6 +json kerberos ldap ldap-sasl libedit mhash
+	intl iodbc ipv6 +json kerberos ldap ldap-sasl libedit libressl mhash
 	mssql mysql libmysqlclient mysqli nls
 	oci8-instant-client odbc +opcache pcntl pdo +phar +posix postgres qdbm
 	readline recode selinux +session sharedmem
@@ -126,7 +126,10 @@ DEPEND="
 	soap? ( >=dev-libs/libxml2-2.6.8 )
 	spell? ( >=app-text/aspell-0.50 )
 	sqlite? ( >=dev-db/sqlite-3.7.6.3 )
-	ssl? ( >=dev-libs/openssl-0.9.7 )
+	ssl? (
+		!libressl? ( >=dev-libs/openssl-0.9.7:0 )
+		libressl? ( dev-libs/libressl:= )
+	)
 	sybase-ct? ( dev-db/freetds )
 	tidy? ( app-text/htmltidy )
 	truetype? (
