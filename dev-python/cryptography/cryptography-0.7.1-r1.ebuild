@@ -14,11 +14,12 @@ SRC_URI="mirror://pypi/${PN:0:1}/${PN}/${P}.tar.gz"
 LICENSE="|| ( Apache-2.0 BSD )"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~mips ~x86 ~x86-fbsd ~x86-freebsd ~x86-interix ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~x64-solaris"
-IUSE="test"
+IUSE="libressl test"
 
 RDEPEND="
 	dev-python/setuptools[${PYTHON_USEDEP}]
-	dev-libs/openssl:0
+	!libressl? ( dev-libs/openssl:0 )
+	libressl? ( dev-libs/libressl:= )
 	>=dev-python/six-1.4.1[${PYTHON_USEDEP}]
 	dev-python/pyasn1[${PYTHON_USEDEP}]
 	$(python_gen_cond_dep '>=dev-python/cffi-0.8:=[${PYTHON_USEDEP}]' 'python*')
@@ -33,7 +34,7 @@ DEPEND="${RDEPEND}
 
 DOCS=( AUTHORS.rst CONTRIBUTING.rst README.rst )
 
-PATCHES=( 
+PATCHES=(
 	"${FILESDIR}"/0.7-setup.patch
 	"${FILESDIR}"/0.7-libressl.patch )
 

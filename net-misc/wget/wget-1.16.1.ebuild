@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/net-misc/wget/wget-1.16.1.ebuild,v 1.2 2014/12/08 17:55:39 polynomial-c Exp $
 
-EAPI="4"
+EAPI=5
 PYTHON_COMPAT=( python{3_3,3_4} )
 
 inherit flag-o-matic python-any-r1 toolchain-funcs autotools
@@ -14,13 +14,15 @@ SRC_URI="mirror://gnu/wget/${P}.tar.xz"
 LICENSE="GPL-3"
 SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~x64-freebsd ~x86-freebsd ~hppa-hpux ~ia64-hpux ~x86-interix ~amd64-linux ~arm-linux ~ia64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
-IUSE="debug gnutls idn ipv6 nls ntlm pcre +ssl static test uuid zlib"
+IUSE="debug gnutls idn ipv6 libressl nls ntlm pcre +ssl static test uuid zlib"
+REQUIRED_USE="?? ( gnutls libressl )"
 
 LIB_DEPEND="idn? ( net-dns/libidn[static-libs(+)] )
 	pcre? ( dev-libs/libpcre[static-libs(+)] )
 	ssl? (
 		gnutls? ( net-libs/gnutls[static-libs(+)] )
-		!gnutls? ( dev-libs/openssl:0[static-libs(+)] )
+		libressl? ( dev-libs/libressl:= )
+		!libressl? ( !gnutls? ( dev-libs/openssl:0[static-libs(+)] ) )
 	)
 	uuid? ( sys-apps/util-linux[static-libs(+)] )
 	zlib? ( sys-libs/zlib[static-libs(+)] )"

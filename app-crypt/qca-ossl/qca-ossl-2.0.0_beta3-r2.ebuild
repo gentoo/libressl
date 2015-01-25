@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/app-crypt/qca-ossl/qca-ossl-2.0.0_beta3-r2.ebuild,v 1.9 2012/06/14 07:01:37 yngwin Exp $
 
-EAPI="2"
+EAPI=5
 inherit eutils qt4-r2
 
 MY_P="${P/_/-}"
@@ -15,10 +15,11 @@ SRC_URI="http://delta.affinix.com/download/qca/${QCA_VER}/plugins/${MY_P}.tar.bz
 LICENSE="LGPL-2"
 SLOT="2"
 KEYWORDS="alpha amd64 ~arm hppa ~ia64 ppc ppc64 sparc x86 ~x86-fbsd ~amd64-linux ~x86-linux ~sparc-solaris"
-IUSE="debug"
+IUSE="debug libressl"
 
 DEPEND=">=app-crypt/qca-${QCA_VER}[debug?]
-	>=dev-libs/openssl-0.9.6"
+	!libressl? ( >=dev-libs/openssl-0.9.6:0 )
+	libressl? ( dev-libs/libressl:= )"
 RDEPEND="${DEPEND}"
 
 S=${WORKDIR}/${MY_P}
