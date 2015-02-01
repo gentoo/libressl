@@ -92,6 +92,9 @@ src_install() {
 		find "${ED%/}"/var/lib/ca-certificates/ -type f \
 			-exec sed -e '$a\' '{}' >> "${ED%/}"/etc/ssl/cert.pem + \
 			|| die
+
+		# compatibility with broken ebuilds
+		dosym ../cert.pem /etc/ssl/certs/ca-certificates.crt
 	fi
 }
 
