@@ -24,7 +24,7 @@ if [[ -n ${PATCHSET} ]]; then
 		PATCHSET="${PVR}.${PATCHSET}"
 	fi
 else
-	PATCHSET="${PVR}"
+	PATCHSET="${PV}"
 fi
 
 DESCRIPTION="An object-oriented scripting language"
@@ -34,7 +34,7 @@ SRC_URI="mirror://ruby/2.0/${MY_P}.tar.xz
 
 LICENSE="|| ( Ruby-BSD BSD-2 )"
 KEYWORDS="alpha amd64 arm hppa ia64 ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~x86-fbsd"
-IUSE="berkdb debug doc examples gdbm ipv6 libressl +rdoc rubytests socks5 ssl xemacs ncurses +readline sse2"
+IUSE="berkdb debug doc examples gdbm ipv6 libressl +rdoc rubytests socks5 ssl xemacs ncurses +readline cpu_flags_x86_sse2"
 
 RDEPEND="
 	berkdb? ( sys-libs/db )
@@ -55,14 +55,14 @@ RDEPEND="
 
 DEPEND="${RDEPEND}"
 PDEPEND="
-	virtual/rubygems:ruby20
+	virtual/rubygems[ruby_targets_ruby20]
 	>=dev-ruby/json-1.7.7[ruby_targets_ruby20]
 	>=dev-ruby/rake-0.9.6[ruby_targets_ruby20]
 	rdoc? ( >=dev-ruby/rdoc-4.0.0[ruby_targets_ruby20] )
 	xemacs? ( app-xemacs/ruby-modes )"
 
 src_prepare() {
-	if use sse2 ; then
+	if use cpu_flags_x86_sse2 ; then
 		excluded_patches="012_no_forced_sse2.patch"
 	fi
 
