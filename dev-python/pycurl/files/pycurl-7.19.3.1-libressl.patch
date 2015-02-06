@@ -1,0 +1,12 @@
+diff -urN a/src/pycurl.c b/src/pycurl.c
+--- a/src/pycurl.c      2015-02-03 23:55:34.220682877 -0500
++++ b/src/pycurl.c      2015-02-03 23:56:25.110682538 -0500
+@@ -4457,6 +4457,8 @@
+         runtime_ssl_lib = "none/other";
+     } else if (!strncmp(vi->ssl_version, "OpenSSL/", 8)) {
+         runtime_ssl_lib = "openssl";
++    } else if (!strncmp(vi->ssl_version, "LibreSSL/", 9)) {
++        runtime_ssl_lib = "openssl";
+     } else if (!strncmp(vi->ssl_version, "GnuTLS/", 7)) {
+         runtime_ssl_lib = "gnutls";
+     } else if (!strncmp(vi->ssl_version, "NSS/", 4)) {
