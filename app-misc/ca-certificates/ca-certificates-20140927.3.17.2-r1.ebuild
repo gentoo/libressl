@@ -59,9 +59,9 @@ src_unpack() {
 
 src_prepare() {
 	if use cacert ; then
-		pushd "${S}"/nss-${NSS_VER} >/dev/null
+		pushd "${S}"/nss-${NSS_VER} >/dev/null || die
 		epatch "${DISTDIR}"/nss-3.14.1-add_spi+cacerts_ca_certs.patch
-		popd >/dev/null
+		popd >/dev/null || die
 	fi
 }
 
