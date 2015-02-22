@@ -1,0 +1,163 @@
+From abc41ab58a209b89a37c052b8b1a12f7f2cc1a65 Mon Sep 17 00:00:00 2001
+From: hasufell <hasufell@gentoo.org>
+Date: Sun, 22 Feb 2015 22:18:59 +0100
+Subject: [PATCH] Fix libressl compatibility
+
+---
+ acinclude.m4                  | 2 +-
+ configure                     | 2 +-
+ include/ap_config_auto.h.in   | 6 ++++++
+ modules/ssl/ssl_engine_init.c | 8 +++++++-
+ modules/ssl/ssl_engine_rand.c | 2 +-
+ modules/ssl/ssl_engine_vars.c | 2 ++
+ modules/ssl/ssl_util_ssl.c    | 4 ++++
+ modules/ssl/ssl_util_ssl.h    | 4 ++++
+ 8 files changed, 26 insertions(+), 4 deletions(-)
+
+diff --git a/acinclude.m4 b/acinclude.m4
+index c750b82..f9683d5 100644
+--- a/acinclude.m4
++++ b/acinclude.m4
+@@ -454,7 +454,7 @@ if test "x$ap_ssltk_configured" = "x"; then
+   if test "$ap_ssltk_type" = "openssl"; then
+     AC_CHECK_HEADERS([openssl/engine.h])
+     AC_CHECK_FUNCS([SSLeay_version SSL_CTX_new], [], [liberrors="yes"])
+-    AC_CHECK_FUNCS([ENGINE_init ENGINE_load_builtin_engines])
++    AC_CHECK_FUNCS([ENGINE_init ENGINE_load_builtin_engines SSL_CTX_use_certificate_chain RAND_egd])
+   else
+     AC_CHECK_FUNCS([SSLC_library_version SSL_CTX_new], [], [liberrors="yes"])
+     AC_CHECK_FUNCS(SSL_set_state)
+diff --git a/configure b/configure
+index 36cb84b..fb10e06 100755
+--- a/configure
++++ b/configure
+@@ -13841,7 +13841,7 @@ else
+ fi
+ done
+ 
+-    for ac_func in ENGINE_init ENGINE_load_builtin_engines
++    for ac_func in ENGINE_init ENGINE_load_builtin_engines SSL_CTX_use_certificate_chain RAND_egd
+ do :
+   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+diff --git a/include/ap_config_auto.h.in b/include/ap_config_auto.h.in
+index 6ea7e6f..797543b 100644
+--- a/include/ap_config_auto.h.in
++++ b/include/ap_config_auto.h.in
+@@ -109,6 +109,9 @@
+ /* Define to 1 if you have the <pwd.h> header file. */
+ #undef HAVE_PWD_H
+ 
++/* Define to 1 if you have the `RAND_egd' function. */
++#undef HAVE_RAND_EGD
++
+ /* Define to 1 if you have the `setsid' function. */
+ #undef HAVE_SETSID
+ 
+@@ -127,6 +130,9 @@
+ /* Define to 1 if you have the `SSL_CTX_new' function. */
+ #undef HAVE_SSL_CTX_NEW
+ 
++/* Define to 1 if you have the `SSL_CTX_use_certificate_chain' function. */
++#undef HAVE_SSL_CTX_USE_CERTIFICATE_CHAIN
++
+ /* Define to 1 if you have the `SSL_set_cert_store' function. */
+ #undef HAVE_SSL_SET_CERT_STORE
+ 
+diff --git a/modules/ssl/ssl_engine_init.c b/modules/ssl/ssl_engine_init.c
+index 2c7b900..9d2016d 100644
+--- a/modules/ssl/ssl_engine_init.c
++++ b/modules/ssl/ssl_engine_init.c
+@@ -406,9 +406,11 @@ void ssl_init_Engine(server_rec *s, apr_pool_t *p)
+             ssl_die();
+         }
+ 
++#ifdef ENGINE_CTRL_CHIL_SET_FORKCHECK
+         if (strEQ(mc->szCryptoDevice, "chil")) {
+             ENGINE_ctrl(e, ENGINE_CTRL_CHIL_SET_FORKCHECK, 1, 0, 0);
+         }
++#endif
+ 
+         if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
+             ap_log_error(APLOG_MARK, APLOG_ERR, 0, s,
+@@ -831,7 +833,11 @@ static void ssl_init_ctx_cert_chain(server_rec *s,
+         }
+     }
+ 
+-    n = SSL_CTX_use_certificate_chain(mctx->ssl_ctx,
++#ifndef HAVE_SSL_CTX_USE_CERTIFICATE_CHAIN
++          n = SSL_CTX_use_certificate_chain(mctx->ssl_ctx,
++#else
++          n = _SSL_CTX_use_certificate_chain(mctx->ssl_ctx,
++#endif
+                                       (char *)chain,
+                                       skip_first, NULL);
+     if (n < 0) {
+diff --git a/modules/ssl/ssl_engine_rand.c b/modules/ssl/ssl_engine_rand.c
+index a3c0fc5..e795444 100644
+--- a/modules/ssl/ssl_engine_rand.c
++++ b/modules/ssl/ssl_engine_rand.c
+@@ -83,7 +83,7 @@ int ssl_rand_seed(server_rec *s, apr_pool_t *p, ssl_rsctx_t nCtx, char *prefix)
+                 nDone += ssl_rand_feedfp(p, fp, pRandSeed->nBytes);
+                 ssl_util_ppclose(s, p, fp);
+             }
+-#ifdef HAVE_SSL_RAND_EGD
++#ifdef HAVE_RAND_EGD
+             else if (pRandSeed->nSrc == SSL_RSSRC_EGD) {
+                 /*
+                  * seed in contents provided by the external
+diff --git a/modules/ssl/ssl_engine_vars.c b/modules/ssl/ssl_engine_vars.c
+index 6199734..5bb601f 100644
+--- a/modules/ssl/ssl_engine_vars.c
++++ b/modules/ssl/ssl_engine_vars.c
+@@ -831,6 +831,7 @@ const char *ssl_ext_lookup(apr_pool_t *p, conn_rec *c, int peer,
+ static char *ssl_var_lookup_ssl_compress_meth(SSL *ssl)
+ {
+     char *result = "NULL";
++#ifndef OPENSSL_NO_COMP
+ #ifdef OPENSSL_VERSION_NUMBER
+ #if (OPENSSL_VERSION_NUMBER >= 0x00908000)
+     SSL_SESSION *pSession = SSL_get_session(ssl);
+@@ -858,6 +859,7 @@ static char *ssl_var_lookup_ssl_compress_meth(SSL *ssl)
+     }
+ #endif
+ #endif
++#endif
+     return result;
+ }
+ 
+diff --git a/modules/ssl/ssl_util_ssl.c b/modules/ssl/ssl_util_ssl.c
+index 0ad9854..b9c824d 100644
+--- a/modules/ssl/ssl_util_ssl.c
++++ b/modules/ssl/ssl_util_ssl.c
+@@ -492,7 +492,11 @@ BOOL SSL_X509_INFO_load_path(apr_pool_t *ptemp,
+  * format, possibly followed by a sequence of CA certificates that
+  * should be sent to the peer in the SSL Certificate message.
+  */
++#ifndef HAVE_SSL_CTX_USE_CERTIFICATE_CHAIN
+ int SSL_CTX_use_certificate_chain(
++#else
++int _SSL_CTX_use_certificate_chain(
++#endif
+     SSL_CTX *ctx, char *file, int skipfirst, modssl_read_bio_cb_fn *cb)
+ {
+     BIO *bio;
+diff --git a/modules/ssl/ssl_util_ssl.h b/modules/ssl/ssl_util_ssl.h
+index c72ca79..87978da 100644
+--- a/modules/ssl/ssl_util_ssl.h
++++ b/modules/ssl/ssl_util_ssl.h
+@@ -89,7 +89,11 @@ char       *SSL_X509_NAME_to_string(apr_pool_t *, X509_NAME *, unsigned int);
+ BOOL        SSL_X509_getCN(apr_pool_t *, X509 *, char **);
+ BOOL        SSL_X509_INFO_load_file(apr_pool_t *, STACK_OF(X509_INFO) *, const char *);
+ BOOL        SSL_X509_INFO_load_path(apr_pool_t *, STACK_OF(X509_INFO) *, const char *);
++#ifndef HAVE_SSL_CTX_USE_CERTIFICATE_CHAIN
+ int         SSL_CTX_use_certificate_chain(SSL_CTX *, char *, int, modssl_read_bio_cb_fn *);
++#else
++int         _SSL_CTX_use_certificate_chain(SSL_CTX *, char *, int, modssl_read_bio_cb_fn *);
++#endif
+ char       *SSL_SESSION_id2sz(unsigned char *, int, char *, int);
+ 
+ /** util functions for OpenSSL+sslc compat */
+-- 
+2.2.1
+
