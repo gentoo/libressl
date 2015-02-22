@@ -360,7 +360,7 @@ src_configure() {
 	$(use_with gmp gmp "${EPREFIX}"/usr)
 	$(use_enable hash hash )
 	$(use_with mhash mhash "${EPREFIX}"/usr)
-	$(use_with iconv iconv $(use elibc_glibc || echo "${EPREFIX}"/usr))
+	$(use_with iconv iconv $(use elibc_glibc || use elibc_musl || echo "${EPREFIX}"/usr))
 	$(use_enable intl intl )
 	$(use_enable ipv6 ipv6 )
 	$(use_enable json json )

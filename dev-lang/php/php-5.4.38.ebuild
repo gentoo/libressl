@@ -1,12 +1,12 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-lang/php/php-5.4.36.ebuild,v 1.11 2014/12/28 15:27:17 titanofold Exp $
+# $Header: /var/cvsroot/gentoo-x86/dev-lang/php/php-5.4.38.ebuild,v 1.1 2015/02/20 08:58:48 olemarkus Exp $
 
 EAPI=5
 
 inherit eutils autotools flag-o-matic versionator depend.apache apache-module db-use libtool systemd
 
-KEYWORDS="alpha amd64 arm hppa ia64 ~mips ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos"
+KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos"
 
 function php_get_uri ()
 {
@@ -367,7 +367,7 @@ src_configure() {
 	$(use_with gmp gmp "${EPREFIX}"/usr)
 	$(use_enable hash hash )
 	$(use_with mhash mhash "${EPREFIX}"/usr)
-	$(use_with iconv iconv $(use elibc_glibc || echo "${EPREFIX}"/usr))
+	$(use_with iconv iconv $(use elibc_glibc || use elibc_musl || echo "${EPREFIX}"/usr))
 	$(use_enable intl intl )
 	$(use_enable ipv6 ipv6 )
 	$(use_enable json json )
