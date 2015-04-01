@@ -57,7 +57,7 @@ DEPEND="${RDEPEND}
 	!sys-devel/gcc[libffi]"
 RDEPEND+=" !build? ( app-misc/mime-types )
 	doc? ( dev-python/python-docs:${SLOT} )"
-PDEPEND="app-admin/eselect-python
+PDEPEND="app-eselect/eselect-python
 	app-admin/python-updater"
 
 S="${WORKDIR}/${MY_P}"

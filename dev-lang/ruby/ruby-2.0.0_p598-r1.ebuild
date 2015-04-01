@@ -49,7 +49,7 @@ RDEPEND="
 	dev-libs/libyaml
 	virtual/libffi
 	sys-libs/zlib
-	>=app-admin/eselect-ruby-20100402
+	>=app-eselect/eselect-ruby-20100402
 	!<dev-ruby/rdoc-3.9.4
 	!<dev-ruby/rubygems-1.8.10-r1"
 

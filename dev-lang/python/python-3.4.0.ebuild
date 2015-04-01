@@ -56,7 +56,7 @@ DEPEND="${RDEPEND}
 	>=sys-devel/autoconf-2.65
 	!sys-devel/gcc[libffi]"
 RDEPEND+=" !build? ( app-misc/mime-types )"
-PDEPEND="app-admin/eselect-python
+PDEPEND="app-eselect/eselect-python
 	app-admin/python-updater"
 
 S="${WORKDIR}/${MY_P}"
