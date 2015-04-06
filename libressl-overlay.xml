@@ -13,6 +13,5 @@
     <source type="git">https://github.com/gentoo/libressl.git</source>
     <feed>http://github.com/feeds/gentoo/commits/libressl/master</feed>
   </repo>
-  <repo quality="experimental" status="official">
 </repositories>
 
