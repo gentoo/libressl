@@ -1,6 +1,6 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-lang/ruby/ruby-2.1.5.ebuild,v 1.3 2015/01/28 19:26:41 mgorny Exp $
+# $Header: /var/cvsroot/gentoo-x86/dev-lang/ruby/ruby-2.1.6-r1.ebuild,v 1.3 2015/05/24 18:25:00 graaff Exp $
 
 EAPI=5
 
@@ -25,7 +25,7 @@ if [[ -n ${PATCHSET} ]]; then
 		PATCHSET="${PVR}.${PATCHSET}"
 	fi
 else
-	PATCHSET="${PV}"
+	PATCHSET="${PVR}"
 fi
 
 DESCRIPTION="An object-oriented scripting language"
@@ -35,10 +35,10 @@ SRC_URI="mirror://ruby/2.1/${MY_P}.tar.xz
 
 LICENSE="|| ( Ruby-BSD BSD-2 )"
 KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd"
-IUSE="berkdb debug doc examples gdbm ipv6 libressl +rdoc rubytests socks5 ssl xemacs ncurses +readline cpu_flags_x86_sse2"
+IUSE="berkdb debug doc examples gdbm ipv6 libressl +rdoc rubytests socks5 ssl xemacs ncurses +readline"
 
 RDEPEND="
-	berkdb? ( sys-libs/db )
+	berkdb? ( sys-libs/db:= )
 	gdbm? ( sys-libs/gdbm )
 	ssl? (
 		!libressl? ( dev-libs/openssl:0 )
@@ -46,7 +46,7 @@ RDEPEND="
 	)
 	socks5? ( >=net-proxy/dante-1.1.13 )
 	ncurses? ( sys-libs/ncurses )
-	readline?  ( sys-libs/readline )
+	readline?  ( sys-libs/readline:0 )
 	dev-libs/libyaml
 	virtual/libffi
 	sys-libs/zlib
@@ -66,11 +66,7 @@ src_prepare() {
 	# Add LibreSSL Support
 	epatch "${FILESDIR}/ruby19-libressl"
 
-	if use cpu_flags_x86_sse2 ; then
-		excluded_patches="012_no_forced_sse2.patch"
-	fi
-
-	EPATCH_EXCLUDE="${excluded_patches}" EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
+	EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
 		epatch "${WORKDIR}/patches"
 
 	# We can no longer unbundle all of rake because rubygems now depends
