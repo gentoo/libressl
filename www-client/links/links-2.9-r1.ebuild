@@ -1,20 +1,20 @@
 # Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/www-client/links/links-2.8-r1.ebuild,v 1.11 2015/06/04 14:39:54 monsieurp Exp $
+# $Header: /var/cvsroot/gentoo-x86/www-client/links/links-2.9-r1.ebuild,v 1.1 2015/06/04 14:39:54 monsieurp Exp $
 
 EAPI=5
 inherit autotools eutils fdo-mime
 
-DEBIAN_REVISION=2.8-1
+DEBIAN_REVISION=2.9-2
 
 DESCRIPTION="A fast and lightweight web browser running in both graphics and text mode"
 HOMEPAGE="http://links.twibright.com/"
 SRC_URI="http://${PN}.twibright.com/download/${P}.tar.bz2
-	mirror://debian/pool/main/${PN:0:1}/${PN}2/${PN}2_${DEBIAN_REVISION}.debian.tar.gz"
+	mirror://debian/pool/main/${PN:0:1}/${PN}2/${PN}2_${DEBIAN_REVISION}.debian.tar.xz"
 
 LICENSE="GPL-2"
 SLOT="2"
-KEYWORDS="alpha amd64 arm hppa ia64 ~mips ppc ppc64 ~s390 ~sh sparc x86 ~ppc-aix ~amd64-fbsd ~x86-fbsd ~ia64-hpux ~x86-interix ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~amd64-fbsd ~x86-fbsd ~ia64-hpux ~x86-interix ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~x64-solaris ~x86-solaris"
 IUSE="bzip2 directfb fbcon gpm ipv6 jpeg libressl livecd lzma ssl suid svga tiff unicode X zlib"
 
 GRAPHICS_DEPEND="media-libs/libpng:0="
@@ -60,7 +60,7 @@ REQUIRED_USE="!livecd? ( fbcon? ( gpm ) )
 DOCS=( AUTHORS BRAILLE_HOWTO ChangeLog KEYS NEWS README SITES )
 
 src_prepare() {
-	epatch "${FILESDIR}/links-libressl.diff"
+	epatch "${FILESDIR}"/${PN}-libressl.diff
 	epatch "${WORKDIR}"/debian/patches/verify-ssl-certs-510417.diff
 
 	if use unicode; then

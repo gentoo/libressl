@@ -1,6 +1,19 @@
 # ChangeLog for www-client/links
 # Copyright 1999-2015 Gentoo Foundation; Distributed under the GPL v2
-# $Header: /var/cvsroot/gentoo-x86/www-client/links/ChangeLog,v 1.204 2015/01/06 16:11:29 radhermit Exp $
+# $Header: /var/cvsroot/gentoo-x86/www-client/links/ChangeLog,v 1.207 2015/06/04 14:46:56 radhermit Exp $
+
+  04 Jun 2015; Tim Harder <radhermit@gentoo.org> metadata.xml:
+  Remove myself as a maintainer.
+
+*links-2.9-r1 (04 Jun 2015)
+
+  04 Jun 2015; Patrice Clement <monsieurp@gentoo.org> +links-2.9-r1.ebuild,
+  links-2.8-r1.ebuild:
+  Remove useless nonfatal function call when creating documentation with dodoc.
+  Fix bug 551196.
+
+  20 May 2015; Patrice Clement <monsieurp@gentoo.org> metadata.xml:
+  Add myself to the maintainers list.
 
 *links-2.9 (06 Jan 2015)
 
