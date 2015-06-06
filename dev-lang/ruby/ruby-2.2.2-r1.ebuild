@@ -35,7 +35,7 @@ KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86
 IUSE="berkdb debug doc examples gdbm ipv6 jemalloc libressl +rdoc rubytests socks5 ssl xemacs ncurses +readline"
 
 RDEPEND="
-	berkdb? ( sys-libs/db )
+	berkdb? ( sys-libs/db:= )
 	gdbm? ( sys-libs/gdbm )
 	jemalloc? ( dev-libs/jemalloc )
 	ssl? (
@@ -44,7 +44,7 @@ RDEPEND="
 	)
 	socks5? ( >=net-proxy/dante-1.1.13 )
 	ncurses? ( sys-libs/ncurses )
-	readline?  ( sys-libs/readline )
+	readline?  ( sys-libs/readline:0 )
 	dev-libs/libyaml
 	virtual/libffi
 	sys-libs/zlib

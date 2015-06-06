@@ -25,7 +25,7 @@ if [[ -n ${PATCHSET} ]]; then
 		PATCHSET="${PVR}.${PATCHSET}"
 	fi
 else
-	PATCHSET="${PV}"
+	PATCHSET="${PVR}"
 fi
 
 DESCRIPTION="An object-oriented scripting language"
