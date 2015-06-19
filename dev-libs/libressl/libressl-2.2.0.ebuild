@@ -11,9 +11,9 @@ HOMEPAGE="http://www.libressl.org/"
 SRC_URI="http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/${P}.tar.gz"
 
 LICENSE="ISC openssl"
-SLOT="0/32"
+SLOT="0/33"
 KEYWORDS="~amd64 ~mips ~ppc ~ppc64 ~x86"
-IUSE="+asm libtls static-libs"
+IUSE="+asm static-libs"
 
 # when importing into the tree, make sure to add
 # 	!dev-libs/openssl:0
@@ -27,9 +27,6 @@ RDEPEND="${DEPEND}"
 PDEPEND="app-misc/ca-certificates"
 
 src_prepare() {
-	# Fix building with MUSL Libc
-	# Thanks, Voidlinux
-	epatch "${FILESDIR}"/${PN}-glibc.patch
 	touch crypto/Makefile.in
 
 	sed -i \
@@ -45,7 +42,6 @@ src_prepare() {
 multilib_src_configure() {
 	ECONF_SOURCE="${S}" econf \
 		$(use_enable asm) \
-		$(use_enable libtls) \
 		$(use_enable static-libs static)
 }
 

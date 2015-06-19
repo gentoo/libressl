@@ -12,8 +12,8 @@ SRC_URI="http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/${P}.tar.gz"
 
 LICENSE="ISC openssl"
 SLOT="0/32"
-KEYWORDS="~amd64 ~mips ~ppc ~ppc64 ~x86"
-IUSE="+asm libtls static-libs"
+KEYWORDS="amd64 ~mips ppc ppc64 x86"
+IUSE="+asm static-libs"
 
 # when importing into the tree, make sure to add
 # 	!dev-libs/openssl:0
@@ -45,7 +45,6 @@ src_prepare() {
 multilib_src_configure() {
 	ECONF_SOURCE="${S}" econf \
 		$(use_enable asm) \
-		$(use_enable libtls) \
 		$(use_enable static-libs static)
 }
 
