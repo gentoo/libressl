@@ -57,7 +57,7 @@ multilib_src_install_all() {
 	einstalldocs
 	prune_libtool_files
 
-	# Include default config for openssl from openssl 1.0.1j
+	# Include default config for openssl
 	insinto /etc/ssl
 	newins "${S}/apps/openssl.cnf" openssl.cnf
 }
