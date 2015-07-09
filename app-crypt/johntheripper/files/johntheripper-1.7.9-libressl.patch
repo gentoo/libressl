@@ -1,0 +1,78 @@
+From 4ee94436892cb65c1f67240d5864f40e703d15c4 Mon Sep 17 00:00:00 2001
+From: hasufell <hasufell@gentoo.org>
+Date: Fri, 10 Jul 2015 01:04:49 +0200
+Subject: [PATCH] Fix compilation with libressl
+
+These things shouldn't even work with OpenSSL. No idea why it does.
+---
+ src/KRB4_fmt_plug.c     | 2 +-
+ src/KRB4_std_plug.c     | 8 ++++----
+ src/keychain_fmt_plug.c | 6 +++---
+ 3 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/KRB4_fmt_plug.c b/src/KRB4_fmt_plug.c
+index 851b0aa..539cb8a 100644
+--- a/src/KRB4_fmt_plug.c
++++ b/src/KRB4_fmt_plug.c
+@@ -182,7 +182,7 @@ krb4_set_key(char *key, int index)
+ 	if (saved_salt->realm[0] != '\0')
+ 		afs_string_to_key(key, saved_salt->realm, &saved_key.key);
+ 	else
+-		des_string_to_key(key, &saved_key.key);
++		DES_string_to_key(key, &saved_key.key);
+ 
+ 	strnzcpy(saved_key.string, key, sizeof(saved_key.string));
+ }
+diff --git a/src/KRB4_std_plug.c b/src/KRB4_std_plug.c
+index 2fd287e..5caba64 100644
+--- a/src/KRB4_std_plug.c
++++ b/src/KRB4_std_plug.c
+@@ -81,7 +81,7 @@ afs_cmu_StringToKey (char *str, char *cell, DES_cblock *key)
+             keybytes[i] = (unsigned char) (temp << 1);
+         }
+     }
+-    des_fixup_key_parity (key);
++    DES_fixup_key_parity (key);
+ }
+ 
+ /*
+@@ -104,16 +104,16 @@ afs_transarc_StringToKey (char *str, char *cell, DES_cblock *key)
+ 
+     memcpy(&ivec, "kerberos", 8);
+     memcpy(&temp_key, "kerberos", 8);
+-    des_fixup_key_parity (&temp_key);
++    DES_fixup_key_parity (&temp_key);
+     DES_key_sched (&temp_key, &schedule);
+     DES_cbc_cksum ((unsigned char *)password, &ivec, passlen, &schedule, &ivec);
+ 
+     memcpy(&temp_key, &ivec, 8);
+-    des_fixup_key_parity (&temp_key);
++    DES_fixup_key_parity (&temp_key);
+     DES_key_sched (&temp_key, &schedule);
+     DES_cbc_cksum ((unsigned char *)password, key, passlen, &schedule, &ivec);
+ 
+-    des_fixup_key_parity (key);
++    DES_fixup_key_parity (key);
+ }
+ 
+ void
+diff --git a/src/keychain_fmt_plug.c b/src/keychain_fmt_plug.c
+index c15b946..462de33 100644
+--- a/src/keychain_fmt_plug.c
++++ b/src/keychain_fmt_plug.c
+@@ -119,9 +119,9 @@ static int kcdecrypt(unsigned char *key, unsigned char *iv, unsigned char *data)
+ 	memcpy(key1, key, 8);
+ 	memcpy(key2, key + 8, 8);
+ 	memcpy(key3, key + 16, 8);
+-	DES_set_key((C_Block *) key1, &ks1);
+-	DES_set_key((C_Block *) key2, &ks2);
+-	DES_set_key((C_Block *) key3, &ks3);
++	DES_set_key((const_DES_cblock *) key1, &ks1);
++	DES_set_key((const_DES_cblock *) key2, &ks2);
++	DES_set_key((const_DES_cblock *) key3, &ks3);
+ 	memcpy(ivec, iv, 8);
+ 	DES_ede3_cbc_encrypt(data, out, CTLEN, &ks1, &ks2, &ks3, &ivec,  DES_DECRYPT);
+ 
+-- 
+2.4.5
+
