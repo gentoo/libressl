@@ -18,12 +18,6 @@ IUSE="+asm static-libs"
 # when importing into the tree, make sure to add
 # 	!dev-libs/openssl:0
 # to DEPEND
-DEPEND="
-	abi_x86_32? (
-		!<=app-emulation/emul-linux-x86-baselibs-20140508
-		!app-emulation/emul-linux-x86-baselibs[-abi_x86_32(-)]
-	)"
-RDEPEND="${DEPEND}"
 PDEPEND="app-misc/ca-certificates"
 
 src_prepare() {
