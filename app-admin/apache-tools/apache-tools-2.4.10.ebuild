@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-admin/apache-tools/apache-tools-2.4.9-r1.ebuild,v 1.1 2014/05/22 14:01:25 polynomial-c Exp $
+# $Id$
 
 EAPI=5
 inherit flag-o-matic eutils multilib toolchain-funcs

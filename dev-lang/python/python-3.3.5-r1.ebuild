@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-lang/python/python-3.3.5-r1.ebuild,v 1.9 2014/08/09 10:47:42 ago Exp $
+# $Id$
 
 EAPI=5
 WANT_AUTOMAKE="none"

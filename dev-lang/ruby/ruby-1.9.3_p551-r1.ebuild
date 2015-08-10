@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-lang/ruby/ruby-1.9.3_p551.ebuild,v 1.10 2014/12/06 16:51:35 ago Exp $
+# $Id$
 
 EAPI=5
 
