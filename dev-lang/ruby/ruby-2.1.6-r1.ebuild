@@ -34,7 +34,7 @@ SRC_URI="mirror://ruby/2.1/${MY_P}.tar.xz
 		 http://dev.gentoo.org/~flameeyes/ruby-team/${PN}-patches-${PATCHSET}.tar.bz2"
 
 LICENSE="|| ( Ruby-BSD BSD-2 )"
-KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd"
+KEYWORDS="alpha amd64 arm ~hppa ia64 ~mips ppc ~ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~x86-fbsd"
 IUSE="berkdb debug doc examples gdbm ipv6 libressl +rdoc rubytests socks5 ssl xemacs ncurses +readline"
 
 RDEPEND="
@@ -45,7 +45,7 @@ RDEPEND="
 		libressl? ( dev-libs/libressl:= )
 	)
 	socks5? ( >=net-proxy/dante-1.1.13 )
-	ncurses? ( sys-libs/ncurses )
+	ncurses? ( sys-libs/ncurses:5= )
 	readline?  ( sys-libs/readline:0 )
 	dev-libs/libyaml
 	virtual/libffi
