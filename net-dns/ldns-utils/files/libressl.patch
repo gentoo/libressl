@@ -1,0 +1,13 @@
+diff -Naur ldns-1.6.17.orig/examples/ldns-signzone.c ldns-1.6.17/examples/ldns-signzone.c
+--- ldns-1.6.17.orig/examples/ldns-signzone.c	2015-05-21 22:09:11.138227240 +0000
++++ ldns-1.6.17/examples/ldns-signzone.c	2015-05-21 22:08:51.622005096 +0000
+@@ -473,7 +473,7 @@
+ 		case 'E':
+ 			ENGINE_load_builtin_engines();
+ 			ENGINE_load_dynamic();
+-			ENGINE_load_cryptodev();
++			/* ENGINE_load_cryptodev(); */
+ 			engine = ENGINE_by_id(optarg);
+ 			if (!engine) {
+ 				printf("No such engine: %s\n", optarg);
+
