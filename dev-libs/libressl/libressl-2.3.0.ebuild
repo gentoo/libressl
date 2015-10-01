@@ -11,8 +11,8 @@ HOMEPAGE="http://www.libressl.org/"
 SRC_URI="http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/${P}.tar.gz"
 
 LICENSE="ISC openssl"
-SLOT="0/35"
-KEYWORDS="amd64 mips ppc ppc64 x86"
+SLOT="0/36"
+KEYWORDS=""
 IUSE="+asm static-libs"
 
 # when importing into the tree, make sure to add
@@ -21,6 +21,9 @@ IUSE="+asm static-libs"
 PDEPEND="app-misc/ca-certificates"
 
 src_prepare() {
+	# Fix for MUSL
+	epatch "${FILESDIR}"/${P}-musl.patch
+
 	touch crypto/Makefile.in
 
 	sed -i \
