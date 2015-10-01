@@ -15,9 +15,6 @@ SLOT="0/36"
 KEYWORDS="~amd64 ~mips ~ppc ~ppc64 ~x86"
 IUSE="+asm static-libs"
 
-# when importing into the tree, make sure to add
-# 	!dev-libs/openssl:0
-# to DEPEND
 PDEPEND="app-misc/ca-certificates"
 
 src_prepare() {
