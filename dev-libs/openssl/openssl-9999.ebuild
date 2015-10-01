@@ -12,7 +12,7 @@ SRC_URI=""
 
 LICENSE="public-domain"
 SLOT="0"
-KEYWORDS="amd64 ~mips ppc ppc64 x86"
+KEYWORDS="amd64 mips ppc ppc64 x86"
 IUSE="kerberos static-libs bindist"
 
 DEPEND=">=dev-libs/libressl-2.0.0[static-libs?,${MULTILIB_USEDEP}]"
