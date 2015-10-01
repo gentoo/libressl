@@ -12,7 +12,7 @@ SRC_URI="http://ftp.openbsd.org/pub/OpenBSD/LibreSSL/${P}.tar.gz"
 
 LICENSE="ISC openssl"
 SLOT="0/36"
-KEYWORDS=""
+KEYWORDS="~amd64 ~mips ~ppc ~ppc64 ~x86"
 IUSE="+asm static-libs"
 
 # when importing into the tree, make sure to add
