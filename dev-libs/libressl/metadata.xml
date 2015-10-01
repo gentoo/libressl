@@ -6,6 +6,5 @@
 	</maintainer>
 	<use>
 		<flag name="asm">Enables assembly</flag>
-		<flag name="libtls">Build libtls</flag>
 	</use>
 </pkgmetadata>
