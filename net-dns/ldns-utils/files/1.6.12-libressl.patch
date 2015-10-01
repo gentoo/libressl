@@ -1,0 +1,20 @@
+diff -Naur ldns-1.6.12.orig/examples/ldns-signzone.c ldns-1.6.12/examples/ldns-signzone.c
+--- ldns-1.6.12.orig/examples/ldns-signzone.c	2011-10-27 20:30:05.000000000 +0900
++++ ldns-1.6.12/examples/ldns-signzone.c	2015-09-25 01:38:08.502773261 +0900
+@@ -481,6 +481,8 @@
+ 		case 'A':
+ 			signflags |= LDNS_SIGN_DNSKEY_WITH_ZSK;
+ 			break;
++
++#ifdef HAVE_ENGINE_LOAD_CRYPTODEV
+ 		case 'E':
+ 			ENGINE_load_builtin_engines();
+ 			ENGINE_load_dynamic();
+@@ -505,6 +507,7 @@
+ 				ENGINE_set_default(engine, 0);
+ 			}
+ 			break;
++#endif
+ 		case 'k':
+ 			eng_key_l = strchr(optarg, ',');
+ 			if (eng_key_l && strlen(eng_key_l) > 1) {
