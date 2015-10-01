@@ -1,1 +1,4 @@
 virtual/openssl
+
+# masked for testing
+>=dev-libs/libressl-2.3.0
