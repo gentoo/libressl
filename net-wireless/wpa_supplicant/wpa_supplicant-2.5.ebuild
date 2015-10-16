@@ -75,10 +75,10 @@ pkg_setup() {
 }
 
 src_prepare() {
-	cd "${WORKDIR}/${P}"
+	pushd "${WORKDIR}/${P}" >/dev/null || die
 	# Fix for LibreSSL
 	epatch "${FILESDIR}/wpa_supplicant-2.5-libressl.patch"
-	cd "${S}"
+	popd > /dev/null || die
 
 	# net/bpf.h needed for net-libs/libpcap on Gentoo/FreeBSD
 	sed -i \
