@@ -18,6 +18,8 @@ IUSE="+asm static-libs"
 PDEPEND="app-misc/ca-certificates"
 
 src_prepare() {
+	epatch "${FILESDIR}"/${P}-buffer-overrun.patch
+
 	# Fix for MUSL
 	epatch "${FILESDIR}"/${P}-musl.patch
 
