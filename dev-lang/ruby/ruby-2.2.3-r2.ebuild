@@ -28,7 +28,7 @@ fi
 DESCRIPTION="An object-oriented scripting language"
 HOMEPAGE="http://www.ruby-lang.org/"
 SRC_URI="mirror://ruby/2.2/${MY_P}.tar.xz
-		 http://dev.gentoo.org/~flameeyes/ruby-team/${PN}-patches-${PATCHSET}.tar.bz2"
+		 https://dev.gentoo.org/~flameeyes/ruby-team/${PN}-patches-${PATCHSET}.tar.bz2"
 
 LICENSE="|| ( Ruby-BSD BSD-2 )"
 KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd"
@@ -40,10 +40,10 @@ RDEPEND="
 	jemalloc? ( dev-libs/jemalloc )
 	ssl? (
 		!libressl? ( dev-libs/openssl:0 )
-		libressl? ( dev-libs/libressl:= )
+		libressl? ( dev-libs/libressl )
 	)
 	socks5? ( >=net-proxy/dante-1.1.13 )
-	ncurses? ( sys-libs/ncurses:5= )
+	ncurses? ( sys-libs/ncurses:0= )
 	readline?  ( sys-libs/readline:0 )
 	dev-libs/libyaml
 	virtual/libffi
@@ -72,8 +72,7 @@ src_prepare() {
 	EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
 		epatch "${WORKDIR}/patches"
 
-	# Add LibreSSL Support
-	epatch "${FILESDIR}"/ruby22-libressl.patch
+	epatch "${FILESDIR}"/${PN}-2.2.3-ssl3.patch
 
 	# We can no longer unbundle all of rake because rubygems now depends
 	# on this. We leave the actual rake code around to bootstrap
@@ -144,7 +143,10 @@ src_configure() {
 		modules="${modules},curses"
 	fi
 
-	INSTALL="${EPREFIX}/usr/bin/install -c" econf \
+	# Provide an empty LIBPATHENV because we disable rpath but we do not
+	# need LD_LIBRARY_PATH by default since that breaks USE=multitarget
+	# #564272
+	INSTALL="${EPREFIX}/usr/bin/install -c" LIBPATHENV="" econf \
 		--program-suffix=${MY_SUFFIX} \
 		--with-soname=ruby${MY_SUFFIX} \
 		--docdir=${EPREFIX}/usr/share/doc/${P} \
