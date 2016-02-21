@@ -1,0 +1,57 @@
+diff -Naur qtbase-opensource-src-5.5.1.orig/src/network/ssl/qsslcontext_openssl.cpp qtbase-opensource-src-5.5.1/src/network/ssl/qsslcontext_openssl.cpp
+--- qtbase-opensource-src-5.5.1.orig/src/network/ssl/qsslcontext_openssl.cpp	2015-10-12 21:35:28.000000000 -0700
++++ qtbase-opensource-src-5.5.1/src/network/ssl/qsslcontext_openssl.cpp	2016-02-21 15:59:06.785847177 -0800
+@@ -338,7 +338,7 @@
+ 
+     const QVector<QSslEllipticCurve> qcurves = sslContext->sslConfiguration.ellipticCurves();
+     if (!qcurves.isEmpty()) {
+-#if OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(OPENSSL_NO_EC)
++#if OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(OPENSSL_NO_EC) && defined(SSL_CTRL_SET_CURVES)
+         // Set the curves to be used
+         if (q_SSLeay() >= 0x10002000L) {
+             // SSL_CTX_ctrl wants a non-const pointer as last argument,
+diff -Naur qtbase-opensource-src-5.5.1.orig/src/network/ssl/qsslellipticcurve_openssl.cpp qtbase-opensource-src-5.5.1/src/network/ssl/qsslellipticcurve_openssl.cpp
+--- qtbase-opensource-src-5.5.1.orig/src/network/ssl/qsslellipticcurve_openssl.cpp	2015-10-12 21:35:28.000000000 -0700
++++ qtbase-opensource-src-5.5.1/src/network/ssl/qsslellipticcurve_openssl.cpp	2016-02-21 16:00:56.435752670 -0800
+@@ -76,7 +76,7 @@
+ 
+     int nid = q_OBJ_sn2nid(curveNameLatin1.data());
+ 
+-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
++#if OPENSSL_VERSION_NUMBER >= 0x10002000L && (!defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER >= 0x20020002L)
+     if (nid == 0 && q_SSLeay() >= 0x10002000L)
+         nid = q_EC_curve_nist2nid(curveNameLatin1.data());
+ #endif // OPENSSL_VERSION_NUMBER >= 0x10002000L
+diff -Naur qtbase-opensource-src-5.5.1.orig/src/network/ssl/qsslsocket_openssl_symbols.cpp qtbase-opensource-src-5.5.1/src/network/ssl/qsslsocket_openssl_symbols.cpp
+--- qtbase-opensource-src-5.5.1.orig/src/network/ssl/qsslsocket_openssl_symbols.cpp	2015-10-12 21:35:28.000000000 -0700
++++ qtbase-opensource-src-5.5.1/src/network/ssl/qsslsocket_openssl_symbols.cpp	2016-02-21 16:00:19.139444675 -0800
+@@ -406,7 +406,7 @@
+ DEFINEFUNC(EC_KEY *, EC_KEY_new_by_curve_name, int nid, nid, return 0, return)
+ DEFINEFUNC(void, EC_KEY_free, EC_KEY *ecdh, ecdh, return, DUMMYARG)
+ DEFINEFUNC2(size_t, EC_get_builtin_curves, EC_builtin_curve * r, r, size_t nitems, nitems, return 0, return)
+-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
++#if OPENSSL_VERSION_NUMBER >= 0x10002000L && (!defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER >= 0x20020002L)
+ DEFINEFUNC(int, EC_curve_nist2nid, const char *name, name, return 0, return)
+ #endif // OPENSSL_VERSION_NUMBER >= 0x10002000L
+ #endif // OPENSSL_NO_EC
+@@ -954,7 +954,7 @@
+     RESOLVEFUNC(EC_KEY_new_by_curve_name)
+     RESOLVEFUNC(EC_KEY_free)
+     RESOLVEFUNC(EC_get_builtin_curves)
+-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
++#if OPENSSL_VERSION_NUMBER >= 0x10002000L && (!defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER >= 0x20020002L)
+     if (q_SSLeay() >= 0x10002000L)
+         RESOLVEFUNC(EC_curve_nist2nid)
+ #endif // OPENSSL_VERSION_NUMBER >= 0x10002000L
+diff -Naur qtbase-opensource-src-5.5.1.orig/src/network/ssl/qsslsocket_openssl_symbols_p.h qtbase-opensource-src-5.5.1/src/network/ssl/qsslsocket_openssl_symbols_p.h
+--- qtbase-opensource-src-5.5.1.orig/src/network/ssl/qsslsocket_openssl_symbols_p.h	2015-10-12 21:35:28.000000000 -0700
++++ qtbase-opensource-src-5.5.1/src/network/ssl/qsslsocket_openssl_symbols_p.h	2016-02-21 15:57:33.980080783 -0800
+@@ -454,7 +454,7 @@
+ 
+ // EC curves management
+ size_t q_EC_get_builtin_curves(EC_builtin_curve *r, size_t nitems);
+-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
++#if OPENSSL_VERSION_NUMBER >= 0x10002000L && (!defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER >= 0x20020002L)
+ int q_EC_curve_nist2nid(const char *name);
+ #endif // OPENSSL_VERSION_NUMBER >= 0x10002000L
+ #endif // OPENSSL_NO_EC
