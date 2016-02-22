@@ -35,9 +35,7 @@ S="${WORKDIR}/${MY_PN}-${PV}"
 RESTRICT=test
 
 PATCHES=(
-	"${FILESDIR}"/0.22.3-Use-swig-generated-python-loader.patch
-	"${FILESDIR}"/0.22.3-packaging.patch
-	"${FILESDIR}"/0.22.3-no-ssl3.patch
+	"${FILESDIR}"/0.23.0-no-ssl3.patch
 )
 
 python_test() {
