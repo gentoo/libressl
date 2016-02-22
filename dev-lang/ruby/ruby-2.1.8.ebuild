@@ -10,12 +10,13 @@ inherit autotools eutils flag-o-matic multilib versionator
 
 RUBYPL=$(get_version_component_range 4)
 
-MY_P="${PN}-$(get_version_component_range 1-3)-${RUBYPL:-0}"
+MY_P="${PN}-$(get_version_component_range 1-3)"
+#MY_P="${PN}-$(get_version_component_range 1-3)-${RUBYPL:-0}"
 S=${WORKDIR}/${MY_P}
 
 SLOT=$(get_version_component_range 1-2)
 MY_SUFFIX=$(delete_version_separator 1 ${SLOT})
-RUBYVERSION=2.0.0
+RUBYVERSION=2.1.0
 
 if [[ -n ${PATCHSET} ]]; then
 	if [[ ${PVR} == ${PV} ]]; then
@@ -29,12 +30,12 @@ fi
 
 DESCRIPTION="An object-oriented scripting language"
 HOMEPAGE="http://www.ruby-lang.org/"
-SRC_URI="mirror://ruby/2.0/${MY_P}.tar.xz
+SRC_URI="mirror://ruby/2.1/${MY_P}.tar.xz
 		 https://dev.gentoo.org/~flameeyes/ruby-team/${PN}-patches-${PATCHSET}.tar.bz2"
 
 LICENSE="|| ( Ruby-BSD BSD-2 )"
-KEYWORDS="alpha amd64 arm hppa ia64 ~mips ppc ppc64 ~s390 ~sh ~sparc x86 ~amd64-fbsd ~x86-fbsd"
-IUSE="berkdb debug doc examples gdbm ipv6 libressl +rdoc rubytests socks5 ssl xemacs ncurses +readline cpu_flags_x86_sse2"
+KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd"
+IUSE="berkdb debug doc examples gdbm ipv6 libressl +rdoc rubytests socks5 ssl xemacs ncurses +readline"
 
 RDEPEND="
 	berkdb? ( sys-libs/db:= )
@@ -49,27 +50,23 @@ RDEPEND="
 	dev-libs/libyaml
 	virtual/libffi
 	sys-libs/zlib
-	>=app-eselect/eselect-ruby-20100402
+	>=app-eselect/eselect-ruby-20131227
 	!<dev-ruby/rdoc-3.9.4
 	!<dev-ruby/rubygems-1.8.10-r1"
 
 DEPEND="${RDEPEND}"
 PDEPEND="
-	virtual/rubygems[ruby_targets_ruby20]
-	>=dev-ruby/json-1.7.7[ruby_targets_ruby20]
-	>=dev-ruby/rake-0.9.6[ruby_targets_ruby20]
-	rdoc? ( >=dev-ruby/rdoc-4.0.0[ruby_targets_ruby20] )
+	virtual/rubygems[ruby_targets_ruby21]
+	>=dev-ruby/json-1.8.1[ruby_targets_ruby21]
+	>=dev-ruby/rake-0.9.6[ruby_targets_ruby21]
+	rdoc? ( >=dev-ruby/rdoc-4.0.1[ruby_targets_ruby21] )
 	xemacs? ( app-xemacs/ruby-modes )"
 
 src_prepare() {
-	if use cpu_flags_x86_sse2 ; then
-		excluded_patches="012_no_forced_sse2.patch"
-	fi
-
 	# Add LibreSSL Support
 	epatch "${FILESDIR}/ruby19-libressl"
 
-	EPATCH_EXCLUDE="${excluded_patches}" EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
+	EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
 		epatch "${WORKDIR}/patches"
 
 	# We can no longer unbundle all of rake because rubygems now depends
@@ -137,7 +134,10 @@ src_configure() {
 		modules="${modules},curses"
 	fi
 
-	INSTALL="${EPREFIX}/usr/bin/install -c" econf \
+	# Provide an empty LIBPATHENV because we disable rpath but we do not
+	# need LD_LIBRARY_PATH by default since that breaks USE=multitarget
+	# #564272
+	INSTALL="${EPREFIX}/usr/bin/install -c" LIBPATHENV="" econf \
 		--program-suffix=${MY_SUFFIX} \
 		--with-soname=ruby${MY_SUFFIX} \
 		--docdir=${EPREFIX}/usr/share/doc/${P} \

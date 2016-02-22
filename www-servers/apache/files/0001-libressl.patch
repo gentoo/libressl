@@ -1,0 +1,158 @@
+diff -ru httpd-2.2.31/acinclude.m4 httpd-2.2.31.new/acinclude.m4
+--- httpd-2.2.31/acinclude.m4	2012-07-06 23:23:21.000000000 +0800
++++ httpd-2.2.31.new/acinclude.m4	2015-11-18 11:49:29.545935605 +0800
+@@ -454,7 +454,7 @@
+   if test "$ap_ssltk_type" = "openssl"; then
+     AC_CHECK_HEADERS([openssl/engine.h])
+     AC_CHECK_FUNCS([SSLeay_version SSL_CTX_new], [], [liberrors="yes"])
+-    AC_CHECK_FUNCS([ENGINE_init ENGINE_load_builtin_engines])
++    AC_CHECK_FUNCS([ENGINE_init ENGINE_load_builtin_engines SSL_CTX_use_certificate_chain RAND_egd])
+   else
+     AC_CHECK_FUNCS([SSLC_library_version SSL_CTX_new], [], [liberrors="yes"])
+     AC_CHECK_FUNCS(SSL_set_state)
+diff -ru httpd-2.2.31/configure httpd-2.2.31.new/configure
+--- httpd-2.2.31/configure	2015-11-18 11:48:24.976936923 +0800
++++ httpd-2.2.31.new/configure	2015-11-18 11:49:29.552935605 +0800
+@@ -13788,7 +13788,7 @@
+ fi
+ done
+ 
+-    for ac_func in ENGINE_init ENGINE_load_builtin_engines
++    for ac_func in ENGINE_init ENGINE_load_builtin_engines SSL_CTX_use_certificate_chain RAND_egd
+ do :
+   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
+ ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"
+diff -ru httpd-2.2.31/include/ap_config_auto.h.in httpd-2.2.31.new/include/ap_config_auto.h.in
+--- httpd-2.2.31/include/ap_config_auto.h.in	2015-11-18 11:48:25.150936919 +0800
++++ httpd-2.2.31.new/include/ap_config_auto.h.in	2015-11-18 11:49:29.553935605 +0800
+@@ -112,6 +112,9 @@
+ /* Define to 1 if you have the <pwd.h> header file. */
+ #undef HAVE_PWD_H
+ 
++/* Define to 1 if you have the `RAND_egd' function. */
++#undef HAVE_RAND_EGD
++
+ /* Define to 1 if you have the `setsid' function. */
+ #undef HAVE_SETSID
+ 
+@@ -130,6 +133,9 @@
+ /* Define to 1 if you have the `SSL_CTX_new' function. */
+ #undef HAVE_SSL_CTX_NEW
+ 
++/* Define to 1 if you have the `SSL_CTX_use_certificate_chain' function. */
++#undef HAVE_SSL_CTX_USE_CERTIFICATE_CHAIN
++
+ /* Define to 1 if you have the `SSL_set_cert_store' function. */
+ #undef HAVE_SSL_SET_CERT_STORE
+ 
+diff -ru httpd-2.2.31/modules/ssl/mod_ssl.h httpd-2.2.31.new/modules/ssl/mod_ssl.h
+--- httpd-2.2.31/modules/ssl/mod_ssl.h	2015-11-18 11:48:21.596936992 +0800
++++ httpd-2.2.31.new/modules/ssl/mod_ssl.h	2015-11-18 11:49:29.553935605 +0800
+@@ -25,6 +25,7 @@
+ 
+ #ifndef __MOD_SSL_H__
+ #define __MOD_SSL_H__
++#define SSL_NO_COMP 1
+ 
+ #include "httpd.h"
+ #include "apr_optional.h"
+diff -ru httpd-2.2.31/modules/ssl/ssl_engine_init.c httpd-2.2.31.new/modules/ssl/ssl_engine_init.c
+--- httpd-2.2.31/modules/ssl/ssl_engine_init.c	2015-05-22 00:05:51.000000000 +0800
++++ httpd-2.2.31.new/modules/ssl/ssl_engine_init.c	2015-11-18 11:49:29.554935605 +0800
+@@ -251,9 +251,11 @@
+             ssl_die();
+         }
+ 
++#ifdef ENGINE_CTRL_CHIL_SET_FORKCHECK
+         if (strEQ(mc->szCryptoDevice, "chil")) {
+             ENGINE_ctrl(e, ENGINE_CTRL_CHIL_SET_FORKCHECK, 1, 0, 0);
+         }
++#endif
+ 
+         if (!ENGINE_set_default(e, ENGINE_METHOD_ALL)) {
+             ap_log_error(APLOG_MARK, APLOG_ERR, 0, s,
+@@ -428,6 +430,9 @@
+     }
+ #endif
+ 
++#ifdef SSL_NO_COMP
++#define OPENSSL_NO_COMP
++#endif
+ 
+ #ifndef OPENSSL_NO_COMP
+     if (sc->compression != TRUE) {
+@@ -689,7 +694,11 @@
+         }
+     }
+ 
++#ifndef HAVE_SSL_CTX_USE_CERTIFICATE_CHAIN
+     n = SSL_CTX_use_certificate_chain(mctx->ssl_ctx,
++#else
++    n = _SSL_CTX_use_certificate_chain(mctx->ssl_ctx,
++#endif
+                                       (char *)chain,
+                                       skip_first, NULL);
+     if (n < 0) {
+diff -ru httpd-2.2.31/modules/ssl/ssl_engine_vars.c httpd-2.2.31.new/modules/ssl/ssl_engine_vars.c
+--- httpd-2.2.31/modules/ssl/ssl_engine_vars.c	2015-11-18 11:48:21.597936992 +0800
++++ httpd-2.2.31.new/modules/ssl/ssl_engine_vars.c	2015-11-18 11:49:44.775935294 +0800
+@@ -841,7 +841,7 @@
+ #ifdef OPENSSL_VERSION_NUMBER
+ #if (OPENSSL_VERSION_NUMBER >= 0x00908000)
+     SSL_SESSION *pSession = SSL_get_session(ssl);
+-
++#ifndef SSL_NO_COMP
+     if (pSession) {
+         switch (pSession->compress_meth) {
+         case 0:
+@@ -863,6 +863,7 @@
+             break;
+         }
+     }
++#endif /* SSL_NO_COMP */
+ #endif
+ #endif
+     return result;
+diff -ru httpd-2.2.31/modules/ssl/ssl_toolkit_compat.h httpd-2.2.31.new/modules/ssl/ssl_toolkit_compat.h
+--- httpd-2.2.31/modules/ssl/ssl_toolkit_compat.h	2013-11-11 22:00:57.000000000 +0800
++++ httpd-2.2.31.new/modules/ssl/ssl_toolkit_compat.h	2015-11-18 11:49:29.555935605 +0800
+@@ -143,7 +143,9 @@
+ #define X509_reference_inc(cert) \
+    CRYPTO_add(&((cert)->references), +1, CRYPTO_LOCK_X509)
+ 
++#ifdef HAVE_RAND_EGD
+ #define HAVE_SSL_RAND_EGD /* since 9.5.1 */
++#endif
+ 
+ #define HAVE_SSL_X509V3_EXT_d2i
+ 
+diff -ru httpd-2.2.31/modules/ssl/ssl_util_ssl.c httpd-2.2.31.new/modules/ssl/ssl_util_ssl.c
+--- httpd-2.2.31/modules/ssl/ssl_util_ssl.c	2015-05-22 00:05:51.000000000 +0800
++++ httpd-2.2.31.new/modules/ssl/ssl_util_ssl.c	2015-11-18 11:49:29.555935605 +0800
+@@ -492,7 +492,11 @@
+  * format, possibly followed by a sequence of CA certificates that
+  * should be sent to the peer in the SSL Certificate message.
+  */
++#ifndef HAVE_SSL_CTX_USE_CERTIFICATE_CHAIN
+ int SSL_CTX_use_certificate_chain(
++#else
++int _SSL_CTX_use_certificate_chain(
++#endif
+     SSL_CTX *ctx, char *file, int skipfirst, modssl_read_bio_cb_fn *cb)
+ {
+     BIO *bio;
+diff -ru httpd-2.2.31/modules/ssl/ssl_util_ssl.h httpd-2.2.31.new/modules/ssl/ssl_util_ssl.h
+--- httpd-2.2.31/modules/ssl/ssl_util_ssl.h	2015-05-22 00:05:51.000000000 +0800
++++ httpd-2.2.31.new/modules/ssl/ssl_util_ssl.h	2015-11-18 11:49:29.555935605 +0800
+@@ -89,7 +89,11 @@
+ BOOL        SSL_X509_getCN(apr_pool_t *, X509 *, char **);
+ BOOL        SSL_X509_INFO_load_file(apr_pool_t *, STACK_OF(X509_INFO) *, const char *);
+ BOOL        SSL_X509_INFO_load_path(apr_pool_t *, STACK_OF(X509_INFO) *, const char *);
++#ifndef HAVE_SSL_CTX_USE_CERTIFICATE_CHAIN
+ int         SSL_CTX_use_certificate_chain(SSL_CTX *, char *, int, modssl_read_bio_cb_fn *);
++#else
++int         _SSL_CTX_use_certificate_chain(SSL_CTX *, char *, int, pem_password_cb *);
++#endif
+ char       *SSL_SESSION_id2sz(unsigned char *, int, char *, int);
+ 
+ /** util functions for OpenSSL+sslc compat */
