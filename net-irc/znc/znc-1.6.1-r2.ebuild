@@ -5,36 +5,37 @@
 EAPI=5
 
 PYTHON_COMPAT=( python{3_3,3_4} )
-inherit base python-single-r1 systemd user
+inherit eutils python-single-r1 systemd user
 
 MY_PV=${PV/_/-}
+GTEST_VER="1.7.0"
+GTEST_URL="https://googletest.googlecode.com/files/gtest-${GTEST_VER}.zip"
 DESCRIPTION="An advanced IRC Bouncer"
 
-if [[ ${PV} == *9999* ]]; then
-	inherit git-2
-	EGIT_REPO_URI=${EGIT_REPO_URI:-"git://github.com/znc/znc.git"}
-	SRC_URI=""
-	KEYWORDS=""
-else
-	SRC_URI="http://znc.in/releases/${PN}-${MY_PV}.tar.gz"
-	KEYWORDS="~amd64 ~arm ~x86"
-fi
+SRC_URI="http://znc.in/releases/archive/${PN}-${MY_PV}.tar.gz
+	test? ( ${GTEST_URL} )"
+KEYWORDS="~amd64 ~arm ~x86"
 
 HOMEPAGE="http://znc.in"
 LICENSE="GPL-2"
 SLOT="0"
-IUSE="daemon debug ipv6 perl python ssl sasl tcl"
+IUSE="daemon debug ipv6 libressl perl python ssl sasl tcl test"
 
 REQUIRED_USE="python? ( ${PYTHON_REQUIRED_USE} )"
 
 RDEPEND="
+	dev-libs/icu
+	sys-libs/zlib
 	perl? ( >=dev-lang/perl-5.10 )
 	python? ( ${PYTHON_DEPS} )
 	sasl? ( >=dev-libs/cyrus-sasl-2 )
-	ssl? ( >=dev-libs/openssl-0.9.7d:0 )
+	ssl? (
+		!libressl? ( dev-libs/openssl:0 )
+		libressl? ( dev-libs/libressl )
+	)
 	tcl? ( dev-lang/tcl:0= )
 "
-DEPEND="
+DEPEND="${RDEPEND}
 	virtual/pkgconfig
 	perl? (
 		>=dev-lang/swig-2.0.12
@@ -42,17 +43,17 @@ DEPEND="
 	python? (
 		>=dev-lang/swig-2.0.12
 	)
-	${RDEPEND}
 "
 
 S=${WORKDIR}/${PN}-${MY_PV}
 
 PATCHES=(
-	"${FILESDIR}/${PN}-1.0-systemwideconfig.patch"
-	"${FILESDIR}/${PN}-1.4-libressl.patch"
+	"${FILESDIR}"/${PN}-1.6.1-systemwideconfig.patch
+	"${FILESDIR}"/${PN}-1.6.1-create-pidfile-per-default.patch
+	"${FILESDIR}"/${PN}-1.6.1-libressl-r1.patch
 )
 
-CONFDIR="/var/lib/znc"
+ZNC_DATADIR="${ZNC_DATADIR:-"/var/lib/znc"}"
 
 pkg_setup() {
 	if use python; then
@@ -64,12 +65,19 @@ pkg_setup() {
 	fi
 }
 
-src_prepare() {
-	if [[ ${PV} == *9999* ]]; then
-		./autogen.sh
-	fi
+src_unpack() {
+	default
 
-	base_src_prepare
+	if use test; then
+		cd "${S}"/test || die "Failed to chdir into '${S}/test'"
+		unpack ${GTEST_URL##*/}
+		mv gtest-${GTEST_VER} gtest \
+			|| die "Failed to rename '${S}/test/gtest-${GTEST_VER}' dir"
+	fi
+}
+
+src_prepare() {
+	epatch ${PATCHES[@]}
 }
 
 src_configure() {
@@ -81,15 +89,16 @@ src_configure() {
 		$(use python && echo "--enable-python=python3") \
 		$(use_enable sasl cyrus) \
 		$(use_enable ssl openssl) \
-		$(use_enable tcl tcl)
+		$(use_enable tcl tcl) \
+		$(use_with test gtest "${S}/test/gtest")
 }
 
 src_install() {
-	emake install DESTDIR="${D}"
+	emake install DESTDIR="${D%/}"
 	dodoc NOTICE README.md
 	if use daemon; then
-		newinitd "${FILESDIR}"/znc.initd znc
-		newconfd "${FILESDIR}"/znc.confd znc
+		newinitd "${FILESDIR}"/znc.initd-r1 znc
+		newconfd "${FILESDIR}"/znc.confd-r1 znc
 	fi
 }
 
@@ -103,53 +112,65 @@ pkg_postinst() {
 		elog
 		elog "An init-script was installed in /etc/init.d"
 		elog "A config file was installed in /etc/conf.d"
-		if [[ ! -d "${EROOT}${CONFDIR}" ]]; then
+		if [[ ! -d "${EROOT}${ZNC_DATADIR}" ]]; then
 			elog
-			elog "Run 'emerge --config znc' to configure ZNC"
+			elog "Run 'emerge --config znc' under portage"
+			elog "or 'cave config znc' under paludis to configure ZNC"
 			elog "as a system-wide daemon."
 			elog
 			elog "To generate a new SSL certificate, run:"
-			elog "  znc --system-wide-config-as znc --makepem -d ${CONFDIR}"
+			elog "  znc --system-wide-config-as znc --makepem -d ${ZNC_DATADIR}"
 			elog "as root"
 			elog
 			elog "If migrating from a user-based install"
 			elog "you can use your existing config files:"
-			elog "  mkdir ${CONFDIR}"
-			elog "  mv /home/\$USER/.znc/* ${CONFDIR}"
+			elog "  mkdir ${ZNC_DATADIR}"
+			elog "  mv /home/\$USER/.znc/* ${ZNC_DATADIR}"
 			elog "  rm -rf /home/\$USER/.znc"
-			elog "  chown -R znc:znc ${CONFDIR}"
+			elog "  chown -R znc:znc ${ZNC_DATADIR}"
 			elog
 			elog "If you already have znc set up and want take advantage of the"
 			elog "init script but skip of all the above, you can also edit"
 			elog "  /etc/conf.d/znc"
 			elog "and adjust the variables to your current znc user and config"
 			elog "location."
+			elog
+			elog "Please make sure that your existing configuration contains"
+			elog "  PidFile = /run/znc/znc.pid"
+			elog "or that PidFile value matches the one in /etc/conf.d/znc"
 			if [[ -d "${EROOT}"/etc/znc ]]; then
 				elog
 				ewarn "/etc/znc exists on your system."
 				ewarn "Due to the nature of the contents of that folder,"
 				ewarn "we have changed the default configuration to use"
-				ewarn "	/var/lib/znc"
-				ewarn "please move /etc/znc to /var/lib/znc"
+				ewarn "	${ZNC_DATADIR}"
+				ewarn "please move /etc/znc to ${ZNC_DATADIR}"
 				ewarn "or adjust /etc/conf.d/znc"
 			fi
 		else
-			elog "Existing config detected in ${CONFDIR}"
-			elog "You're good to go :)"
+			elog "Existing config detected in ${ZNC_DATADIR}"
+			if ! systemd_is_booted; then
+				elog
+				elog "Please make sure that your existing configuration contains"
+				elog "  PidFile = /run/znc/znc.pid"
+				elog "or that PidFile value matches the one in /etc/conf.d/znc"
+			else
+				elog "You're good to go :)"
+			fi
 		fi
 		elog
 	fi
 }
 
 pkg_config() {
-	if use daemon && ! [[ -d "${EROOT}${CONFDIR}" ]]; then
+	if use daemon && ! [[ -d "${EROOT}${ZNC_DATADIR}" ]]; then
 		einfo "Press ENTER to interactively create a new configuration file for znc."
 		einfo "To abort, press Control-C"
 		read
-		mkdir -p "${EROOT}${CONFDIR}" || die
-		chown -R ${PN}:${PN} "${EROOT}${CONFDIR}" ||
+		mkdir -p "${EROOT}${ZNC_DATADIR}" || die
+		chown -R ${PN}:${PN} "${EROOT}${ZNC_DATADIR}" ||
 			die "Setting permissions failed"
-		"${EROOT}"/usr/bin/znc --system-wide-config-as znc -c -r -d "${EROOT}${CONFDIR}" ||
+		"${EROOT}"/usr/bin/znc --system-wide-config-as znc -c -r -d "${EROOT}${ZNC_DATADIR}" ||
 			die "Config failed"
 		echo
 		einfo "To start znc, run '/etc/init.d/znc start'"
@@ -157,7 +178,7 @@ pkg_config() {
 		einfo "  rc-update add znc default"
 	else
 		if use daemon; then
-			ewarn "${CONFDIR} already exists, aborting to avoid damaging"
+			ewarn "${ZNC_DATADIR} already exists, aborting to avoid damaging"
 			ewarn "any existing configuration. If you are sure you want"
 			ewarn "to generate a new configuration, remove the folder"
 			ewarn "and try again."
