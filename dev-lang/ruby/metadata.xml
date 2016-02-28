@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
-  <herd>ruby</herd>
+  <maintainer type="project">
+    <email>ruby@gentoo.org</email>
+    <name>Gentoo Ruby Project</name>
+  </maintainer>
   <use>
     <flag name="rubytests">
       Install ruby tests that can only be run after ruby is installed
@@ -14,11 +17,6 @@
       If neither libedit nor readline USE flags are enabled, the
       readline extension will not be built (and irb will lose line
       editing functionality).
-    </flag>
-    <flag name="yaml">
-      Use the <pkg>dev-libs/libyaml</pkg> library to build the psych
-      extension, available since Ruby 1.9.2_rc2, in alternative to the
-      bundled syck-based parser.
     </flag>
     <flag name="rdoc">
       Install <pkg>dev-ruby/rdoc</pkg> after installing Ruby.
