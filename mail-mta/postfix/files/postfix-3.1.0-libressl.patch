@@ -1,0 +1,11 @@
+--- src/tls/tls.h.orig	2016-03-06 20:52:53.845055433 -0500
++++ src/tls/tls.h	2016-03-06 20:52:55.801030385 -0500
+@@ -89,7 +89,7 @@
+ #endif
+ 
+  /* Backwards compatibility with OpenSSL < 1.1.0 */
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L
++#ifndef OPENSSL_VERSION
+ #define OpenSSL_version_num SSLeay
+ #define OpenSSL_version SSLeay_version
+ #define OPENSSL_VERSION SSLEAY_VERSION
