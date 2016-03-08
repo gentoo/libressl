@@ -13,7 +13,7 @@ SRC_URI="http://pogostick.net/~pnh/ntpasswd/${PN}-source-${PV}.zip"
 LICENSE="GPL-2 LGPL-2.1"
 SLOT="0"
 KEYWORDS="~amd64 ~ppc ~x86"
-IUSE="static"
+IUSE="libressl static"
 
 RDEPEND="
 	!libressl? ( dev-libs/openssl:0 )
