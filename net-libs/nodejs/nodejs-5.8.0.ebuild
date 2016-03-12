@@ -16,17 +16,17 @@ SRC_URI="https://nodejs.org/dist/v${PV}/node-v${PV}.tar.xz"
 LICENSE="Apache-1.1 Apache-2.0 BSD BSD-2 MIT"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~x86 ~x64-macos"
-IUSE="cpu_flags_x86_sse2 debug doc icu +npm +snapshot +ssl test"
+IUSE="cpu_flags_x86_sse2 debug doc icu libressl +npm +snapshot +ssl test"
 
 RDEPEND="icu? ( >=dev-libs/icu-56:= )
 	npm? ( ${PYTHON_DEPS} )
-	>=net-libs/http-parser-2.6.1:=
+	>=net-libs/http-parser-2.6.2:=
 	>=dev-libs/libuv-1.8.0:=
-	>=dev-libs/openssl-1.0.2f:0=[-bindist]
+	!libressl? ( >=dev-libs/openssl-1.0.2g:0=[-bindist] )
+	libressl? ( dev-libs/libressl )
 	sys-libs/zlib"
 DEPEND="${RDEPEND}
 	${PYTHON_DEPS}
-	!!net-libs/iojs
 	test? ( net-misc/curl )"
 
 S="${WORKDIR}/node-v${PV}"
@@ -34,7 +34,6 @@ REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 
 PATCHES=(
 	"${FILESDIR}"/gentoo-global-npm-config.patch
-	"${FILESDIR}"/${P}-libressl.patch
 )
 
 pkg_pretend() {
@@ -49,6 +48,10 @@ src_prepare() {
 	tc-export CC CXX PKG_CONFIG
 	export V=1
 	export BUILDTYPE=Release
+
+	if use libressl; then
+		epatch "${FILESDIR}"/${PN}-5.7.1-libressl.patch
+	fi
 
 	# fix compilation on Darwin
 	# https://code.google.com/p/gyp/issues/detail?id=260
@@ -193,4 +196,10 @@ pkg_postinst() {
 	einfo "Protip: When using node-gyp to install native modules, you can"
 	einfo "avoid having to download extras by doing the following:"
 	einfo "$ node-gyp --nodedir /usr/include/node <command>"
+	if use libressl; then
+		ewarn
+		ewarn "You enabled libressl support. As such, you are missing the"
+		ewarn "getEphemeralKeyInfo and onCertCb JavaScript APIs."
+		ewarn "Some node packages may be broken."
+	fi
 }

@@ -1,6 +1,6 @@
-diff -Naur node-v5.6.0.orig/lib/_tls_wrap.js node-v5.6.0/lib/_tls_wrap.js
---- node-v5.6.0.orig/lib/_tls_wrap.js	2016-02-11 11:24:45.488429976 -0800
-+++ node-v5.6.0/lib/_tls_wrap.js	2016-02-11 12:31:05.287424256 -0800
+diff -Naur node-v5.7.1.orig/lib/_tls_wrap.js node-v5.7.1/lib/_tls_wrap.js
+--- node-v5.7.1.orig/lib/_tls_wrap.js	2016-03-02 14:20:54.000000000 -0800
++++ node-v5.7.1/lib/_tls_wrap.js	2016-03-09 12:41:27.567542510 -0800
 @@ -165,26 +165,31 @@
      if (err)
        return self.destroy(err);
@@ -51,7 +51,7 @@ diff -Naur node-v5.6.0.orig/lib/_tls_wrap.js node-v5.6.0/lib/_tls_wrap.js
      });
    });
  }
-@@ -410,18 +415,15 @@
+@@ -407,18 +412,15 @@
      ssl.onhandshakestart = () => onhandshakestart.call(this);
      ssl.onhandshakedone = () => onhandshakedone.call(this);
      ssl.onclienthello = (hello) => onclienthello.call(this, hello);
@@ -75,7 +75,7 @@ diff -Naur node-v5.6.0.orig/lib/_tls_wrap.js node-v5.6.0/lib/_tls_wrap.js
      }
    } else {
      ssl.onhandshakestart = function() {};
-@@ -463,7 +465,7 @@
+@@ -460,7 +462,7 @@
         options.server._contexts.length)) {
      assert(typeof options.SNICallback === 'function');
      this._SNICallback = options.SNICallback;
@@ -84,7 +84,7 @@ diff -Naur node-v5.6.0.orig/lib/_tls_wrap.js node-v5.6.0/lib/_tls_wrap.js
    }
  
    if (process.features.tls_npn && options.NPNProtocols)
-@@ -657,13 +659,6 @@
+@@ -654,13 +656,6 @@
    }
  };
  
@@ -95,10 +95,10 @@ diff -Naur node-v5.6.0.orig/lib/_tls_wrap.js node-v5.6.0/lib/_tls_wrap.js
 -  return null;
 -};
 -
- // TODO: support anonymous (nocert) and PSK
- 
- 
-@@ -1043,17 +1038,6 @@
+ TLSSocket.prototype.getProtocol = function() {
+   if (this._handle)
+     return this._handle.getProtocol();
+@@ -1047,17 +1042,6 @@
      socket._start();
  
    socket.on('secure', function() {
@@ -116,21 +116,21 @@ diff -Naur node-v5.6.0.orig/lib/_tls_wrap.js node-v5.6.0/lib/_tls_wrap.js
      var verifyError = socket._handle.verifyError();
  
      // Verify that server's identity matches it's certificate's names
-diff -Naur node-v5.6.0.orig/src/env.h node-v5.6.0/src/env.h
---- node-v5.6.0.orig/src/env.h	2016-02-11 11:24:45.498430061 -0800
-+++ node-v5.6.0/src/env.h	2016-02-11 11:24:56.714525041 -0800
-@@ -63,7 +63,6 @@
-   V(bytes_parsed_string, "bytesParsed")                                       \
+diff -Naur node-v5.7.1.orig/src/env.h node-v5.7.1/src/env.h
+--- node-v5.7.1.orig/src/env.h	2016-03-02 14:20:54.000000000 -0800
++++ node-v5.7.1/src/env.h	2016-03-09 12:38:59.042899553 -0800
+@@ -66,7 +66,6 @@
+   V(cached_data_rejected_string, "cachedDataRejected")                        \
    V(callback_string, "callback")                                              \
    V(change_string, "change")                                                  \
 -  V(oncertcb_string, "oncertcb")                                              \
    V(onclose_string, "_onclose")                                               \
    V(code_string, "code")                                                      \
    V(compare_string, "compare")                                                \
-diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
---- node-v5.6.0.orig/src/node_crypto.cc	2016-02-11 11:24:45.502430095 -0800
-+++ node-v5.6.0/src/node_crypto.cc	2016-02-11 11:26:48.916094983 -0800
-@@ -162,8 +162,6 @@
+diff -Naur node-v5.7.1.orig/src/node_crypto.cc node-v5.7.1/src/node_crypto.cc
+--- node-v5.7.1.orig/src/node_crypto.cc	2016-03-02 14:20:54.000000000 -0800
++++ node-v5.7.1/src/node_crypto.cc	2016-03-09 12:44:13.609732921 -0800
+@@ -164,8 +164,6 @@
  #endif
  
  template void SSLWrap<TLSWrap>::DestroySSL();
@@ -139,7 +139,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
  
  #ifdef TLSEXT_TYPE_application_layer_protocol_negotiation
  template int SSLWrap<TLSWrap>::SelectALPNCallback(
-@@ -526,8 +524,7 @@
+@@ -518,8 +516,7 @@
      for (int i = 0; i < sk_X509_num(extra_certs); i++) {
        X509* ca = sk_X509_value(extra_certs, i);
  
@@ -149,7 +149,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
  
        if (!r) {
          ret = 0;
-@@ -1056,7 +1053,7 @@
+@@ -1045,7 +1042,7 @@
  void SecureContext::SetFreeListLength(const FunctionCallbackInfo<Value>& args) {
    SecureContext* wrap = Unwrap<SecureContext>(args.Holder());
  
@@ -158,7 +158,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
  }
  
  
-@@ -1195,14 +1192,12 @@
+@@ -1182,14 +1179,12 @@
    env->SetProtoMethod(t, "verifyError", VerifyError);
    env->SetProtoMethod(t, "getCurrentCipher", GetCurrentCipher);
    env->SetProtoMethod(t, "endParser", EndParser);
@@ -170,10 +170,10 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
    env->SetProtoMethod(t, "setOCSPResponse", SetOCSPResponse);
    env->SetProtoMethod(t, "requestOCSP", RequestOCSP);
 -  env->SetProtoMethod(t, "getEphemeralKeyInfo", GetEphemeralKeyInfo);
+   env->SetProtoMethod(t, "getProtocol", GetProtocol);
  
  #ifdef SSL_set_max_send_fragment
-   env->SetProtoMethod(t, "setMaxSendFragment", SetMaxSendFragment);
-@@ -1816,50 +1811,6 @@
+@@ -1805,50 +1800,6 @@
  }
  
  
@@ -224,7 +224,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
  #ifdef SSL_set_max_send_fragment
  template <class Base>
  void SSLWrap<Base>::SetMaxSendFragment(
-@@ -2236,129 +2187,6 @@
+@@ -2234,129 +2185,6 @@
  
  
  template <class Base>
@@ -352,9 +352,9 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
 -
 -template <class Base>
  void SSLWrap<Base>::SSLGetter(Local<String> property,
-                         const PropertyCallbackInfo<Value>& info) {
-   HandleScope scope(info.GetIsolate());
-@@ -2391,10 +2219,6 @@
+                               const PropertyCallbackInfo<Value>& info) {
+   SSL* ssl = Unwrap<Base>(info.This())->ssl_;
+@@ -2387,10 +2215,6 @@
  
  template <class Base>
  int SSLWrap<Base>::SetCACerts(SecureContext* sc) {
@@ -365,7 +365,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
    STACK_OF(X509_NAME)* list = SSL_dup_CA_list(
        SSL_CTX_get_client_CA_list(sc->ctx_));
  
-@@ -2488,10 +2312,6 @@
+@@ -2484,10 +2308,6 @@
      DEBUG_PRINT("[%p] SSL: %s want read\n", ssl_, func);
      return 0;
  
@@ -376,7 +376,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
    } else if (err == SSL_ERROR_ZERO_RETURN) {
      HandleScope scope(ssl_env()->isolate());
  
-@@ -2672,7 +2492,7 @@
+@@ -2668,7 +2488,7 @@
    SSL* ssl = static_cast<SSL*>(
        X509_STORE_CTX_get_ex_data(ctx, SSL_get_ex_data_X509_STORE_CTX_idx()));
  
@@ -385,7 +385,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
      return 1;
  
    // Client needs to check if the server cert is listed in the
-@@ -2699,7 +2519,7 @@
+@@ -2695,7 +2515,7 @@
  
      // Call the SNI callback and use its return value as context
      if (!conn->sniObject_.IsEmpty()) {
@@ -394,7 +394,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
  
        Local<Object> sni_obj = PersistentToLocal(env->isolate(),
                                                  conn->sniObject_);
-@@ -2715,7 +2535,7 @@
+@@ -2711,7 +2531,7 @@
        Local<FunctionTemplate> secure_context_constructor_template =
            env->secure_context_constructor_template();
        if (secure_context_constructor_template->HasInstance(ret)) {
@@ -403,7 +403,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
          SecureContext* sc = Unwrap<SecureContext>(ret.As<Object>());
          conn->SetSNIContext(sc);
        } else {
-@@ -2753,8 +2573,6 @@
+@@ -2749,8 +2569,6 @@
  
    InitNPN(sc);
  
@@ -412,9 +412,9 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.cc node-v5.6.0/src/node_crypto.cc
  #ifdef SSL_CTRL_SET_TLSEXT_SERVERNAME_CB
    if (is_server) {
      SSL_CTX_set_tlsext_servername_callback(sc->ctx_, SelectSNIContextCallback_);
-diff -Naur node-v5.6.0.orig/src/node_crypto.h node-v5.6.0/src/node_crypto.h
---- node-v5.6.0.orig/src/node_crypto.h	2016-02-11 11:24:45.502430095 -0800
-+++ node-v5.6.0/src/node_crypto.h	2016-02-11 11:55:28.438786044 -0800
+diff -Naur node-v5.7.1.orig/src/node_crypto.h node-v5.7.1/src/node_crypto.h
+--- node-v5.7.1.orig/src/node_crypto.h	2016-03-02 14:20:54.000000000 -0800
++++ node-v5.7.1/src/node_crypto.h	2016-03-09 12:45:11.683121390 -0800
 @@ -177,10 +177,7 @@
          kind_(kind),
          next_sess_(nullptr),
@@ -463,10 +463,10 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.h node-v5.6.0/src/node_crypto.h
    static void RequestOCSP(const v8::FunctionCallbackInfo<v8::Value>& args);
 -  static void GetEphemeralKeyInfo(
 -      const v8::FunctionCallbackInfo<v8::Value>& args);
+   static void GetProtocol(const v8::FunctionCallbackInfo<v8::Value>& args);
  
  #ifdef SSL_set_max_send_fragment
-   static void SetMaxSendFragment(
-@@ -280,12 +267,10 @@
+@@ -281,12 +268,10 @@
                                  unsigned int inlen,
                                  void* arg);
    static int TLSExtStatusCallback(SSL* s, void* arg);
@@ -479,7 +479,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.h node-v5.6.0/src/node_crypto.h
    void SetSNIContext(SecureContext* sc);
    int SetCACerts(SecureContext* sc);
  
-@@ -300,21 +285,12 @@
+@@ -301,21 +286,12 @@
    bool session_callbacks_;
    bool new_session_wait_;
  
@@ -501,7 +501,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.h node-v5.6.0/src/node_crypto.h
    friend class SecureContext;
  };
  
-@@ -326,6 +302,7 @@
+@@ -327,6 +303,7 @@
    ~Connection() override {
  #ifdef SSL_CTRL_SET_TLSEXT_SERVERNAME_CB
      sniObject_.Reset();
@@ -509,7 +509,7 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.h node-v5.6.0/src/node_crypto.h
      servername_.Reset();
  #endif
    }
-@@ -340,6 +317,7 @@
+@@ -341,6 +318,7 @@
  
  #ifdef SSL_CTRL_SET_TLSEXT_SERVERNAME_CB
    v8::Persistent<v8::Object> sniObject_;
@@ -517,9 +517,9 @@ diff -Naur node-v5.6.0.orig/src/node_crypto.h node-v5.6.0/src/node_crypto.h
    v8::Persistent<v8::String> servername_;
  #endif
  
-diff -Naur node-v5.6.0.orig/src/tls_wrap.cc node-v5.6.0/src/tls_wrap.cc
---- node-v5.6.0.orig/src/tls_wrap.cc	2016-02-11 11:24:45.515430205 -0800
-+++ node-v5.6.0/src/tls_wrap.cc	2016-02-11 11:24:56.725525134 -0800
+diff -Naur node-v5.7.1.orig/src/tls_wrap.cc node-v5.7.1/src/tls_wrap.cc
+--- node-v5.7.1.orig/src/tls_wrap.cc	2016-03-02 14:20:54.000000000 -0800
++++ node-v5.7.1/src/tls_wrap.cc	2016-03-09 12:38:59.047899589 -0800
 @@ -141,8 +141,6 @@
  
    InitNPN(sc_);
@@ -572,9 +572,9 @@ diff -Naur node-v5.6.0.orig/src/tls_wrap.cc node-v5.6.0/src/tls_wrap.cc
  
    StreamBase::AddMethods<TLSWrap>(env, t, StreamBase::kFlagHasWritev);
    SSLWrap<TLSWrap>::AddMethods(env, t);
-diff -Naur node-v5.6.0.orig/src/tls_wrap.h node-v5.6.0/src/tls_wrap.h
---- node-v5.6.0.orig/src/tls_wrap.h	2016-02-11 11:24:45.515430205 -0800
-+++ node-v5.6.0/src/tls_wrap.h	2016-02-11 11:24:56.725525134 -0800
+diff -Naur node-v5.7.1.orig/src/tls_wrap.h node-v5.7.1/src/tls_wrap.h
+--- node-v5.7.1.orig/src/tls_wrap.h	2016-03-02 14:20:54.000000000 -0800
++++ node-v5.7.1/src/tls_wrap.h	2016-03-09 12:38:59.047899589 -0800
 @@ -132,7 +132,7 @@
    static void SetVerifyMode(const v8::FunctionCallbackInfo<v8::Value>& args);
    static void EnableSessionCallbacks(
@@ -595,9 +595,9 @@ diff -Naur node-v5.6.0.orig/src/tls_wrap.h node-v5.6.0/src/tls_wrap.h
  };
  
  }  // namespace node
-diff -Naur node-v5.6.0.orig/test/parallel/test-tls-client-getephemeralkeyinfo.js node-v5.6.0/test/parallel/test-tls-client-getephemeralkeyinfo.js
---- node-v5.6.0.orig/test/parallel/test-tls-client-getephemeralkeyinfo.js	2016-02-11 11:24:45.872433228 -0800
-+++ node-v5.6.0/test/parallel/test-tls-client-getephemeralkeyinfo.js	1969-12-31 16:00:00.000000000 -0800
+diff -Naur node-v5.7.1.orig/test/parallel/test-tls-client-getephemeralkeyinfo.js node-v5.7.1/test/parallel/test-tls-client-getephemeralkeyinfo.js
+--- node-v5.7.1.orig/test/parallel/test-tls-client-getephemeralkeyinfo.js	2016-03-02 14:20:55.000000000 -0800
++++ node-v5.7.1/test/parallel/test-tls-client-getephemeralkeyinfo.js	1969-12-31 16:00:00.000000000 -0800
 @@ -1,98 +0,0 @@
 -'use strict';
 -var common = require('../common');
@@ -697,9 +697,9 @@ diff -Naur node-v5.6.0.orig/test/parallel/test-tls-client-getephemeralkeyinfo.js
 -  assert.equal(ntests, nsuccess);
 -  assert.equal(ntests, 5);
 -});
-diff -Naur node-v5.6.0.orig/test/parallel/test-tls-cnnic-whitelist.js node-v5.6.0/test/parallel/test-tls-cnnic-whitelist.js
---- node-v5.6.0.orig/test/parallel/test-tls-cnnic-whitelist.js	2016-02-11 11:24:45.873433237 -0800
-+++ node-v5.6.0/test/parallel/test-tls-cnnic-whitelist.js	2016-02-11 11:24:56.727525151 -0800
+diff -Naur node-v5.7.1.orig/test/parallel/test-tls-cnnic-whitelist.js node-v5.7.1/test/parallel/test-tls-cnnic-whitelist.js
+--- node-v5.7.1.orig/test/parallel/test-tls-cnnic-whitelist.js	2016-03-02 14:20:55.000000000 -0800
++++ node-v5.7.1/test/parallel/test-tls-cnnic-whitelist.js	2016-03-09 12:38:59.048899596 -0800
 @@ -53,7 +53,9 @@
        port: common.PORT,
        rejectUnauthorized: true
@@ -711,73 +711,9 @@ diff -Naur node-v5.6.0.orig/test/parallel/test-tls-cnnic-whitelist.js node-v5.6.
    }
  ];
  
-diff -Naur node-v5.6.0.orig/test/parallel/test-tls-no-sslv3.js node-v5.6.0/test/parallel/test-tls-no-sslv3.js
---- node-v5.6.0.orig/test/parallel/test-tls-no-sslv3.js	2016-02-11 11:24:45.877433271 -0800
-+++ node-v5.6.0/test/parallel/test-tls-no-sslv3.js	1969-12-31 16:00:00.000000000 -0800
-@@ -1,60 +0,0 @@
--'use strict';
--var common = require('../common');
--var assert = require('assert');
--
--if (!common.hasCrypto) {
--  console.log('1..0 # Skipped: missing crypto');
--  return;
--}
--var tls = require('tls');
--
--var fs = require('fs');
--var spawn = require('child_process').spawn;
--
--if (common.opensslCli === false) {
--  console.log('1..0 # Skipped: node compiled without OpenSSL CLI.');
--  return;
--}
--
--var cert = fs.readFileSync(common.fixturesDir + '/test_cert.pem');
--var key = fs.readFileSync(common.fixturesDir + '/test_key.pem');
--var server = tls.createServer({ cert: cert, key: key }, common.fail);
--var errors = [];
--var stderr = '';
--
--server.listen(common.PORT, '127.0.0.1', function() {
--  var address = this.address().address + ':' + this.address().port;
--  var args = ['s_client',
--              '-no_ssl2',
--              '-ssl3',
--              '-no_tls1',
--              '-no_tls1_1',
--              '-no_tls1_2',
--              '-connect', address];
--
--  // for the performance and stability issue in s_client on Windows
--  if (common.isWindows)
--    args.push('-no_rand_screen');
--
--  var client = spawn(common.opensslCli, args, { stdio: 'pipe' });
--  client.stdout.pipe(process.stdout);
--  client.stderr.pipe(process.stderr);
--  client.stderr.setEncoding('utf8');
--  client.stderr.on('data', data => stderr += data);
--
--  client.once('exit', common.mustCall(function(exitCode) {
--    assert.equal(exitCode, 1);
--    server.close();
--  }));
--});
--
--server.on('clientError', err => errors.push(err));
--
--process.on('exit', function() {
--  if (/unknown option -ssl3/.test(stderr)) {
--    console.log('1..0 # Skipped: `openssl s_client -ssl3` not supported.');
--  } else {
--    assert.equal(errors.length, 1);
--    assert(/:wrong version number/.test(errors[0].message));
--  }
--});
-diff -Naur node-v5.6.0.orig/test/parallel/test-tls-sni-server-client.js node-v5.6.0/test/parallel/test-tls-sni-server-client.js
---- node-v5.6.0.orig/test/parallel/test-tls-sni-server-client.js	2016-02-11 11:24:45.880433296 -0800
-+++ node-v5.6.0/test/parallel/test-tls-sni-server-client.js	2016-02-11 11:24:56.728525159 -0800
+diff -Naur node-v5.7.1.orig/test/parallel/test-tls-sni-server-client.js node-v5.7.1/test/parallel/test-tls-sni-server-client.js
+--- node-v5.7.1.orig/test/parallel/test-tls-sni-server-client.js	2016-03-02 14:20:55.000000000 -0800
++++ node-v5.7.1/test/parallel/test-tls-sni-server-client.js	2016-03-09 12:39:14.677009247 -0800
 @@ -36,11 +36,6 @@
    'asterisk.test.com': {
      key: loadPEM('agent3-key'),
