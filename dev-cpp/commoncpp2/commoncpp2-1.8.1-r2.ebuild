@@ -1,4 +1,4 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
@@ -6,7 +6,7 @@ EAPI="5"
 
 inherit eutils autotools
 
-DESCRIPTION="C++ framework offering portable support for threading, sockets, file access, daemons, persistence, serial I/O, XML parsing, and system services"
+DESCRIPTION="C++ framework offering portable system programming"
 SRC_URI="mirror://gnu/commoncpp/${P}.tar.gz"
 HOMEPAGE="https://www.gnu.org/software/commoncpp/"
 LICENSE="GPL-2"
@@ -15,15 +15,17 @@ KEYWORDS="~amd64 ~ppc ~ppc64 ~x86"
 IUSE="debug doc examples gnutls ipv6 libressl ssl static-libs"
 REQUIRED_USE="gnutls? ( ssl )"
 
-RDEPEND="ssl? ( gnutls? ( dev-libs/libgcrypt:0
-				net-libs/gnutls )
-			!gnutls? (
-				!libressl? ( dev-libs/openssl:0 )
-				libressl? ( dev-libs/libressl )
-			)
+RDEPEND="
+	ssl? (
+		gnutls? ( dev-libs/libgcrypt:0 net-libs/gnutls )
+		!gnutls? (
+			!libressl? ( dev-libs/openssl:0 )
+			libressl? ( dev-libs/libressl )
 		)
-		sys-libs/zlib"
-DEPEND="doc? ( >=app-doc/doxygen-1.3.6 )
+	)
+	sys-libs/zlib"
+DEPEND="
+	doc? ( >=app-doc/doxygen-1.3.6 )
 	${RDEPEND}"
 
 src_prepare() {
