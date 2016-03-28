@@ -63,11 +63,11 @@ PDEPEND="
 	xemacs? ( app-xemacs/ruby-modes )"
 
 src_prepare() {
-	# Add LibreSSL Support
-	epatch "${FILESDIR}/ruby19-libressl"
-
 	EPATCH_FORCE="yes" EPATCH_SUFFIX="patch" \
 		epatch "${WORKDIR}/patches"
+
+	# Add LibreSSL Support
+	epatch "${FILESDIR}/${PN}-conditional-randegd.patch"
 
 	# We can no longer unbundle all of rake because rubygems now depends
 	# on this. We leave the actual rake code around to bootstrap

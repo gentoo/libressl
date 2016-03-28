@@ -1,6 +1,6 @@
-diff -Naurw ruby-2.2.3.orig/ext/openssl/extconf.rb ruby-2.2.3/ext/openssl/extconf.rb
---- ruby-2.2.3.orig/ext/openssl/extconf.rb	2013-10-27 23:32:24.000000000 -0700
-+++ ruby-2.2.3/ext/openssl/extconf.rb	2015-11-24 23:09:56.046766879 -0800
+diff -Naur ruby-2_0_0_648.orig/ext/openssl/extconf.rb ruby-2_0_0_648/ext/openssl/extconf.rb
+--- ruby-2_0_0_648.orig/ext/openssl/extconf.rb	2015-12-16 04:31:18.000000000 -0800
++++ ruby-2_0_0_648/ext/openssl/extconf.rb	2016-03-28 13:32:05.837065312 -0700
 @@ -103,6 +103,9 @@
  have_func("SSLv2_method")
  have_func("SSLv2_server_method")
@@ -11,10 +11,10 @@ diff -Naurw ruby-2.2.3.orig/ext/openssl/extconf.rb ruby-2.2.3/ext/openssl/extcon
  have_func("TLSv1_1_method")
  have_func("TLSv1_1_server_method")
  have_func("TLSv1_1_client_method")
-diff -Naurw ruby-2.2.3.orig/ext/openssl/ossl_ssl.c ruby-2.2.3/ext/openssl/ossl_ssl.c
---- ruby-2.2.3.orig/ext/openssl/ossl_ssl.c	2014-12-12 13:58:34.000000000 -0800
-+++ ruby-2.2.3/ext/openssl/ossl_ssl.c	2015-11-24 23:11:11.426769124 -0800
-@@ -138,9 +138,12 @@
+diff -Naur ruby-2_0_0_648.orig/ext/openssl/ossl_ssl.c ruby-2_0_0_648/ext/openssl/ossl_ssl.c
+--- ruby-2_0_0_648.orig/ext/openssl/ossl_ssl.c	2015-12-16 04:31:18.000000000 -0800
++++ ruby-2_0_0_648/ext/openssl/ossl_ssl.c	2016-03-28 13:32:05.839065329 -0700
+@@ -129,9 +129,12 @@
      OSSL_SSL_METHOD_ENTRY(SSLv2_server),
      OSSL_SSL_METHOD_ENTRY(SSLv2_client),
  #endif
