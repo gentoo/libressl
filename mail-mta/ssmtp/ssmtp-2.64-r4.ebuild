@@ -48,7 +48,10 @@ RDEPEND="${DEPEND}
 		!mail-mta/opensmtpd
 	)"
 
-REQUIRED_USE="gnutls? ( ssl )"
+REQUIRED_USE="
+	gnutls? ( ssl )
+	libressl? ( ssl )
+"
 
 pkg_setup() {
 	if ! use prefix; then
