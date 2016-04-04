@@ -43,7 +43,7 @@ DEPEND="${RDEPEND}
 
 DOCS=( AUTHORS.rst CONTRIBUTING.rst README.rst )
 
-PATCHES=( "${FILESDIR}/${P}-libressl.patch" )
+PATCHES=( "${FILESDIR}/${PN}-1.3-libressl.patch" )
 
 python_test() {
 	py.test -v -v -x || die "Tests fail with ${EPYTHON}"
