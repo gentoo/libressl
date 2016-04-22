@@ -1,0 +1,108 @@
+--- a/daemon/remote.c	2015-10-29 17:32:58.000000000 +0000
++++ b/daemon/remote.c	2015-12-31 11:09:50.433457006 +0000
+@@ -208,18 +208,22 @@
+ 		return NULL;
+ 	}
+ 	/* no SSLv2, SSLv3 because has defects */
++#ifndef OPENSSL_NO_SSL2
+ 	if((SSL_CTX_set_options(rc->ctx, SSL_OP_NO_SSLv2) & SSL_OP_NO_SSLv2)
+ 		!= SSL_OP_NO_SSLv2){
+ 		log_crypto_err("could not set SSL_OP_NO_SSLv2");
+ 		daemon_remote_delete(rc);
+ 		return NULL;
+ 	}
++#endif
++#ifndef OPENSSL_NO_SSL3
+ 	if((SSL_CTX_set_options(rc->ctx, SSL_OP_NO_SSLv3) & SSL_OP_NO_SSLv3)
+ 		!= SSL_OP_NO_SSLv3){
+ 		log_crypto_err("could not set SSL_OP_NO_SSLv3");
+ 		daemon_remote_delete(rc);
+ 		return NULL;
+ 	}
++#endif
+ 
+ 	if (cfg->remote_control_use_cert == 0) {
+ 		/* No certificates are requested */
+--- a/smallapp/unbound-control.c	2015-12-08 17:15:55.000000000 +0000
++++ b/smallapp/unbound-control.c	2015-12-31 11:14:04.887942219 +0000
+@@ -156,13 +156,17 @@
+         ctx = SSL_CTX_new(SSLv23_client_method());
+ 	if(!ctx)
+ 		ssl_err("could not allocate SSL_CTX pointer");
++#ifndef OPENSSL_NO_SSL2
+         if((SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2) & SSL_OP_NO_SSLv2)
+ 		!= SSL_OP_NO_SSLv2)
+ 		ssl_err("could not set SSL_OP_NO_SSLv2");
++#endif
+         if(cfg->remote_control_use_cert) {
++#ifndef OPENSSL_NO_SSL3
+ 		if((SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3) & SSL_OP_NO_SSLv3)
+ 			!= SSL_OP_NO_SSLv3)
+ 			ssl_err("could not set SSL_OP_NO_SSLv3");
++#endif
+ 		if(!SSL_CTX_use_certificate_chain_file(ctx,c_cert) ||
+ 		    !SSL_CTX_use_PrivateKey_file(ctx,c_key,SSL_FILETYPE_PEM)
+ 		    || !SSL_CTX_check_private_key(ctx))
+--- a/testcode/petal.c	2015-07-21 23:37:15.000000000 +0000
++++ b/testcode/petal.c	2015-12-31 11:16:42.451194022 +0000
+@@ -234,8 +234,12 @@
+ {
+ 	SSL_CTX* ctx = SSL_CTX_new(SSLv23_server_method());
+ 	if(!ctx) print_exit("out of memory");
++#ifndef OPENSSL_NO_SSL2
+ 	(void)SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2);
++#endif
++#ifndef OPENSSL_NO_SSL3
+ 	(void)SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3);
++#endif
+ 	if(!SSL_CTX_use_certificate_chain_file(ctx, cert))
+ 		print_exit("cannot read cert");
+ 	if(!SSL_CTX_use_PrivateKey_file(ctx, key, SSL_FILETYPE_PEM))
+--- a/util/net_help.c	2015-10-29 17:32:58.000000000 +0000
++++ b/util/net_help.c	2015-12-31 11:21:47.057925619 +0000
+@@ -619,18 +619,22 @@
+ 		return NULL;
+ 	}
+ 	/* no SSLv2, SSLv3 because has defects */
++#ifndef OPENSSL_NO_SSL2
+ 	if((SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2) & SSL_OP_NO_SSLv2)
+ 		!= SSL_OP_NO_SSLv2){
+ 		log_crypto_err("could not set SSL_OP_NO_SSLv2");
+ 		SSL_CTX_free(ctx);
+ 		return NULL;
+ 	}
++#endif
++#ifndef OPENSSL_NO_SSL3
+ 	if((SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3) & SSL_OP_NO_SSLv3)
+ 		!= SSL_OP_NO_SSLv3){
+ 		log_crypto_err("could not set SSL_OP_NO_SSLv3");
+ 		SSL_CTX_free(ctx);
+ 		return NULL;
+ 	}
++#endif
+ 	if(!SSL_CTX_use_certificate_chain_file(ctx, pem)) {
+ 		log_err("error for cert file: %s", pem);
+ 		log_crypto_err("error in SSL_CTX use_certificate_chain_file");
+@@ -692,18 +696,22 @@
+ 		log_crypto_err("could not allocate SSL_CTX pointer");
+ 		return NULL;
+ 	}
++#ifndef OPENSSL_NO_SSL2
+ 	if((SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv2) & SSL_OP_NO_SSLv2)
+ 		!= SSL_OP_NO_SSLv2) {
+ 		log_crypto_err("could not set SSL_OP_NO_SSLv2");
+ 		SSL_CTX_free(ctx);
+ 		return NULL;
+ 	}
++#endif
++#ifndef OPENSSL_NO_SSL3
+ 	if((SSL_CTX_set_options(ctx, SSL_OP_NO_SSLv3) & SSL_OP_NO_SSLv3)
+ 		!= SSL_OP_NO_SSLv3) {
+ 		log_crypto_err("could not set SSL_OP_NO_SSLv3");
+ 		SSL_CTX_free(ctx);
+ 		return NULL;
+ 	}
++#endif
+ 	if(key && key[0]) {
+ 		if(!SSL_CTX_use_certificate_chain_file(ctx, pem)) {
+ 			log_err("error in client certificate %s", pem);
