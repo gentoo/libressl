@@ -12,7 +12,7 @@ if [[ ${QT5_BUILD_TYPE} == release ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~ppc ~ppc64 ~x86"
 fi
 
-IUSE="bindist connman libproxy networkmanager +ssl libressl"
+IUSE="bindist connman libproxy libressl networkmanager +ssl"
 
 DEPEND="
 	~dev-qt/qtcore-${PV}
@@ -20,8 +20,10 @@ DEPEND="
 	connman? ( ~dev-qt/qtdbus-${PV} )
 	libproxy? ( net-libs/libproxy )
 	networkmanager? ( ~dev-qt/qtdbus-${PV} )
-	ssl? ( !libressl? ( dev-libs/openssl:0[bindist=] )
-	       libressl? ( dev-libs/libressl:0 ) )
+	ssl? (
+		!libressl? ( dev-libs/openssl:0=[bindist=] )
+		libressl? ( dev-libs/libressl:0= )
+	)
 "
 RDEPEND="${DEPEND}
 	connman? ( net-misc/connman )
@@ -32,7 +34,6 @@ PATCHES=(
 #	"${FILESDIR}/${PN}-5.5-socklen_t.patch" # bug 554556
 	"${FILESDIR}/0001-Fix-compilation-with-libressl.patch" # 562050
 )
-
 
 QT5_TARGET_SUBDIRS=(
 	src/network
