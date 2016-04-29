@@ -43,7 +43,6 @@ S="${WORKDIR}/${MY_P}"
 RESTRICT="test"
 
 PATCHES=(
-    "${FILESDIR}/${PN}-1.56.0-no-ssl3.patch"
 	"${FILESDIR}/${PN}-1.51.0-respect_python-buildid.patch"
 	"${FILESDIR}/${PN}-1.51.0-support_dots_in_python-buildid.patch"
 	"${FILESDIR}/${PN}-1.48.0-no_strict_aliasing_python2.patch"
