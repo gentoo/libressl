@@ -36,6 +36,10 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-1.7.3.0-filan-build.patch
 	epatch "${FILESDIR}"/${PN}-1.7.3.1-stddef_h.patch
 	use libressl && epatch "${FILESDIR}"/0001-remove-openssl-comp.patch
+
+	# Fix for LibreSSL >= 2.3.0
+	epatch "${FILESDIR}"/${PN}-1.7.3.1-no-ssl3.patch
+
 	epatch_user
 	eautoreconf
 }

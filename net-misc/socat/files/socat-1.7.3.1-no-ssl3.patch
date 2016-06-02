@@ -1,0 +1,70 @@
+diff --git a/sslcls.c.orig b/sslcls.c
+index 6ddc077..cc07220 100644
+--- a/sslcls.c.orig
++++ b/sslcls.c
+@@ -55,6 +55,7 @@ const SSL_METHOD *sycSSLv2_server_method(void) {
+ }
+ #endif
+ 
++#if HAVE_SSLv3_client_method
+ const SSL_METHOD *sycSSLv3_client_method(void) {
+    const SSL_METHOD *result;
+    Debug("SSLv3_client_method()");
+@@ -62,7 +63,9 @@ const SSL_METHOD *sycSSLv3_client_method(void) {
+    Debug1("SSLv3_client_method() -> %p", result);
+    return result;
+ }
++#endif
+ 
++#if HAVE_SSLv3_server_method
+ const SSL_METHOD *sycSSLv3_server_method(void) {
+    const SSL_METHOD *result;
+    Debug("SSLv3_server_method()");
+@@ -70,7 +73,9 @@ const SSL_METHOD *sycSSLv3_server_method(void) {
+    Debug1("SSLv3_server_method() -> %p", result);
+    return result;
+ }
++#endif
+ 
++#if HAVE_SSLv23_client_method
+ const SSL_METHOD *sycSSLv23_client_method(void) {
+    const SSL_METHOD *result;
+    Debug("SSLv23_client_method()");
+@@ -78,7 +83,9 @@ const SSL_METHOD *sycSSLv23_client_method(void) {
+    Debug1("SSLv23_client_method() -> %p", result);
+    return result;
+ }
++#endif
+ 
++#if HAVE_SSLv23_server_method
+ const SSL_METHOD *sycSSLv23_server_method(void) {
+    const SSL_METHOD *result;
+    Debug("SSLv23_server_method()");
+@@ -86,7 +93,9 @@ const SSL_METHOD *sycSSLv23_server_method(void) {
+    Debug1("SSLv23_server_method() -> %p", result);
+    return result;
+ }
++#endif
+ 
++#if HAVE_TLSv1_client_method
+ const SSL_METHOD *sycTLSv1_client_method(void) {
+    const SSL_METHOD *result;
+    Debug("TLSv1_client_method()");
+@@ -94,7 +103,9 @@ const SSL_METHOD *sycTLSv1_client_method(void) {
+    Debug1("TLSv1_client_method() -> %p", result);
+    return result;
+ }
++#endif
+ 
++#if HAVE_TLSv1_server_method
+ const SSL_METHOD *sycTLSv1_server_method(void) {
+    const SSL_METHOD *result;
+    Debug("TLSv1_server_method()");
+@@ -102,6 +113,7 @@ const SSL_METHOD *sycTLSv1_server_method(void) {
+    Debug1("TLSv1_server_method() -> %p", result);
+    return result;
+ }
++#endif
+ 
+ #if HAVE_TLSv1_1_client_method
+ const SSL_METHOD *sycTLSv1_1_client_method(void) {
