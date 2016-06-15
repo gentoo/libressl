@@ -12,7 +12,7 @@ if [[ ${QT5_BUILD_TYPE} == release ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~ppc ~ppc64 ~x86"
 fi
 
-IUSE="bindist connman libproxy networkmanager +ssl"
+IUSE="bindist connman libproxy networkmanager +ssl libressl"
 
 DEPEND="
 	~dev-qt/qtcore-${PV}
