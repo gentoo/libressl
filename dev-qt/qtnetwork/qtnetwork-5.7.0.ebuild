@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
-EAPI=5
+EAPI=6
 QT5_MODULE="qtbase"
 inherit qt5-build
 
@@ -31,8 +31,7 @@ RDEPEND="${DEPEND}
 "
 
 PATCHES=(
-#	"${FILESDIR}/${PN}-5.5-socklen_t.patch" # bug 554556
-	"${FILESDIR}/0001-Fix-compilation-with-libressl.patch" # 562050
+	"${FILESDIR}/${P}-libressl.patch" # bug 562050
 )
 
 QT5_TARGET_SUBDIRS=(
@@ -56,7 +55,7 @@ src_configure() {
 	local myconf=(
 		$(use connman || use networkmanager && echo -dbus-linked)
 		$(qt_use libproxy)
-		$(use ssl && echo -openssl-linked)
+		$(usex ssl -openssl-linked '')
 	)
 	qt5-build_src_configure
 }
