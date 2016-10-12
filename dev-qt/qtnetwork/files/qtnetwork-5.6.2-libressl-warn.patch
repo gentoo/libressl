@@ -1,0 +1,12 @@
+diff -Naur qtbase-opensource-src-5.6.2.orig/config.tests/unix/openssl/openssl.cpp qtbase-opensource-src-5.6.2/config.tests/unix/openssl/openssl.cpp
+--- qtbase-opensource-src-5.6.2.orig/config.tests/unix/openssl/openssl.cpp	2016-10-12 10:59:49.797703074 -0700
++++ qtbase-opensource-src-5.6.2/config.tests/unix/openssl/openssl.cpp	2016-10-12 11:01:51.944406142 -0700
+@@ -40,7 +40,7 @@
+ #include <openssl/ssl.h>
+ 
+ #if OPENSSL_VERSION_NUMBER-0 >= 0x10002000L && !defined(OPENSSL_NO_EC) && !defined(SSL_CTRL_SET_CURVES)
+-#  error "OpenSSL was reported as >= 1.0.2 but is missing required features, possibly it's libressl which is unsupported"
++#  warning "OpenSSL was reported as >= 1.0.2 but is missing required features, possibly it's libressl which is unsupported"
+ #endif
+ 
+ int main()
