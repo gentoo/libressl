@@ -1,11 +1,11 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
 EAPI="5"
-PYTHON_COMPAT=( python{2_7,3_4,3_5} )
+PYTHON_COMPAT=( python{2_7,3_4} )
 
-inherit eutils flag-o-matic multiprocessing python-r1 toolchain-funcs versionator multilib-minimal
+inherit eutils flag-o-matic multilib multiprocessing python-r1 toolchain-funcs versionator multilib-minimal
 
 MY_P="${PN}_$(replace_all_version_separators _)"
 MAJOR_V="$(get_version_component_range 1-2)"
@@ -16,11 +16,12 @@ SRC_URI="mirror://sourceforge/boost/${MY_P}.tar.bz2"
 
 LICENSE="Boost-1.0"
 SLOT="0/${PV}" # ${PV} instead ${MAJOR_V} due to bug 486122
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~sparc64-solaris ~x86-solaris ~x86-winnt"
+KEYWORDS="alpha amd64 arm ~arm64 hppa ia64 ~mips ppc ppc64 ~s390 ~sh sparc x86 ~ppc-aix ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~sparc64-solaris ~x86-solaris ~x86-winnt"
 
 IUSE="context debug doc icu +nls mpi python static-libs +threads tools"
 
-RDEPEND="icu? ( >=dev-libs/icu-3.6:=[${MULTILIB_USEDEP}] )
+RDEPEND="abi_x86_32? ( !app-emulation/emul-linux-x86-cpplibs[-abi_x86_32(-)] )
+	icu? ( >=dev-libs/icu-3.6:=[${MULTILIB_USEDEP}] )
 	!icu? ( virtual/libiconv[${MULTILIB_USEDEP}] )
 	mpi? ( virtual/mpi[cxx,threads] )
 	python? ( ${PYTHON_DEPS} )
@@ -41,19 +42,6 @@ S="${WORKDIR}/${MY_P}"
 # (failing for no good reason) or completely useless (never failing)
 # there is no point in having them in the ebuild to begin with.
 RESTRICT="test"
-
-PATCHES=(
-	"${FILESDIR}/${PN}-1.51.0-respect_python-buildid.patch"
-	"${FILESDIR}/${PN}-1.51.0-support_dots_in_python-buildid.patch"
-	"${FILESDIR}/${PN}-1.48.0-no_strict_aliasing_python2.patch"
-	"${FILESDIR}/${PN}-1.48.0-disable_libboost_python3.patch"
-	"${FILESDIR}/${PN}-1.48.0-python_linking.patch"
-	"${FILESDIR}/${PN}-1.48.0-disable_icu_rpath.patch"
-	"${FILESDIR}/${PN}-1.55.0-context-x32.patch"
-	"${FILESDIR}/${PN}-1.56.0-build-auto_index-tool.patch"
-	"${FILESDIR}/${PN}-1.60.0-deprecated-header-ice_not.patch"
-	"${FILESDIR}/${PN}-1.60.0-auto-pointer-python.patch"
-)
 
 python_bindings_needed() {
 	multilib_is_native_abi && use python
@@ -124,11 +112,26 @@ pkg_setup() {
 }
 
 src_prepare() {
-	default
+	epatch \
+		"${FILESDIR}/${PN}-1.56.0-no-ssl3.patch" \
+		"${FILESDIR}/${PN}-1.51.0-respect_python-buildid.patch" \
+		"${FILESDIR}/${PN}-1.51.0-support_dots_in_python-buildid.patch" \
+		"${FILESDIR}/${PN}-1.48.0-no_strict_aliasing_python2.patch" \
+		"${FILESDIR}/${PN}-1.48.0-disable_libboost_python3.patch" \
+		"${FILESDIR}/${PN}-1.48.0-python_linking.patch" \
+		"${FILESDIR}/${PN}-1.48.0-disable_icu_rpath.patch" \
+		"${FILESDIR}/${PN}-1.55.0-context-x32.patch" \
+		"${FILESDIR}/${PN}-1.55.0-tools-c98-compat.patch" \
+		"${FILESDIR}/${PN}-1.52.0-threads.patch" \
+		"${FILESDIR}/${PN}-1.56.0-build-auto_index-tool.patch" \
+		"${FILESDIR}/${PN}-1.55.0-variadic-templates.patch" \
+		"${FILESDIR}/${PN}-1.56.0-atomic.patch"
 
 	# Do not try to build missing 'wave' tool, bug #522682
 	# Upstream bugreport - https://svn.boost.org/trac/boost/ticket/10507
 	sed -i -e 's:wave/build//wave::' tools/Jamfile.v2 || die
+
+	epatch_user
 
 	multilib_copy_sources
 }
@@ -172,10 +175,10 @@ src_configure() {
 	use icu || OPTIONS+=" --disable-icu boost.locale.icu=off"
 	mpi_needed || OPTIONS+=" --without-mpi"
 	use nls || OPTIONS+=" --without-locale"
-	use context || OPTIONS+=" --without-context --without-coroutine --without-coroutine2"
+	use context || OPTIONS+=" --without-context --without-coroutine"
 
 	OPTIONS+=" pch=off"
-	OPTIONS+=" --boost-build=\"${EPREFIX}\"/usr/share/boost-build --prefix=\"${ED}usr\""
+	OPTIONS+=" --boost-build=${EPREFIX}/usr/share/boost-build --prefix=\"${ED}usr\""
 	OPTIONS+=" --layout=system"
 	OPTIONS+=" threading=$(usex threads multi single) link=$(usex static-libs shared,static shared)"
 
@@ -262,20 +265,23 @@ multilib_src_install_all() {
 
 	if ! use context; then
 		rm -r "${ED}"/usr/include/boost/context || die
-		rm -r "${ED}"/usr/include/boost/coroutine{,2} || die
-		rm "${ED}"/usr/include/boost/asio/spawn.hpp || die
+		rm -r "${ED}"/usr/include/boost/coroutine || die
 	fi
 
 	if use doc; then
 		find libs/*/* -iname "test" -or -iname "src" | xargs rm -rf
-		find doc -name Jamfile.v2 -or -name build -or -name *.manifest | xargs rm -f
-		find tools -name Jamfile.v2 -or -name src -or -name *.cpp -or -name *.hpp | xargs rm -rf
-		docinto html
-		dodoc *.{htm,html,png,css}
-		dodoc -r doc libs more tools
+		dohtml \
+			-A pdf,txt,cpp,hpp \
+			*.{htm,html,png,css} \
+			-r doc
+		dohtml -A pdf,txt -r tools
+		insinto /usr/share/doc/${PF}/html
+		doins -r libs
+		doins -r more
 
 		# To avoid broken links
-		dodoc LICENSE_1_0.txt
+		insinto /usr/share/doc/${PF}/html
+		doins LICENSE_1_0.txt
 
 		dosym /usr/include/boost /usr/share/doc/${PF}/html/boost
 	fi
