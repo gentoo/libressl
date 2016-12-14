@@ -2,14 +2,14 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Id$
 
-EAPI=5
+EAPI=6
 QT5_MODULE="qtbase"
 inherit qt5-build
 
 DESCRIPTION="Network abstraction library for the Qt5 framework"
 
 if [[ ${QT5_BUILD_TYPE} == release ]]; then
-	KEYWORDS="amd64 arm ~arm64 hppa ppc ppc64 x86"
+	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~ppc ~ppc64 ~x86"
 fi
 
 IUSE="bindist connman libproxy libressl networkmanager +ssl"
@@ -20,8 +20,10 @@ DEPEND="
 	connman? ( ~dev-qt/qtdbus-${PV} )
 	libproxy? ( net-libs/libproxy )
 	networkmanager? ( ~dev-qt/qtdbus-${PV} )
-	ssl? ( !libressl? ( dev-libs/openssl:0[bindist=] )
-	       libressl?  ( dev-libs/libressl ) )
+	ssl? (
+		!libressl? ( dev-libs/openssl:0=[bindist=] )
+		libressl? ( dev-libs/libressl:0= )
+	)
 "
 RDEPEND="${DEPEND}
 	connman? ( net-misc/connman )
@@ -29,8 +31,8 @@ RDEPEND="${DEPEND}
 "
 
 PATCHES=(
-	"${FILESDIR}/${PN}-5.5-socklen_t.patch" # bug 554556
-	"${FILESDIR}/0001-Fix-compilation-with-libressl.patch" # 562050
+	"${FILESDIR}/${PN}-5.7.0-libressl.patch" # bug 562050
+	"${FILESDIR}/${PN}-5.6.2-libressl-warn.patch"
 )
 
 QT5_TARGET_SUBDIRS=(
@@ -54,7 +56,7 @@ src_configure() {
 	local myconf=(
 		$(use connman || use networkmanager && echo -dbus-linked)
 		$(qt_use libproxy)
-		$(use ssl && echo -openssl-linked)
+		$(usex ssl -openssl-linked '')
 	)
 	qt5-build_src_configure
 }
