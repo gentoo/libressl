@@ -1,6 +1,6 @@
 diff -Naur qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslcontext_openssl.cpp qtbase-opensource-src-5.7.1/src/network/ssl/qsslcontext_openssl.cpp
---- qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslcontext_openssl.cpp	2017-02-05 11:52:45.100394264 -0800
-+++ qtbase-opensource-src-5.7.1/src/network/ssl/qsslcontext_openssl.cpp	2017-02-05 11:57:21.159178021 -0800
+--- qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslcontext_openssl.cpp	2017-02-05 12:14:22.961487032 -0800
++++ qtbase-opensource-src-5.7.1/src/network/ssl/qsslcontext_openssl.cpp	2017-02-05 12:15:16.772029960 -0800
 @@ -71,6 +71,15 @@
      return dh;
  }
@@ -32,7 +32,7 @@ diff -Naur qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslcontext_openssl.
 -                                qcurves.size(),
 -                                const_cast<int *>(reinterpret_cast<const int *>(qcurves.data())))) {
 +        if (q_enableECSetCurves()) {
-+            if (!q_SSL_CTX_set1_groups(sslContext->ctx,
++            if (!q_SSL_CTX_set1_curves(sslContext->ctx,
 +                                       reinterpret_cast<const int *>(qcurves.data()),
 +                                       qcurves.size())) {
                  sslContext->errorStr = msgErrorSettingEllipticCurves(QSslSocketBackendPrivate::getErrorsFromOpenSsl());
@@ -49,8 +49,8 @@ diff -Naur qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslcontext_openssl.
          }
      }
 diff -Naur qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl.cpp qtbase-opensource-src-5.7.1/src/network/ssl/qsslsocket_openssl.cpp
---- qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl.cpp	2017-02-05 11:52:45.098394244 -0800
-+++ qtbase-opensource-src-5.7.1/src/network/ssl/qsslsocket_openssl.cpp	2017-02-05 11:52:58.870533121 -0800
+--- qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl.cpp	2017-02-05 12:14:22.959487012 -0800
++++ qtbase-opensource-src-5.7.1/src/network/ssl/qsslsocket_openssl.cpp	2017-02-05 12:15:00.140862158 -0800
 @@ -98,6 +98,14 @@
  int QSslSocketBackendPrivate::s_indexForSSLExtraData = -1;
  #endif
@@ -84,25 +84,30 @@ diff -Naur qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl.c
      connectionEncrypted = true;
      emit q->encrypted();
 diff -Naur qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl_symbols.cpp qtbase-opensource-src-5.7.1/src/network/ssl/qsslsocket_openssl_symbols.cpp
---- qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl_symbols.cpp	2017-02-05 11:52:45.102394284 -0800
-+++ qtbase-opensource-src-5.7.1/src/network/ssl/qsslsocket_openssl_symbols.cpp	2017-02-05 11:56:53.848902627 -0800
-@@ -247,6 +247,7 @@
+--- qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl_symbols.cpp	2017-02-05 12:14:22.964487063 -0800
++++ qtbase-opensource-src-5.7.1/src/network/ssl/qsslsocket_openssl_symbols.cpp	2017-02-05 12:23:00.659626640 -0800
+@@ -247,6 +247,9 @@
  DEFINEFUNC(int, SSL_connect, SSL *a, a, return -1, return)
  DEFINEFUNC(int, SSL_CTX_check_private_key, const SSL_CTX *a, a, return -1, return)
  DEFINEFUNC4(long, SSL_CTX_ctrl, SSL_CTX *a, a, int b, b, long c, c, void *d, d, return -1, return)
++#if defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER >= 0x2050100fL
 +DEFINEFUNC3(int, SSL_CTX_set1_groups, SSL_CTX *a, a, const int* b, b, size_t c, c, return 0, return)
++#endif
  DEFINEFUNC(void, SSL_CTX_free, SSL_CTX *a, a, return, DUMMYARG)
  #if OPENSSL_VERSION_NUMBER >= 0x10000000L
  DEFINEFUNC(SSL_CTX *, SSL_CTX_new, const SSL_METHOD *a, a, return 0, return)
-@@ -846,6 +847,7 @@
+@@ -846,6 +849,10 @@
      RESOLVEFUNC(SSL_CIPHER_get_bits)
      RESOLVEFUNC(SSL_CTX_check_private_key)
      RESOLVEFUNC(SSL_CTX_ctrl)
-+    RESOLVEFUNC(SSL_CTX_set1_groups)
++#ifdef LIBRESSL_VERSION_NUMBER
++    if (q_LibreSSL_version() >= 0x2050100fL)
++        RESOLVEFUNC(SSL_CTX_set1_groups)
++#endif
      RESOLVEFUNC(SSL_CTX_free)
      RESOLVEFUNC(SSL_CTX_new)
      RESOLVEFUNC(SSL_CTX_set_cipher_list)
-@@ -1006,6 +1008,20 @@
+@@ -1006,6 +1012,20 @@
  #endif
      return true;
  }
@@ -124,8 +129,8 @@ diff -Naur qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl_s
  
  //==============================================================================
 diff -Naur qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl_symbols_p.h qtbase-opensource-src-5.7.1/src/network/ssl/qsslsocket_openssl_symbols_p.h
---- qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl_symbols_p.h	2017-02-05 11:52:45.100394264 -0800
-+++ qtbase-opensource-src-5.7.1/src/network/ssl/qsslsocket_openssl_symbols_p.h	2017-02-05 11:52:58.871533131 -0800
+--- qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl_symbols_p.h	2017-02-05 12:14:22.962487042 -0800
++++ qtbase-opensource-src-5.7.1/src/network/ssl/qsslsocket_openssl_symbols_p.h	2017-02-05 12:21:31.253743268 -0800
 @@ -215,6 +215,8 @@
  #endif // !defined QT_LINKED_OPENSSL
  
@@ -135,15 +140,21 @@ diff -Naur qtbase-opensource-src-5.7.1.orig/src/network/ssl/qsslsocket_openssl_s
  long q_ASN1_INTEGER_get(ASN1_INTEGER *a);
  unsigned char * q_ASN1_STRING_data(ASN1_STRING *a);
  int q_ASN1_STRING_length(ASN1_STRING *a);
-@@ -327,6 +329,7 @@
+@@ -327,6 +329,13 @@
  int q_SSL_connect(SSL *a);
  int q_SSL_CTX_check_private_key(const SSL_CTX *a);
  long q_SSL_CTX_ctrl(SSL_CTX *a, int b, long c, void *d);
++#if defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER >= 0x2050100fL
 +int q_SSL_CTX_set1_groups(SSL_CTX *a, const int* b, size_t c);
++# define q_SSL_CTX_set1_curves q_SSL_CTX_set1_groups
++#elif !defined(LIBRESSL_VERSION_NUMBER)
++# define SSL_CTX_set1_curves(ctx, clist, clistlen) \
++        SSL_CTX_ctrl(ctx,SSL_CTRL_SET_CURVES,clistlen,(char *)clist)
++#endif
  void q_SSL_CTX_free(SSL_CTX *a);
  #if OPENSSL_VERSION_NUMBER >= 0x10000000L
  SSL_CTX *q_SSL_CTX_new(const SSL_METHOD *a);
-@@ -489,9 +492,9 @@
+@@ -489,9 +498,9 @@
  int q_EC_curve_nist2nid(const char *name);
  #endif // OPENSSL_VERSION_NUMBER >= 0x10002000L
  #endif // OPENSSL_NO_EC
