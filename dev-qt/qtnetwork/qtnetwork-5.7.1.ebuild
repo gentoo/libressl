@@ -31,7 +31,7 @@ RDEPEND="${DEPEND}
 "
 
 PATCHES=(
-	"${FILESDIR}/${PN}-5.7.0-libressl.patch" # bug 562050
+	"${FILESDIR}/${PN}-5.7.1-libressl.patch" # bug 562050
 	"${FILESDIR}/${PN}-5.6.2-libressl-warn.patch"
 )
 
