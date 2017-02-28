@@ -87,7 +87,9 @@ src_install() {
 
 	newinitd "${FILESDIR}"/fetchmail.initd fetchmail
 	newconfd "${FILESDIR}"/fetchmail.confd fetchmail
-	systemd_dounit "${FILESDIR}"/${PN}.service
+
+	systemd_dounit  "${FILESDIR}"/${PN}.service
+	systemd_newunit "${FILESDIR}"/${PN}_at.service "${PN}@.service"
 	systemd_dotmpfilesd "${FILESDIR}"/${PN}.conf
 
 	docinto contrib
