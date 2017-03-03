@@ -26,9 +26,9 @@ DEPEND="${RDEPEND}
 	dev-lang/go:=
 	sasl? ( dev-libs/cyrus-sasl )
 	ssl? (
-	  !libressl? ( dev-libs/openssl:0= )
-	  libressl? ( dev-libs/libressl:0= )
-  )
+		!libressl? ( dev-libs/openssl:0= )
+		libressl? ( dev-libs/libressl:0= )
+	)
 "
 
 S=${WORKDIR}/${MY_P}
