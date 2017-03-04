@@ -3,14 +3,14 @@
 
 EAPI=6
 
-inherit autotools
+inherit autotools eutils
 
 DESCRIPTION="C++ library offering portable support for system-related services"
 SRC_URI="mirror://gnu/commoncpp/${P}.tar.gz"
 HOMEPAGE="https://www.gnu.org/software/commoncpp/"
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="amd64 ppc ppc64 x86"
+KEYWORDS="~amd64 ~ppc ~ppc64 ~x86"
 IUSE="debug doc examples ipv6 gnutls libressl ssl static-libs"
 
 RDEPEND="
@@ -28,6 +28,8 @@ RDEPEND="
 DEPEND="${RDEPEND}
 	doc? ( >=app-doc/doxygen-1.3.6 )"
 
+HTML_DOCS=()
+
 PATCHES=(
 	"${FILESDIR}/1.8.1-no-ssl3.patch"
 	"${FILESDIR}/1.8.1-configure_detect_netfilter.patch"
@@ -37,7 +39,12 @@ PATCHES=(
 	"${FILESDIR}/1.8.1-parallel-build.patch"
 	"${FILESDIR}/1.8.1-libgcrypt.patch"
 	"${FILESDIR}/1.8.1-fix-c++14.patch"
+	"${FILESDIR}/1.8.1-gnutls-3.4.patch"
 )
+
+pkg_setup() {
+	use doc && HTML_DOCS+=( doc/html/. )
+}
 
 src_prepare() {
 	default
@@ -56,10 +63,9 @@ src_configure() {
 }
 
 src_install () {
-	# Only install html docs
-	# man and latex available, but seems a little wasteful
-	use doc && HTML_DOCS=( doc/html/. )
 	default
+	prune_libtool_files
+
 	dodoc COPYING.addendum
 
 	if use examples; then
@@ -67,7 +73,4 @@ src_install () {
 		dodoc demo/{*.cpp,*.h,*.xml,README}
 		docompress -x /usr/share/doc/${PF}/examples
 	fi
-
-	# package provides .pc files
-	find "${D}" -name '*.la' -delete || die
 }
