@@ -63,9 +63,9 @@ fi
 # foo is added to IUSE.
 FFMPEG_FLAG_MAP=(
 		+bzip2:bzlib cpudetection:runtime-cpudetect debug gcrypt gnutls gmp
-		+gpl +hardcoded-tables +iconv lzma +network openssl +postproc
-		samba:libsmbclient sdl:ffplay sdl:sdl2 vaapi vdpau X:xlib xcb:libxcb
-		xcb:libxcb-shm xcb:libxcb-xfixes +zlib
+		+gpl +hardcoded-tables +iconv lzma +network +postproc
+		samba:libsmbclient sdl:ffplay sdl:sdl2 ssl vaapi vdpau X:xlib
+		xcb:libxcb xcb:libxcb-shm xcb:libxcb-xfixes +zlib
 		# libavdevice options
 		cdio:libcdio iec61883:libiec61883 ieee1394:libdc1394 libcaca openal
 		opengl
@@ -155,7 +155,7 @@ IUSE="${IUSE} ${FFTOOLS[@]/#/+fftools_}"
 RDEPEND="
 	alsa? ( >=media-libs/alsa-lib-1.0.27.2[${MULTILIB_USEDEP}] )
 	amr? ( >=media-libs/opencore-amr-0.1.3-r1[${MULTILIB_USEDEP}] )
-	bluray? ( >=media-libs/libbluray-0.3.0-r1[${MULTILIB_USEDEP}] )
+	bluray? ( >=media-libs/libbluray-0.3.0-r1:=[${MULTILIB_USEDEP}] )
 	bs2b? ( >=media-libs/libbs2b-3.1.0-r1[${MULTILIB_USEDEP}] )
 	bzip2? ( >=app-arch/bzip2-1.0.6-r4[${MULTILIB_USEDEP}] )
 	cdio? ( >=dev-libs/libcdio-paranoia-0.90_p1-r1[${MULTILIB_USEDEP}] )
@@ -212,7 +212,7 @@ RDEPEND="
 	modplug? ( >=media-libs/libmodplug-0.8.8.4-r1[${MULTILIB_USEDEP}] )
 	openal? ( >=media-libs/openal-1.15.1[${MULTILIB_USEDEP}] )
 	opengl? ( >=virtual/opengl-7.0-r1[${MULTILIB_USEDEP}] )
-	openssl? (
+	ssl? (
 		!libressl? ( >=dev-libs/openssl-1.0.1h-r2:0[${MULTILIB_USEDEP}] )
 		libressl? ( dev-libs/libressl[${MULTILIB_USEDEP}] )
 	)
@@ -281,7 +281,7 @@ REQUIRED_USE="
 	${GPL_REQUIRED_USE}
 	${CPU_REQUIRED_USE}"
 RESTRICT="
-	gpl? ( openssl? ( bindist ) fdk? ( bindist ) )
+	gpl? ( ssl? ( bindist ) fdk? ( bindist ) )
 "
 
 PATCHES=( "${FILESDIR}"/${PN}-3.2-libressl.patch )
@@ -303,7 +303,7 @@ multilib_src_configure() {
 	local myconf=( ${EXTRA_FFMPEG_CONF} )
 
 	local ffuse=( "${FFMPEG_FLAG_MAP[@]}" )
-	use openssl && use gpl && myconf+=( --enable-nonfree )
+	use ssl && use gpl && myconf+=( --enable-nonfree )
 	use samba && myconf+=( --enable-version3 )
 
 	# Encoders
