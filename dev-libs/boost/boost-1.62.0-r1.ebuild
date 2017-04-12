@@ -1,6 +1,5 @@
 # Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
 EAPI=6
 PYTHON_COMPAT=( python{2_7,3_4,3_5} )
@@ -16,7 +15,7 @@ SRC_URI="https://downloads.sourceforge.net/project/boost/${PN}/${PV}/${MY_P}.tar
 
 LICENSE="Boost-1.0"
 SLOT="0/${PV}" # ${PV} instead ${MAJOR_V} due to bug 486122
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~x86 ~ppc-aix ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~sparc64-solaris ~x86-solaris ~x86-winnt"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~mips ppc ppc64 ~s390 ~sh sparc x86 ~ppc-aix ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~sparc64-solaris ~x86-solaris ~x86-winnt"
 
 IUSE="context debug doc icu +nls mpi python static-libs +threads tools"
 
@@ -51,7 +50,7 @@ PATCHES=(
 	"${FILESDIR}/${PN}-1.48.0-disable_icu_rpath.patch"
 	"${FILESDIR}/${PN}-1.55.0-context-x32.patch"
 	"${FILESDIR}/${PN}-1.56.0-build-auto_index-tool.patch"
-	"${FILESDIR}/${P}-asio-libressl.patch"
+	"${FILESDIR}/${PN}-1.62.0-asio-libressl.patch"
 )
 
 python_bindings_needed() {
@@ -438,4 +437,9 @@ pkg_preinst() {
 			rm -f "${symlink}" || die
 		fi
 	done
+
+	# some ancient installs still have boost cruft lying around
+	# for unknown reasons, causing havoc for reverse dependencies
+	# Bug: 607734
+	rm -rf "${EROOT%/}"/usr/include/boost-1_[3-5]? || die
 }
