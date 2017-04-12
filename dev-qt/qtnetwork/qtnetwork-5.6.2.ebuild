@@ -1,6 +1,5 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
 EAPI=6
 QT5_MODULE="qtbase"
@@ -9,7 +8,7 @@ inherit qt5-build
 DESCRIPTION="Network abstraction library for the Qt5 framework"
 
 if [[ ${QT5_BUILD_TYPE} == release ]]; then
-	KEYWORDS="amd64 ~arm ~arm64 ~hppa ~ppc ~ppc64 x86"
+	KEYWORDS="amd64 arm ~arm64 hppa ppc ppc64 x86"
 fi
 
 IUSE="bindist connman libproxy libressl networkmanager +ssl"
@@ -31,7 +30,7 @@ RDEPEND="${DEPEND}
 "
 
 PATCHES=(
-	"${FILESDIR}/0001-Fix-compilation-with-libressl.patch" # bug 562050
+	"${FILESDIR}/${PN}-5.6.2-libressl.patch" # bug 562050
 	"${FILESDIR}/${PN}-5.6.2-libressl-warn.patch"
 )
 

@@ -1,6 +1,5 @@
 # Copyright 1999-2016 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
 EAPI=6
 QT5_MODULE="qtbase"
@@ -31,7 +30,7 @@ RDEPEND="${DEPEND}
 "
 
 PATCHES=(
-	"${FILESDIR}/0001-Fix-compilation-with-libressl.patch" # bug 562050
+	"${FILESDIR}/${PN}-5.6.2-libressl.patch" # bug 562050
 )
 
 QT5_TARGET_SUBDIRS=(
