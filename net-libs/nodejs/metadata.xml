@@ -14,7 +14,9 @@
                 <name>Proxy Maintainers</name>
         </maintainer>
 	<use>
+	<flag name="bundled-ssl">Use bundled version of OpenSSL (hack)</flag>
 	<flag name="npm">Enable NPM package manager</flag>
 	<flag name="snapshot">Enable snapshot creation for faster startup</flag>
+	<flag name="systemtap">Enable SystemTAP/DTrace tracing</flag>
 	</use>
 </pkgmetadata>

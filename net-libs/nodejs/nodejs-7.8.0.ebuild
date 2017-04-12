@@ -1,8 +1,8 @@
-# Copyright 1999-2016 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
-EAPI=5
+EAPI=6
+RESTRICT="test"
 
 PYTHON_COMPAT=( python2_7 )
 PYTHON_REQ_USE="threads"
@@ -15,18 +15,20 @@ SRC_URI="https://nodejs.org/dist/v${PV}/node-v${PV}.tar.xz"
 
 LICENSE="Apache-1.1 Apache-2.0 BSD BSD-2 MIT"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~arm64 ~x86 ~x64-macos"
-IUSE="cpu_flags_x86_sse2 debug doc icu libressl +npm +snapshot +ssl test"
+KEYWORDS="~amd64 ~arm ~arm64 ~ppc ~ppc64 ~x86 ~amd64-linux ~x64-macos"
+IUSE="bundled-ssl cpu_flags_x86_sse2 debug doc icu libressl +npm +snapshot +ssl systemtap test"
+
+REQUIRED_USE="libressl? ( bundled-ssl )"
 
 RDEPEND="icu? ( >=dev-libs/icu-56:= )
 	npm? ( ${PYTHON_DEPS} )
 	>=net-libs/http-parser-2.6.2:=
-	>=dev-libs/libuv-1.8.0:=
-	!libressl? ( >=dev-libs/openssl-1.0.2g:0=[-bindist] )
-	libressl? ( dev-libs/libressl )
+	>=dev-libs/libuv-1.11.0:=
+	!bundled-ssl? ( >=dev-libs/openssl-1.0.2g:0=[-bindist] )
 	sys-libs/zlib"
 DEPEND="${RDEPEND}
 	${PYTHON_DEPS}
+	systemtap? ( dev-util/systemtap )
 	test? ( net-misc/curl )"
 
 S="${WORKDIR}/node-v${PV}"
@@ -48,10 +50,6 @@ src_prepare() {
 	tc-export CC CXX PKG_CONFIG
 	export V=1
 	export BUILDTYPE=Release
-
-	if use libressl; then
-		epatch "${FILESDIR}"/${PN}-5.7.1-libressl.patch
-	fi
 
 	# fix compilation on Darwin
 	# https://code.google.com/p/gyp/issues/detail?id=260
@@ -91,20 +89,22 @@ src_prepare() {
 
 src_configure() {
 	local myarch=""
-	local myconf=( --shared-openssl --shared-libuv --shared-http-parser --shared-zlib )
+	local myconf=( --shared-libuv --shared-http-parser --shared-zlib )
 	use npm || myconf+=( --without-npm )
 	use icu && myconf+=( --with-intl=system-icu )
 	use snapshot && myconf+=( --with-snapshot )
+	use bundled-ssl || myconf+=( --shared-openssl )
 	use ssl || myconf+=( --without-ssl )
 	use debug && myconf+=( --debug )
 
 	case ${ABI} in
-		x86) myarch="ia32";;
 		amd64) myarch="x64";;
-		x32) myarch="x32";;
 		arm) myarch="arm";;
 		arm64) myarch="arm64";;
-		*) die "Unrecognized ARCH ${ARCH}";;
+		ppc64) myarch="ppc64";;
+		x32) myarch="x32";;
+		x86) myarch="ia32";;
+		*) myarch="${ABI}";;
 	esac
 
 	GYP_DEFINES="linux_use_gold_flags=0
@@ -113,7 +113,7 @@ src_configure() {
 	"${PYTHON}" configure \
 		--prefix="${EPREFIX}"/usr \
 		--dest-cpu=${myarch} \
-		--without-dtrace \
+		$(use_with systemtap dtrace) \
 		"${myconf[@]}" || die
 }
 
@@ -121,13 +121,11 @@ src_compile() {
 	emake -C out mksnapshot
 	pax-mark m "out/${BUILDTYPE}/mksnapshot"
 	emake -C out
-
-	use doc && emake doc
 }
 
 src_install() {
 	local LIBDIR="${ED}/usr/$(get_libdir)"
-	emake install DESTDIR="${ED}"
+	emake install DESTDIR="${D}"
 	pax-mark -m "${ED}"usr/bin/node
 
 	# set up a symlink structure that node-gyp expects..
@@ -143,7 +141,7 @@ src_install() {
 			sed -i '/fonts.googleapis.com/ d' $i;
 		done
 		# Install docs!
-		dohtml -r "${S}"/out/doc/api/*
+		dohtml -r "${S}"/doc/*
 	fi
 
 	if use npm; then
@@ -153,11 +151,11 @@ src_install() {
 		# We need to temporarily replace default config path since
 		# npm otherwise tries to write outside of the sandbox
 		local npm_config="usr/$(get_libdir)/node_modules/npm/lib/config/core.js"
-		sed -i -e "s|'/etc'|'${D}/etc'|g" "${ED}/${npm_config}" || die
+		sed -i -e "s|'/etc'|'${ED}/etc'|g" "${ED}/${npm_config}" || die
 		local tmp_npm_completion_file="$(emktemp)"
 		"${ED}/usr/bin/npm" completion > "${tmp_npm_completion_file}"
 		newbashcomp "${tmp_npm_completion_file}" npm
-		sed -i -e "s|'${D}/etc'|'/etc'|g" "${ED}/${npm_config}" || die
+		sed -i -e "s|'${ED}/etc'|'/etc'|g" "${ED}/${npm_config}" || die
 
 		# Move man pages
 		doman "${LIBDIR}"/node_modules/npm/man/man{1,5,7}/*
@@ -196,10 +194,4 @@ pkg_postinst() {
 	einfo "Protip: When using node-gyp to install native modules, you can"
 	einfo "avoid having to download extras by doing the following:"
 	einfo "$ node-gyp --nodedir /usr/include/node <command>"
-	if use libressl; then
-		ewarn
-		ewarn "You enabled libressl support. As such, you are missing the"
-		ewarn "getEphemeralKeyInfo and onCertCb JavaScript APIs."
-		ewarn "Some node packages may be broken."
-	fi
 }
