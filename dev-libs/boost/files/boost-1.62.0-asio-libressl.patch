@@ -4,13 +4,13 @@ Date: Sun, 5 Mar 2017 22:47:57 +1100
 Subject: [PATCH] Re-enable building against LibreSSL.
 
 ---
- include/boost/asio/ssl/impl/context.ipp | 12 ++++++------
+ boost/asio/ssl/impl/context.ipp | 12 ++++++------
  1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/include/boost/asio/ssl/impl/context.ipp b/include/boost/asio/ssl/impl/context.ipp
+diff --git a/boost/asio/ssl/impl/context.ipp b/boost/asio/ssl/impl/context.ipp
 index 4667575..c8c5f43 100644
---- a/include/boost/asio/ssl/impl/context.ipp
-+++ b/include/boost/asio/ssl/impl/context.ipp
+--- a/boost/asio/ssl/impl/context.ipp
++++ b/boost/asio/ssl/impl/context.ipp
 @@ -228,7 +228,7 @@ context::~context()
  {
    if (handle_)
