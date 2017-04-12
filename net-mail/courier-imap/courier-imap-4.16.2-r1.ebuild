@@ -1,6 +1,5 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2017 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Id$
 
 EAPI=5
 
@@ -12,17 +11,16 @@ SRC_URI="mirror://sourceforge/courier/${P}.tar.bz2"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="~amd64 ~hppa ~mips ~ppc64 ~x86"
-IUSE="debug berkdb fam +gdbm gnutls ipv6 libressl selinux trashquota"
+KEYWORDS="alpha amd64 ~arm hppa ia64 ~mips ppc ppc64 sparc x86"
+IUSE="berkdb debug fam +gdbm gnutls ipv6 libressl selinux trashquota"
 
-REQUIRED_USE="|| ( berkdb gdbm )
-	gnutls? ( !libressl )"
+REQUIRED_USE="|| ( berkdb gdbm )"
 
 CDEPEND="
 	gnutls? ( net-libs/gnutls )
 	!gnutls? (
-		!libressl? ( >=dev-libs/openssl-0.9.6:0= )
-		libressl? ( dev-libs/libressl )
+		!libressl? ( dev-libs/openssl:0= )
+		libressl? ( dev-libs/libressl:0= )
 	)
 	>=net-libs/courier-authlib-0.61
 	>=net-libs/courier-unicode-1.3
