@@ -17,8 +17,6 @@ SLOT="0"
 KEYWORDS="amd64 arm ~arm64 ppc ppc64 x86 ~amd64-linux ~x64-macos"
 IUSE="bundled-ssl cpu_flags_x86_sse2 debug doc icu libressl +npm +snapshot +ssl test"
 
-REQUIRED_USE="libressl? ( bundled-ssl )"
-
 RDEPEND="icu? ( >=dev-libs/icu-56:= )
 	npm? ( ${PYTHON_DEPS} )
 	>=net-libs/http-parser-2.6.2:=
@@ -30,7 +28,9 @@ DEPEND="${RDEPEND}
 	test? ( net-misc/curl )"
 
 S="${WORKDIR}/node-v${PV}"
-REQUIRED_USE="${PYTHON_REQUIRED_USE}"
+REQUIRED_USE="${PYTHON_REQUIRED_USE}
+	libressl? ( bundled-ssl )
+	bundled-ssl? ( ssl )"
 
 PATCHES=(
 	"${FILESDIR}"/gentoo-global-npm-config.patch
