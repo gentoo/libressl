@@ -1,0 +1,12 @@
+diff -Naur ioerror-tlsdate-ae33169.orig/src/tlsdate-helper.c ioerror-tlsdate-ae33169/src/tlsdate-helper.c
+--- ioerror-tlsdate-ae33169.orig/src/tlsdate-helper.c	2017-04-28 08:00:52.458805233 -0700
++++ ioerror-tlsdate-ae33169/src/tlsdate-helper.c	2017-04-28 10:45:04.182602704 -0700
+@@ -374,7 +374,7 @@
+ openssl_time_callback (const SSL* ssl, int where, int ret)
+ {
+   if (where == SSL_CB_CONNECT_LOOP &&
+-      (ssl->state == SSL3_ST_CR_SRVR_HELLO_A || ssl->state == SSL3_ST_CR_SRVR_HELLO_B))
++      (SSL_get_state(ssl) == SSL3_ST_CR_SRVR_HELLO_A || SSL_get_state(ssl) == SSL3_ST_CR_SRVR_HELLO_B))
+   {
+     // XXX TODO: If we want to trust the remote system for time,
+     // can we just read that time out of the remote system and if the

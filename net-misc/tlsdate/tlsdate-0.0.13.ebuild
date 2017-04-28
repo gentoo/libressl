@@ -24,6 +24,7 @@ RDEPEND="${DEPEND}"
 PATCHES=(
 	"${FILESDIR}"/${P}-tlsdated-service.patch
 	"${FILESDIR}"/${P}-libressl-no-sslv3-support.patch
+	"${FILESDIR}"/${P}-libressl251-SSL_get_state.patch
 )
 
 src_prepare() {
