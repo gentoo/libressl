@@ -1,7 +1,0 @@
-# Copyright 1999-2015 Gentoo Foundation
-# Distributed under the terms of the GNU General Public License v2
-# $Header: $
-
-# Keep them sorted
-
-libressl - Use dev-libs/libressl as SSL provider (might need ssl USE flag), packages should not depend on this USE flag
