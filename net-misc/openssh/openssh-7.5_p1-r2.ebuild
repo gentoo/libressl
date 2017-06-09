@@ -12,7 +12,7 @@ PARCH=${P/_}
 HPN_PATCH="${PARCH}-hpnssh14v12.tar.xz"
 SCTP_PATCH="${PN}-7.4_p1-sctp.patch.xz"
 LDAP_PATCH="${PN}-lpk-7.5p1-0.3.14.patch.xz"
-X509_VER="10.1" X509_PATCH="${PN}-${PV/_}+x509-${X509_VER}.diff.gz"
+X509_VER="10.2" X509_PATCH="${PN}-${PV/_}+x509-${X509_VER}.diff.gz"
 
 DESCRIPTION="Port of OpenBSD's free SSH release"
 HOMEPAGE="http://www.openssh.org/"
@@ -25,7 +25,7 @@ SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
 
 LICENSE="BSD GPL-2"
 SLOT="0"
-KEYWORDS="~alpha amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc x86 ~ppc-aix ~x64-cygwin ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~x64-cygwin ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 # Probably want to drop ssl defaulting to on in a future version.
 IUSE="abi_mips_n32 audit bindist debug ${HPN_PATCH:++}hpn kerberos kernel_linux ldap ldns libedit libressl livecd pam +pie sctp selinux skey ssh1 +ssl static test X X509"
 REQUIRED_USE="ldns? ( ssl )
@@ -169,8 +169,8 @@ src_prepare() {
 	(
 		sed '/^#define SSH_RELEASE/d' version.h.* | sort -u
 		macros=()
-		for p in HPN LPK X509 ; do [[ -e version.h.${p} ]] && macros+=( SSH_${p} ) ; done
-		printf '#define SSH_RELEASE SSH_VERSION SSH_PORTABLE %s\n' "${macros}"
+		for p in HPN LPK X509; do [[ -e version.h.${p} ]] && macros+=( SSH_${p} ) ; done
+		printf '#define SSH_RELEASE SSH_VERSION SSH_PORTABLE %s\n' "${macros[*]}"
 	) > version.h
 
 	eautoreconf
