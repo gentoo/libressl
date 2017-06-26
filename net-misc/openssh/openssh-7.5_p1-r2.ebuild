@@ -129,7 +129,7 @@ src_prepare() {
 		save_version LPK
 	fi
 
-	epatch "${FILESDIR}"/${PN}-7.5_p1-libressl_arc4random.patch
+	use X509 || epatch "${FILESDIR}"/${PN}-7.5_p1-libressl_arc4random.patch
 	epatch "${FILESDIR}"/${PN}-7.5_p1-GSSAPI-dns.patch #165444 integrated into gsskex
 	epatch "${FILESDIR}"/${PN}-6.7_p1-openssl-ignore-status.patch
 	epatch "${FILESDIR}"/${PN}-7.5_p1-cross-cache.patch
