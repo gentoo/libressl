@@ -1,0 +1,12 @@
+diff -Naur libevent-2.1.8-stable.orig/openssl-compat.h libevent-2.1.8-stable/openssl-compat.h
+--- libevent-2.1.8-stable.orig/openssl-compat.h	2016-12-06 14:13:44.000000000 -0800
++++ libevent-2.1.8-stable/openssl-compat.h	2017-07-13 07:48:28.052565501 -0700
+@@ -1,7 +1,7 @@
+ #ifndef OPENSSL_COMPAT_H
+ #define OPENSSL_COMPAT_H
+ 
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+ 
+ static inline BIO_METHOD *BIO_meth_new(int type, const char *name)
+ {
