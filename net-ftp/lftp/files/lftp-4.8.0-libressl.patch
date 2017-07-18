@@ -1,0 +1,21 @@
+diff -Naur lftp-4.8.0.orig/src/lftp_ssl.cc lftp-4.8.0/src/lftp_ssl.cc
+--- lftp-4.8.0.orig/src/lftp_ssl.cc	2017-07-18 09:19:02.590699660 -0700
++++ lftp-4.8.0/src/lftp_ssl.cc	2017-07-18 09:19:45.311101034 -0700
+@@ -772,7 +772,7 @@
+ #elif USE_OPENSSL
+ //static int lftp_ssl_passwd_callback(char *buf,int size,int rwflag,void *userdata);
+ 
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+ // for compatibility with older versions
+ X509_OBJECT *X509_OBJECT_new()
+ {
+@@ -795,7 +795,7 @@
+ # define X509_CRL_get0_nextUpdate(x) X509_CRL_get_nextUpdate(x)
+ # define ASN1_STRING_get0_data(x) ASN1_STRING_data(x)
+ # define X509_REVOKED_get0_serialNumber(x) (x->serialNumber)
+-#endif // OPENSSL_VERSION_NUMBER < 0x10100000L
++#endif // OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+ 
+ Ref<lftp_ssl_openssl_instance> lftp_ssl_openssl::instance;
+ 
