@@ -23,11 +23,10 @@ openssl? (
 DEPEND="${RDEPEND}
 	nls? ( sys-devel/gettext )"
 
+S="${WORKDIR}/RHash-${PV}"
+
 src_prepare() {
 	default
-
-	# Exit on test failure or src_test will always succeed.
-	sed -i "s/return 1/exit 1/g" tests/test_rhash.sh || die
 
 	# Install /etc stuff inside the Prefix
 	sed -i -e 's:\$(DESTDIR)/etc:\$(DESTDIR)/$(SYSCONFDIR):g' Makefile || die
