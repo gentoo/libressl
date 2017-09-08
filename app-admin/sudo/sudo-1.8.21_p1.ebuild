@@ -25,7 +25,7 @@ SLOT="0"
 if [[ ${PV} != *_beta* ]] && [[ ${PV} != *_rc* ]] ; then
 	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~sparc-fbsd ~x86-fbsd ~sparc-solaris"
 fi
-IUSE="gcrypt ldap libressl nls pam offensive openssl selinux skey +sendmail"
+IUSE="gcrypt ldap libressl nls pam offensive openssl sasl selinux +sendmail skey"
 
 CDEPEND="
 	gcrypt? ( dev-libs/libgcrypt:= )
@@ -34,6 +34,7 @@ CDEPEND="
 		libressl? ( dev-libs/libressl:0= )
 	)
 	pam? ( virtual/pam )
+	sasl? ( dev-libs/cyrus-sasl )
 	skey? ( >=sys-auth/skey-1.1.5-r1 )
 	ldap? (
 		>=net-nds/openldap-2.1.30-r1
@@ -132,6 +133,7 @@ src_configure() {
 		$(use_enable gcrypt)
 		$(use_enable nls)
 		$(use_enable openssl)
+		$(use_enable sasl)
 		$(use_with offensive insults)
 		$(use_with offensive all-insults)
 		$(use_with ldap ldap_conf_file /etc/ldap.conf.sudo)
