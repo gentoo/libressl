@@ -284,13 +284,13 @@ RESTRICT="
 	gpl? ( openssl? ( bindist ) fdk? ( bindist ) )
 "
 
-PATCHES=( "${FILESDIR}"/${PN}-3.2-libressl.patch )
-
 S=${WORKDIR}/${P/_/-}
 
 MULTILIB_WRAPPED_HEADERS=(
 	/usr/include/libavutil/avconfig.h
 )
+
+PATCHES=( "${FILESDIR}"/${PN}-3.2-libressl.patch )
 
 src_prepare() {
 	if [[ "${PV%_p*}" != "${PV}" ]] ; then # Snapshot
