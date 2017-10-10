@@ -1,5 +1,5 @@
---- openbsd-compat/openbsd-compat.h	
-+++ openbsd-compat/openbsd-compat.h	
+--- a/openbsd-compat/openbsd-compat.h	
++++ b/openbsd-compat/openbsd-compat.h	
 @@ -179,20 +179,25 @@ int writev(int, struct iovec *, int);
  int getpeereid(int , uid_t *, gid_t *);
  #endif
