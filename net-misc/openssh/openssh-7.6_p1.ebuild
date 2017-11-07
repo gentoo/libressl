@@ -9,9 +9,9 @@ inherit user flag-o-matic multilib autotools pam systemd versionator
 # and _p? releases.
 PARCH=${P/_}
 
-#HPN_PATCH="${PARCH}-hpnssh14v12.tar.xz"
+HPN_PATCH="${PARCH}-hpnssh14v12.tar.xz"
 SCTP_PATCH="${PN}-7.6_p1-sctp.patch.xz"
-LDAP_PATCH="${PN}-lpk-7.5p1-0.3.14.patch.xz"
+LDAP_PATCH="${PN}-lpk-7.6p1-0.3.14.patch.xz"
 X509_VER="11.0" X509_PATCH="${PN}-${PV/_}+x509-${X509_VER}.diff.gz"
 
 DESCRIPTION="Port of OpenBSD's free SSH release"
@@ -19,7 +19,7 @@ HOMEPAGE="http://www.openssh.org/"
 SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
 	${SCTP_PATCH:+https://dev.gentoo.org/~polynomial-c/${SCTP_PATCH}}
 	${HPN_PATCH:+hpn? ( mirror://gentoo/${HPN_PATCH} )}
-	${LDAP_PATCH:+ldap? ( mirror://gentoo/${LDAP_PATCH} )}
+	${LDAP_PATCH:+ldap? ( https://dev.gentoo.org/~polynomial-c/${LDAP_PATCH} )}
 	${X509_PATCH:+X509? ( http://roumenpetrov.info/openssh/x509-${X509_VER}/${X509_PATCH} )}
 	"
 
@@ -109,13 +109,16 @@ src_prepare() {
 	# this file.
 	cp version.h version.h.pristine
 
+	eapply "${FILESDIR}/${P}-warnings.patch"
+
 	# don't break .ssh/authorized_keys2 for fun
 	sed -i '/^AuthorizedKeysFile/s:^:#:' sshd_config || die
 
 	if use X509 ; then
 		if use hpn ; then
-			pushd "${WORKDIR}"/${HPN_PATCH%.*.*} >/dev/null
+			pushd "${WORKDIR}" >/dev/null
 			eapply "${FILESDIR}"/${P}-hpn-x509-${X509_VER}-glue.patch
+			eapply "${FILESDIR}"/${P}-x509-${X509_VER}-libressl.patch
 			popd >/dev/null
 		fi
 		save_version X509
@@ -324,5 +327,11 @@ pkg_postinst() {
 		elog "Be aware that by disabling openssl support in openssh, the server and clients"
 		elog "no longer support dss/rsa/ecdsa keys.  You will need to generate ed25519 keys"
 		elog "and update all clients/servers that utilize them."
+	fi
+
+	# remove this if aes-ctr-mt gets fixed
+	if use hpn; then
+		elog "The multithreaded AES-CTR cipher has been temporarily dropped from the HPN patch"
+		elog "set since it does not (yet) work with >=openssh-7.6p1."
 	fi
 }
