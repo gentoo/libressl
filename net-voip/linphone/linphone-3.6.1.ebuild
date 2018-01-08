@@ -1,4 +1,4 @@
-# Copyright 1999-2015 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=5
@@ -49,9 +49,6 @@ DEPEND="${RDEPEND}
 	nls? ( dev-util/intltool )
 "
 
-IUSE_LINGUAS=" fr it de he ja es pl cs nl sr sv pt_BR hu ru zh_CN"
-IUSE="${IUSE}${IUSE_LINGUAS// / linguas_}"
-
 pkg_setup() {
 	if ! use gtk && ! use ncurses ; then
 		ewarn "gtk and ncurses are disabled."
@@ -59,7 +56,8 @@ pkg_setup() {
 		ewarn "Only liblinphone is going to be installed."
 	fi
 
-	strip-linguas ${IUSE_LINGUAS}
+	local my_linguas="fr it de he ja es pl cs nl sr sv pt_BR hu ru zh_CN"
+	strip-linguas ${my_linguas}
 }
 
 src_prepare() {
