@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -39,6 +39,10 @@ QT5_GENTOO_CONFIG=(
 	ssl::SSL
 	ssl::OPENSSL
 	ssl:openssl-linked:LINKED_OPENSSL
+)
+
+QT5_GENTOO_PRIVATE_CONFIG=(
+	:network
 )
 
 pkg_setup() {
