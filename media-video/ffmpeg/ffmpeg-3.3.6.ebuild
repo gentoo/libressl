@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -54,7 +54,7 @@ LICENSE="
 	samba? ( GPL-3 )
 "
 if [ "${PV#9999}" = "${PV}" ] ; then
-	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~x64-solaris ~x86-solaris"
+	KEYWORDS="amd64 arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~x64-solaris ~x86-solaris"
 fi
 
 # Options to use as use_enable in the foo[:bar] form.
@@ -75,12 +75,12 @@ FFMPEG_FLAG_MAP=(
 		amr:libopencore-amrwb amr:libopencore-amrnb fdk:libfdk-aac
 		jpeg2k:libopenjpeg bluray:libbluray celt:libcelt gme:libgme gsm:libgsm
 		mmal modplug:libmodplug opus:libopus libilbc librtmp ssh:libssh
-		speex:libspeex svg:librsvg vorbis:libvorbis
-		vpx:libvpx zvbi:libzvbi
+		schroedinger:libschroedinger speex:libspeex vorbis:libvorbis vpx:libvpx
+		zvbi:libzvbi
 		# libavfilter options
 		bs2b:libbs2b chromaprint flite:libflite frei0r
 		fribidi:libfribidi fontconfig ladspa libass truetype:libfreetype
-		rubberband:librubberband zeromq:libzmq zimg:libzimg
+		rubberband:librubberband sofalizer:netcdf zeromq:libzmq zimg:libzimg
 		# libswresample options
 		libsoxr
 		# Threads; we only support pthread for now but ffmpeg supports more
@@ -142,18 +142,28 @@ X86_CPU_REQUIRED_USE="
 	cpu_flags_x86_3dnow?  ( cpu_flags_x86_mmx )
 "
 
-CPU_FEATURES_MAP=(
-	${ARM_CPU_FEATURES[@]}
-	${MIPS_CPU_FEATURES[@]}
-	${PPC_CPU_FEATURES[@]}
-	${X86_CPU_FEATURES[@]}
-)
 IUSE="${IUSE}
-	${CPU_FEATURES_MAP[@]%:*}"
+	${ARM_CPU_FEATURES[@]%:*}
+	${MIPS_CPU_FEATURES[@]%:*}
+	${PPC_CPU_FEATURES[@]%:*}
+	${X86_CPU_FEATURES[@]%:*}
+"
 
 CPU_REQUIRED_USE="
 	${ARM_CPU_REQUIRED_USE}
 	${X86_CPU_REQUIRED_USE}
+"
+
+# "$(tc-arch):XXX" form where XXX_CPU_FEATURES are the cpu features that apply to
+# $(tc-arch).
+CPU_FEATURES_MAP="
+	arm:ARM
+	arm64:ARM
+	mips:MIPS
+	ppc:PPC
+	ppc64:PPC
+	x86:X86
+	amd64:X86
 "
 
 FFTOOLS=( aviocat cws2fws ffescape ffeval ffhash fourcc2pixfmt graph2dot ismindex pktdumper qt-faststart sidxindex trasher )
@@ -227,10 +237,14 @@ RDEPEND="
 	librtmp? ( >=media-video/rtmpdump-2.4_p20131018[${MULTILIB_USEDEP}] )
 	rubberband? ( >=media-libs/rubberband-1.8.1-r1[${MULTILIB_USEDEP}] )
 	samba? ( >=net-fs/samba-3.6.23-r1[${MULTILIB_USEDEP}] )
+	schroedinger? ( >=media-libs/schroedinger-1.0.11-r1[${MULTILIB_USEDEP}] )
 	sdl? ( media-libs/libsdl2[sound,video,${MULTILIB_USEDEP}] )
+	sofalizer? (
+		>=sci-libs/netcdf-4.3.2-r1[hdf5]
+		>=sci-libs/hdf5-1.8.18[hl]
+	)
 	speex? ( >=media-libs/speex-1.2_rc1-r1[${MULTILIB_USEDEP}] )
 	ssh? ( >=net-libs/libssh-0.5.5[${MULTILIB_USEDEP}] )
-	svg? ( gnome-base/librsvg:2=[${MULTILIB_USEDEP}] )
 	truetype? ( >=media-libs/freetype-2.5.0.1:2[${MULTILIB_USEDEP}] )
 	vaapi? ( >=x11-libs/libva-1.2.1-r1[${MULTILIB_USEDEP}] )
 	vdpau? ( >=x11-libs/libvdpau-0.7[${MULTILIB_USEDEP}] )
@@ -258,7 +272,7 @@ DEPEND="${RDEPEND}
 	doc? ( sys-apps/texinfo )
 	>=virtual/pkgconfig-0-r1[${MULTILIB_USEDEP}]
 	ladspa? ( >=media-libs/ladspa-sdk-1.13-r2[${MULTILIB_USEDEP}] )
-	cpu_flags_x86_mmx? ( || ( >=dev-lang/nasm-2.13 >=dev-lang/yasm-1.3 ) )
+	cpu_flags_x86_mmx? ( >=dev-lang/yasm-1.2 )
 	test? ( net-misc/wget sys-devel/bc )
 	v4l? ( sys-kernel/linux-headers )
 "
@@ -281,6 +295,7 @@ GPL_REQUIRED_USE="
 	)
 "
 REQUIRED_USE="
+	libressl? ( openssl )
 	libv4l? ( v4l )
 	fftools_cws2fws? ( zlib )
 	test? ( encode )
@@ -292,13 +307,15 @@ RESTRICT="
 
 S=${WORKDIR}/${P/_/-}
 
-PATCHES=(
-	"${FILESDIR}"/chromium.patch
-	"${FILESDIR}"/${PN}-3.3-libressl.patch
-)
-
 MULTILIB_WRAPPED_HEADERS=(
 	/usr/include/libavutil/avconfig.h
+)
+
+PATCHES=(
+	"${FILESDIR}"/openjpeg22.patch
+	"${FILESDIR}"/openjpeg23.patch
+	"${FILESDIR}"/chromium.patch
+	"${FILESDIR}"/${PN}-3.3-libressl.patch
 )
 
 src_prepare() {
@@ -350,14 +367,19 @@ multilib_src_configure() {
 
 	# (temporarily) disable non-multilib deps
 	if ! multilib_is_native_abi; then
-		for i in frei0r libzmq ; do
+		for i in frei0r netcdf libzmq ; do
 			myconf+=( --disable-${i} )
 		done
 	fi
 
 	# CPU features
-	for i in "${CPU_FEATURES_MAP[@]}" ; do
-		use ${i%:*} || myconf+=( --disable-${i#*:} )
+	for i in ${CPU_FEATURES_MAP} ; do
+		if [ "$(tc-arch)" = "${i%:*}" ] ; then
+			local var="${i#*:}_CPU_FEATURES[@]"
+			for j in ${!var} ; do
+				use ${j%:*} || myconf+=( --disable-${j#*:} )
+			done
+		fi
 	done
 
 	if use pic ; then

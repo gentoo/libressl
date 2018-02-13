@@ -275,6 +275,7 @@ GPL_REQUIRED_USE="
 	)
 "
 REQUIRED_USE="
+	libressl? ( openssl )
 	libv4l? ( v4l )
 	fftools_cws2fws? ( zlib )
 	test? ( encode )
