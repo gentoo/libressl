@@ -9,18 +9,21 @@ inherit user flag-o-matic multilib autotools pam systemd versionator
 # and _p? releases.
 PARCH=${P/_}
 
-HPN_PATCH="${PARCH}-hpnssh14v12-r1.tar.xz"
-SCTP_PATCH="${PN}-7.6_p1-sctp.patch.xz"
-LDAP_PATCH="${PN}-lpk-7.6p1-0.3.14.patch.xz"
-X509_VER="11.2" X509_PATCH="${PN}-${PV/_}+x509-${X509_VER}.diff.gz"
+HPN_VER="14v14-gentoo1" HPN_PATCH="${PARCH}-hpnssh${HPN_VER}.patch.xz" HPN_DISABLE_MTAES=1
+SCTP_VER="1.0" SCTP_PATCH="${PARCH}-sctp-${SCTP_VER}.patch.xz"
+X509_VER="11.3.1" X509_PATCH="${PARCH}-x509-${X509_VER}.patch.xz"
+
+# Disable LDAP support until someone will rewrite the patch,
+# upstream removed auth_parse_options() via commit 7c856857607112a3dfe6414696bf4c7ab7fb0cb3
+#LDAP_VER="0.3.14" LDAP_PATCH="${PN}-lpk-7.7p1-${LDAP_VER}.patch.xz"
 
 DESCRIPTION="Port of OpenBSD's free SSH release"
-HOMEPAGE="http://www.openssh.org/"
+HOMEPAGE="https://www.openssh.com/"
 SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
-	${SCTP_PATCH:+https://dev.gentoo.org/~polynomial-c/${SCTP_PATCH}}
-	${HPN_PATCH:+hpn? ( https://dev.gentoo.org/~chutzpah/${HPN_PATCH} )}
-	${LDAP_PATCH:+ldap? ( https://dev.gentoo.org/~polynomial-c/${LDAP_PATCH} )}
-	${X509_PATCH:+X509? ( https://dev.gentoo.org/~chutzpah/${X509_PATCH} )}
+	${SCTP_PATCH:+sctp? ( https://dev.gentoo.org/~whissi/dist/openssh/${SCTP_PATCH} )}
+	${HPN_PATCH:+hpn? ( https://dev.gentoo.org/~whissi/dist/openssh/${HPN_PATCH} )}
+	${LDAP_PATCH:+ldap? ( https://dev.gentoo.org/~whissi/dist/openssh/${LDAP_PATCH} )}
+	${X509_PATCH:+X509? ( https://dev.gentoo.org/~whissi/dist/openssh/${X509_PATCH} )}
 	"
 
 LICENSE="BSD GPL-2"
@@ -75,9 +78,10 @@ pkg_pretend() {
 	# than not be able to log in to their server any more
 	maybe_fail() { [[ -z ${!2} ]] && echo "$1" ; }
 	local fail="
-		$(use X509 && maybe_fail X509 X509_PATCH)
-		$(use ldap && maybe_fail ldap LDAP_PATCH)
 		$(use hpn && maybe_fail hpn HPN_PATCH)
+		$(use ldap && maybe_fail ldap LDAP_PATCH)
+		$(use sctp && maybe_fail sctp SCTP_PATCH)
+		$(use X509 && maybe_fail X509 X509_PATCH)
 	"
 	fail=$(echo ${fail})
 	if [[ -n ${fail} ]] ; then
@@ -89,63 +93,132 @@ pkg_pretend() {
 	fi
 
 	# Make sure people who are using tcp wrappers are notified of its removal. #531156
-	if grep -qs '^ *sshd *:' "${EROOT}"/etc/hosts.{allow,deny} ; then
+	if grep -qs '^ *sshd *:' "${EROOT%/}"/etc/hosts.{allow,deny} ; then
 		ewarn "Sorry, but openssh no longer supports tcp-wrappers, and it seems like"
 		ewarn "you're trying to use it.  Update your ${EROOT}etc/hosts.{allow,deny} please."
 	fi
 }
 
-save_version() {
-	# version.h patch conflict avoidence
-	mv version.h version.h.$1
-	cp -f version.h.pristine version.h
-}
-
 src_prepare() {
 	sed -i \
-		-e "/_PATH_XAUTH/s:/usr/X11R6/bin/xauth:${EPREFIX}/usr/bin/xauth:" \
+		-e "/_PATH_XAUTH/s:/usr/X11R6/bin/xauth:${EPREFIX%/}/usr/bin/xauth:" \
 		pathnames.h || die
-	# keep this as we need it to avoid the conflict between LPK and HPN changing
-	# this file.
-	cp version.h version.h.pristine
-
-	eapply "${FILESDIR}/${P}-warnings.patch"
-	eapply "${FILESDIR}/${P}-permitopen.patch"
 
 	# don't break .ssh/authorized_keys2 for fun
 	sed -i '/^AuthorizedKeysFile/s:^:#:' sshd_config || die
 
-	if use X509 ; then
-		if use hpn ; then
-			pushd "${WORKDIR}" >/dev/null
-			eapply "${FILESDIR}"/${P}-hpn-x509-${X509_VER}-glue.patch
-			popd >/dev/null
-			save_version X509
-		fi
-		# remove this with the next version bump
-		pushd "${WORKDIR}" >/dev/null
-		eapply "${FILESDIR}/${P}-permitopen-x509-glue.patch"
-		popd >/dev/null
+	eapply "${FILESDIR}"/${PN}-7.7_p1-GSSAPI-dns.patch #165444 integrated into gsskex
+	eapply "${FILESDIR}"/${PN}-6.7_p1-openssl-ignore-status.patch
 
+	local PATCHSET_VERSION_MACROS=()
+
+	if use X509 ; then
 		eapply "${WORKDIR}"/${X509_PATCH%.*}
+
+		# We need to patch package version or any X.509 sshd will reject our ssh client
+		# with "userauth_pubkey: could not parse key: string is too large [preauth]"
+		# error
+		einfo "Patching package version for X.509 patch set ..."
+		sed -i \
+			-e "s/^AC_INIT(\[OpenSSH\], \[Portable\]/AC_INIT([OpenSSH], [${X509_VER}]/" \
+			"${S}"/configure.ac || die "Failed to patch package version for X.509 patch"
+
+		einfo "Patching version.h to expose X.509 patch set ..."
+		sed -i \
+			-e "/^#define SSH_PORTABLE.*/a #define SSH_X509               \"-PKIXSSH-${X509_VER}\"" \
+			"${S}"/version.h || die "Failed to sed-in X.509 patch version"
+		PATCHSET_VERSION_MACROS+=( 'SSH_X509' )
+
+		einfo "Disabling broken X.509 agent test ..."
+		sed -i \
+			-e "/^ agent$/d" \
+			"${S}"/tests/CA/config || die "Failed to disable broken X.509 agent test"
 	fi
 
 	if use ldap ; then
 		eapply "${WORKDIR}"/${LDAP_PATCH%.*}
-		save_version LPK
+
+		einfo "Patching version.h to expose LDAP patch set ..."
+		sed -i \
+			-e "/^#define SSH_PORTABLE.*/a #define SSH_LDAP               \"-ldap-${LDAP_VER}\"" \
+			"${S}"/version.h || die "Failed to sed-in LDAP patch version"
+		PATCHSET_VERSION_MACROS+=( 'SSH_LDAP' )
+	fi
+
+	if use sctp ; then
+		eapply "${WORKDIR}"/${SCTP_PATCH%.*}
+
+		einfo "Patching version.h to expose SCTP patch set ..."
+		sed -i \
+			-e "/^#define SSH_PORTABLE/a #define SSH_SCTP        \"-sctp-${SCTP_VER}\"" \
+			"${S}"/version.h || die "Failed to sed-in SCTP patch version"
+		PATCHSET_VERSION_MACROS+=( 'SSH_SCTP' )
+
+		einfo "Disabling know failing test (cfgparse) caused by SCTP patch ..."
+		sed -i \
+			-e "/\t\tcfgparse \\\/d" \
+			"${S}"/regress/Makefile || die "Failed to disable known failing test (cfgparse) caused by SCTP patch"
+	fi
+
+	if use hpn ; then
+		eapply "${WORKDIR}"/${HPN_PATCH%.*}
+
+		einfo "Patching Makefile.in for HPN patch set ..."
+		sed -i \
+			-e "/^LIBS=/ s/\$/ -lpthread/" \
+			"${S}"/Makefile.in || die "Failed to patch Makefile.in"
+
+		einfo "Patching version.h to expose HPN patch set ..."
+		sed -i \
+			-e "/^#define SSH_PORTABLE/a #define SSH_HPN         \"-hpn${HPN_VER}\"" \
+			"${S}"/version.h || die "Failed to sed-in HPN patch version"
+		PATCHSET_VERSION_MACROS+=( 'SSH_HPN' )
+
+		if [[ -n "${HPN_DISABLE_MTAES}" ]] ; then
+			einfo "Disabling known non-working MT AES cipher per default ..."
+
+			cat > "${T}"/disable_mtaes.conf <<- EOF
+
+			# HPN's Multi-Threaded AES CTR cipher is currently known to be broken
+			# and therefore disabled per default.
+			DisableMTAES yes
+			EOF
+			sed -i \
+				-e "/^#HPNDisabled.*/r ${T}/disable_mtaes.conf" \
+				"${S}"/sshd_config || die "Failed to disabled MT AES ciphers in sshd_config"
+
+			sed -i \
+				-e "/AcceptEnv.*_XXX_TEST$/a \\\tDisableMTAES\t\tyes" \
+				"${S}"/regress/test-exec.sh || die "Failed to disable MT AES ciphers in test config"
+		fi
+	fi
+
+	if use X509 || use hpn ; then
+		einfo "Patching packet.c for X509 and/or HPN patch set ..."
+		sed -i \
+			-e "s/const struct sshcipher/struct sshcipher/" \
+			"${S}"/packet.c || die "Failed to patch ssh_packet_set_connection() (packet.c)"
+	fi
+
+	if use X509 || use sctp || use ldap || use hpn ; then
+		einfo "Patching sshconnect.c to use SSH_RELEASE in send_client_banner() ..."
+		sed -i \
+			-e "s/PROTOCOL_MAJOR_2, PROTOCOL_MINOR_2, SSH_VERSION/PROTOCOL_MAJOR_2, PROTOCOL_MINOR_2, SSH_RELEASE/" \
+			"${S}"/sshconnect.c || die "Failed to patch send_client_banner() to use SSH_RELEASE (sshconnect.c)"
+
+		einfo "Patching sshd.c to use SSH_RELEASE in sshd_exchange_identification() ..."
+		sed -i \
+			-e "s/PROTOCOL_MAJOR_2, PROTOCOL_MINOR_2, SSH_VERSION/PROTOCOL_MAJOR_2, PROTOCOL_MINOR_2, SSH_RELEASE/" \
+			"${S}"/sshd.c || die "Failed to patch sshd_exchange_identification() to use SSH_RELEASE (sshd.c)"
+
+		einfo "Patching version.h to add our patch sets to SSH_RELEASE ..."
+		sed -i \
+			-e "s/^#define SSH_RELEASE.*/#define SSH_RELEASE     SSH_VERSION SSH_PORTABLE ${PATCHSET_VERSION_MACROS[*]}/" \
+			"${S}"/version.h || die "Failed to patch SSH_RELEASE (version.h)"
 	fi
 
 	use X509 || eapply "${FILESDIR}"/${PN}-7.5_p1-libressl_arc4random.patch
-	eapply "${FILESDIR}"/${PN}-7.5_p1-GSSAPI-dns.patch #165444 integrated into gsskex
-	eapply "${FILESDIR}"/${PN}-6.7_p1-openssl-ignore-status.patch
-	use X509 || eapply "${WORKDIR}"/${SCTP_PATCH%.*}
-	use abi_mips_n32 && eapply "${FILESDIR}"/${PN}-7.3-mips-seccomp-n32.patch
-
-	if use hpn ; then
-		elog "Applying HPN patchset ..."
-		eapply "${WORKDIR}"/${HPN_PATCH%.*.*}
-		save_version HPN
-	fi
+	eapply_user #473004
 
 	tc-export PKG_CONFIG
 	local sed_args=(
@@ -155,6 +228,7 @@ src_prepare() {
 		# Disable fortify flags ... our gcc does this for us
 		-e 's:-D_FORTIFY_SOURCE=2::'
 	)
+
 	# The -ftrapv flag ICEs on hppa #505182
 	use hppa && sed_args+=(
 		-e '/CFLAGS/s:-ftrapv:-fdisable-this-test:'
@@ -165,16 +239,6 @@ src_prepare() {
 		-e 's/-D_XOPEN_SOURCE//'
 	)
 	sed -i "${sed_args[@]}" configure{.ac,} || die
-
-	eapply_user #473004
-
-	# Now we can build a sane merged version.h
-	(
-		sed '/^#define SSH_RELEASE/d' version.h.* | sort -u
-		macros=()
-		for p in HPN LPK X509; do [[ -e version.h.${p} ]] && macros+=( SSH_${p} ) ; done
-		printf '#define SSH_RELEASE SSH_VERSION SSH_PORTABLE %s\n' "${macros[*]}"
-	) > version.h
 
 	eautoreconf
 }
@@ -189,21 +253,21 @@ src_configure() {
 		--with-ldflags="${LDFLAGS}"
 		--disable-strip
 		--with-pid-dir="${EPREFIX}"$(usex kernel_linux '' '/var')/run
-		--sysconfdir="${EPREFIX}"/etc/ssh
-		--libexecdir="${EPREFIX}"/usr/$(get_libdir)/misc
-		--datadir="${EPREFIX}"/usr/share/openssh
-		--with-privsep-path="${EPREFIX}"/var/empty
+		--sysconfdir="${EPREFIX%/}"/etc/ssh
+		--libexecdir="${EPREFIX%/}"/usr/$(get_libdir)/misc
+		--datadir="${EPREFIX%/}"/usr/share/openssh
+		--with-privsep-path="${EPREFIX%/}"/var/empty
 		--with-privsep-user=sshd
 		$(use_with audit audit linux)
-		$(use_with kerberos kerberos5 "${EPREFIX}"/usr)
-		# We apply the ldap patch conditionally, so can't pass --without-ldap
+		$(use_with kerberos kerberos5 "${EPREFIX%/}"/usr)
+		# We apply the ldap and sctp patch conditionally, so can't pass --without-{ldap,sctp}
 		# unconditionally else we get unknown flag warnings.
 		$(use ldap && use_with ldap)
+		$(use sctp && use_with sctp)
 		$(use_with ldns)
 		$(use_with libedit)
 		$(use_with pam)
 		$(use_with pie)
-		$(use X509 || use_with sctp)
 		$(use_with selinux)
 		$(use_with skey)
 		$(use_with ssl openssl)
@@ -215,57 +279,6 @@ src_configure() {
 	use amd64 && [[ ${ABI} == "x32" ]] && myconf+=( --with-sandbox=rlimit )
 
 	econf "${myconf[@]}"
-}
-
-src_install() {
-	emake install-nokeys DESTDIR="${D}"
-	fperms 600 /etc/ssh/sshd_config
-	dobin contrib/ssh-copy-id
-	newinitd "${FILESDIR}"/sshd.rc6.4 sshd
-	newconfd "${FILESDIR}"/sshd.confd sshd
-
-	newpamd "${FILESDIR}"/sshd.pam_include.2 sshd
-	if use pam ; then
-		sed -i \
-			-e "/^#UsePAM /s:.*:UsePAM yes:" \
-			-e "/^#PasswordAuthentication /s:.*:PasswordAuthentication no:" \
-			-e "/^#PrintMotd /s:.*:PrintMotd no:" \
-			-e "/^#PrintLastLog /s:.*:PrintLastLog no:" \
-			"${ED}"/etc/ssh/sshd_config || die
-	fi
-
-	# Gentoo tweaks to default config files
-	cat <<-EOF >> "${ED}"/etc/ssh/sshd_config
-
-	# Allow client to pass locale environment variables #367017
-	AcceptEnv LANG LC_*
-	EOF
-	cat <<-EOF >> "${ED}"/etc/ssh/ssh_config
-
-	# Send locale environment variables #367017
-	SendEnv LANG LC_*
-	EOF
-
-	if use livecd ; then
-		sed -i \
-			-e '/^#PermitRootLogin/c# Allow root login with password on livecds.\nPermitRootLogin Yes' \
-			"${ED}"/etc/ssh/sshd_config || die
-	fi
-
-	if ! use X509 && [[ -n ${LDAP_PATCH} ]] && use ldap ; then
-		insinto /etc/openldap/schema/
-		newins openssh-lpk_openldap.schema openssh-lpk.schema
-	fi
-
-	doman contrib/ssh-copy-id.1
-	dodoc CREDITS OVERVIEW README* TODO sshd_config
-	use X509 || dodoc ChangeLog
-
-	diropts -m 0700
-	dodir /etc/skel/.ssh
-
-	systemd_dounit "${FILESDIR}"/sshd.{service,socket}
-	systemd_newunit "${FILESDIR}"/sshd_at.service 'sshd@.service'
 }
 
 src_test() {
@@ -295,6 +308,60 @@ src_test() {
 	einfo "Passed tests: ${passed[*]}"
 	[[ ${#skipped[@]} -gt 0 ]] && ewarn "Skipped tests: ${skipped[*]}"
 	[[ ${#failed[@]}  -gt 0 ]] && die "Some tests failed: ${failed[*]}"
+}
+
+src_install() {
+	emake install-nokeys DESTDIR="${D}"
+	fperms 600 /etc/ssh/sshd_config
+	dobin contrib/ssh-copy-id
+	newinitd "${FILESDIR}"/sshd.rc6.5 sshd
+	newconfd "${FILESDIR}"/sshd-r1.confd sshd
+
+	newpamd "${FILESDIR}"/sshd.pam_include.2 sshd
+	if use pam ; then
+		sed -i \
+			-e "/^#UsePAM /s:.*:UsePAM yes:" \
+			-e "/^#PasswordAuthentication /s:.*:PasswordAuthentication no:" \
+			-e "/^#PrintMotd /s:.*:PrintMotd no:" \
+			-e "/^#PrintLastLog /s:.*:PrintLastLog no:" \
+			"${ED%/}"/etc/ssh/sshd_config || die
+	fi
+
+	# Gentoo tweaks to default config files
+	cat <<-EOF >> "${ED%/}"/etc/ssh/sshd_config
+
+	# Allow client to pass locale environment variables #367017
+	AcceptEnv LANG LC_*
+	EOF
+	cat <<-EOF >> "${ED%/}"/etc/ssh/ssh_config
+
+	# Send locale environment variables #367017
+	SendEnv LANG LC_*
+	EOF
+
+	if use livecd ; then
+		sed -i \
+			-e '/^#PermitRootLogin/c# Allow root login with password on livecds.\nPermitRootLogin Yes' \
+			"${ED%/}"/etc/ssh/sshd_config || die
+	fi
+
+	if use ldap && [[ -n ${LDAP_PATCH} ]] ; then
+		insinto /etc/openldap/schema/
+		newins openssh-lpk_openldap.schema openssh-lpk.schema
+	fi
+
+	doman contrib/ssh-copy-id.1
+	dodoc CREDITS OVERVIEW README* TODO sshd_config
+	use hpn && dodoc HPN-README
+	use X509 || dodoc ChangeLog
+
+	diropts -m 0700
+	dodir /etc/skel/.ssh
+
+	keepdir /var/empty
+
+	systemd_dounit "${FILESDIR}"/sshd.{service,socket}
+	systemd_newunit "${FILESDIR}"/sshd_at.service 'sshd@.service'
 }
 
 pkg_preinst() {
@@ -334,9 +401,15 @@ pkg_postinst() {
 		elog "and update all clients/servers that utilize them."
 	fi
 
-	# remove this if aes-ctr-mt gets fixed
-	if use hpn; then
-		elog "The multithreaded AES-CTR cipher has been temporarily dropped from the HPN patch"
-		elog "set since it does not (yet) work with >=openssh-7.6p1."
+	if use hpn && [[ -n "${HPN_DISABLE_MTAES}" ]] ; then
+		elog ""
+		elog "HPN's multi-threaded AES CTR cipher is currently known to be broken"
+		elog "and therefore disabled at runtime per default."
+		elog "Make sure your sshd_config is up to date and contains"
+		elog ""
+		elog "  DisableMTAES yes"
+		elog ""
+		elog "Otherwise you maybe unable to connect to this sshd using any AES CTR cipher."
+		elog ""
 	fi
 }
