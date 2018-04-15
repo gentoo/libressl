@@ -1,0 +1,16 @@
+#!/sbin/openrc-run
+# Copyright 1999-2018 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License, v2 or later
+
+command="/usr/bin/stubby"
+pidfile="/var/run/stubby.pid"
+command_args="-g ${STUBBY_OPTS}"
+name="DNS Privacy Daemon"
+
+depend()
+{
+	provide dns
+	need localmount net
+	after bootmisc
+	use logger
+}
