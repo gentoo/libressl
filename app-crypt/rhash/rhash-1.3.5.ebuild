@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -11,7 +11,7 @@ SRC_URI="mirror://sourceforge/${PN}/${P}-src.tar.gz"
 
 LICENSE="MIT"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~x86 ~amd64-linux ~x64-macos ~x86-macos ~x64-solaris ~x86-solaris"
+KEYWORDS="alpha amd64 arm arm64 hppa ia64 ~mips ppc ppc64 sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~ppc-macos ~x64-macos ~x86-macos ~x64-solaris ~x86-solaris"
 IUSE="debug nls libressl openssl static-libs"
 
 RDEPEND="
@@ -31,7 +31,7 @@ src_prepare() {
 	# Install /etc stuff inside the Prefix
 	sed -i -e 's:\$(DESTDIR)/etc:\$(DESTDIR)/$(SYSCONFDIR):g' Makefile || die
 
-	if [[ ${CHOST} == *-darwin* ]] ; then
+	if use elibc_Darwin ; then
 		local ver_script='-Wl,--version-script,exports.sym,-soname,$(SONAME)'
 		local install_name='-install_name $(LIBDIR)/$(SONAME)'
 		sed -i -e '/^\(SONAME\|SHAREDLIB\)/s/\.so\.\([0-9]\+\)/.\1.dylib/' \
@@ -41,7 +41,7 @@ src_prepare() {
 			Makefile || die
 	fi
 
-	if [[ ${CHOST} == *-solaris* ]] ; then
+	if use elibc_SunOS ; then
 		# https://sourceware.org/bugzilla/show_bug.cgi?id=12548
 		# skip the export.sym for now
 		sed -i -e 's/,--version-script,exports.sym//' librhash/Makefile || die
@@ -61,8 +61,9 @@ multilib_src_compile() {
 		$(use openssl && echo -ldl)
 	)
 
-	[[ ${CHOST} == *-darwin* || ${CHOST} == *-solaris* ]] \
-		&& ADDLDFLAGS+=( $(use nls && echo -lintl) )
+	use elibc_Darwin || use elibc_DragonFly || use elibc_FreeBSD ||
+		use elibc_NetBSD || use elibc_OpenBSD || use elibc_SunOS &&
+			ADDLDFLAGS+=( $(use nls && echo -lintl) )
 
 	emake CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}" CC="$(tc-getCC)" \
 		  ADDCFLAGS="${ADDCFLAGS[*]}" ADDLDFLAGS="${ADDLDFLAGS[*]}" \
