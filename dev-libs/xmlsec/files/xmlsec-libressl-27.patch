@@ -1,0 +1,61 @@
+--- ./configure.ac.orig	2018-05-26 19:05:54.108964299 -0400
++++ ./configure.ac	2018-05-26 19:08:39.382442333 -0400
+@@ -489,11 +489,24 @@
+     if test "z$OPENSSL_VERSION" = "z" ; then
+         AC_EGREP_CPP(yes,[
+             #include <openssl/opensslv.h>
+-        #if OPENSSL_VERSION_NUMBER == 0x20000000L && defined(LIBRESSL_VERSION_NUMBER)
++        #if defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x20700000L
+         yes
+         #endif
+     ],[
+-        OPENSSL_VERSION="1.0.0 (libressl)"
++        OPENSSL_VERSION="1.0.0 (libreSSL < 2.7)"
++    ],[
++        OPENSSL_VERSION=""
++    ])
++    fi
++
++    if test "z$OPENSSL_VERSION" = "z" ; then
++        AC_EGREP_CPP(yes,[
++            #include <openssl/opensslv.h>
++        #if defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER >= 0x20700000L
++        yes
++        #endif
++    ],[
++        OPENSSL_VERSION="1.1.0 (libreSSL >= 2.7)"
+     ],[
+         OPENSSL_VERSION=""
+     ])
+--- ./src/openssl/openssl_compat.h.orig	2018-05-26 19:13:31.312645962 -0400
++++ ./src/openssl/openssl_compat.h	2018-05-26 19:14:12.039255846 -0400
+@@ -47,6 +47,10 @@
+ #define X509_OBJECT_free(x)                { X509_OBJECT_free_contents(x); free(x); }
+ #define X509_OBJECT_get0_X509(x)           (((x) != NULL) ? ((x)->data.x509) : (X509 *)NULL)
+ 
++#if defined(LIBRESSL_VERSION_NUMBER) && defined(XMLSEC_OPENSSL_API_110)
++#define EVP_CIPHER_CTX_encrypting(x)       ((x)->encrypt)
++#endif /* defined(LIBRESSL_VERSION_NUMBER) && defined(XMLSEC_OPENSSL_API_110) */
++
+ #endif /* !defined(XMLSEC_OPENSSL_API_110) */
+ 
+ #endif /* __XMLSEC_OPENSSL_OPENSSL_COMPAT_H__ */
+--- ./include/xmlsec/openssl/crypto.h.orig	2018-05-26 19:09:43.282830238 -0400
++++ ./include/xmlsec/openssl/crypto.h	2018-05-26 19:12:04.161480775 -0400
+@@ -43,11 +43,14 @@
+  * What version of the openssl API do we have? (also see configure.ac)
+  *
+  *******************************************************************/
+-#if OPENSSL_VERSION_NUMBER == 0x20000000L && defined(LIBRESSL_VERSION_NUMBER)
+-/* Libressl decided to take over OpenSSL version 2.0.0, likely will create
++#if defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x20700000L
++/* LibreSSL decided to take over OpenSSL version 2.0.0, likely will create
+  * issues down the road...
+  */
+ #define XMLSEC_OPENSSL_API_100      1
++#elif defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER >= 0x20700000L
++/* LibreSSL 2.7 implements (most of) OpenSSL 1.1 API */
++#define XMLSEC_OPENSSL_API_110      1
+ #elif OPENSSL_VERSION_NUMBER >= 0x10100000L
+ #define XMLSEC_OPENSSL_API_110      1
+ #elif OPENSSL_VERSION_NUMBER >= 0x10000000L
