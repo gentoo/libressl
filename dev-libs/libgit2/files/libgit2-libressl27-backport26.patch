@@ -1,0 +1,28 @@
+diff --git a/src/openssl_stream.c b/src/openssl_stream.c
+index 6bab6b54a..f6f908a76 100644
+--- a/src/openssl_stream.c
++++ b/src/openssl_stream.c
+@@ -103,7 +103,8 @@ int git_openssl_stream_global_init(void)
+ 	ssl_opts |= SSL_OP_NO_COMPRESSION;
+ #endif
+ 
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || \
++     (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x20700000)
+ 	SSL_load_error_strings();
+ 	OpenSSL_add_ssl_algorithms();
+ #else
+diff --git a/src/openssl_stream.h b/src/openssl_stream.h
+index f5e59dab1..75bea07cf 100644
+--- a/src/openssl_stream.h
++++ b/src/openssl_stream.h
+@@ -27,7 +27,8 @@ extern int git_openssl_stream_new(git_stream **out, const char *host, const char
+ 
+ 
+ 
+-# if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++# if OPENSSL_VERSION_NUMBER < 0x10100000L || \
++      (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x20700000L)
+ 
+ GIT_INLINE(BIO_METHOD*) BIO_meth_new(int type, const char *name)
+ {
