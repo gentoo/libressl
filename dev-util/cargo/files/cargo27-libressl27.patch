@@ -1,0 +1,11 @@
+--- a/cargo_home/gentoo/libgit2-sys-0.7.1/libgit2/src/streams/openssl.h	2018-05-26 21:15:58.452343318 -0400
++++ b/cargo_home/gentoo/libgit2-sys-0.7.1/libgit2/src/streams/openssl.h	2018-05-26 21:16:07.728253943 -0400
+@@ -31,7 +31,7 @@
+ 
+ 
+ 
+-# if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++# if OPENSSL_VERSION_NUMBER < 0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x20700000L)
+ 
+ GIT_INLINE(BIO_METHOD*) BIO_meth_new(int type, const char *name)
+ {
