@@ -9,17 +9,20 @@ inherit user flag-o-matic multilib autotools pam systemd versionator
 # and _p? releases.
 PARCH=${P/_}
 
-HPN_VER="14v14-gentoo1" HPN_PATCH="${PARCH}-hpnssh${HPN_VER}.patch.xz" HPN_DISABLE_MTAES=1
-SCTP_VER="1.0" SCTP_PATCH="${PARCH}-sctp-${SCTP_VER}.patch.xz"
+HPN_VER="14v15-gentoo2" HPN_PATCH="${PARCH}-hpnssh${HPN_VER}.patch.xz"
+SCTP_VER="1.1" SCTP_PATCH="${PARCH}-sctp-${SCTP_VER}.patch.xz"
 X509_VER="11.3.1" X509_PATCH="${PARCH}-x509-${X509_VER}.patch.xz"
 
 # Disable LDAP support until someone will rewrite the patch,
 # upstream removed auth_parse_options() via commit 7c856857607112a3dfe6414696bf4c7ab7fb0cb3
 #LDAP_VER="0.3.14" LDAP_PATCH="${PN}-lpk-7.7p1-${LDAP_VER}.patch.xz"
 
+PATCH_SET="openssh-7.7p1-patches-1.1"
+
 DESCRIPTION="Port of OpenBSD's free SSH release"
 HOMEPAGE="https://www.openssh.com/"
 SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
+	https://dev.gentoo.org/~whissi/dist/${PN}/${PATCH_SET}.tar.xz
 	${SCTP_PATCH:+sctp? ( https://dev.gentoo.org/~whissi/dist/openssh/${SCTP_PATCH} )}
 	${HPN_PATCH:+hpn? ( https://dev.gentoo.org/~whissi/dist/openssh/${HPN_PATCH} )}
 	${LDAP_PATCH:+ldap? ( https://dev.gentoo.org/~whissi/dist/openssh/${LDAP_PATCH} )}
@@ -28,7 +31,7 @@ SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
 
 LICENSE="BSD GPL-2"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~x64-cygwin ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha amd64 ~arm ~arm64 ~hppa ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh sparc x86 ~ppc-aix ~x64-cygwin ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 # Probably want to drop ssl defaulting to on in a future version.
 IUSE="abi_mips_n32 audit bindist debug hpn kerberos kernel_linux ldap ldns libedit libressl livecd pam +pie sctp selinux skey +ssl static test X X509"
 REQUIRED_USE="ldns? ( ssl )
@@ -109,6 +112,7 @@ src_prepare() {
 
 	eapply "${FILESDIR}"/${PN}-7.7_p1-GSSAPI-dns.patch #165444 integrated into gsskex
 	eapply "${FILESDIR}"/${PN}-6.7_p1-openssl-ignore-status.patch
+	eapply "${FILESDIR}"/${PN}-7.5_p1-disable-conch-interop-tests.patch
 
 	local PATCHSET_VERSION_MACROS=()
 
@@ -133,6 +137,15 @@ src_prepare() {
 		sed -i \
 			-e "/^ agent$/d" \
 			"${S}"/tests/CA/config || die "Failed to disable broken X.509 agent test"
+
+		# The following patches don't apply on top of X509 patch
+		rm "${WORKDIR}"/patch/2002_all_openssh-7.7p1_upstream_bug2840.patch || die
+		rm "${WORKDIR}"/patch/2009_all_openssh-7.7p1_make-shell-tests-portable.patch || die
+		rm "${WORKDIR}"/patch/2016_all_openssh-7.7p1_implement-EMFILE-mitigation-for-ssh-agent.patch || die
+		rm "${WORKDIR}"/patch/2025_all_openssh-7.7p1_prefer-argv0-to-ssh-when-re-executing-ssh-for-proxyjump.patch || die
+	else
+		rm "${WORKDIR}"/patch/2016_all_openssh-7.7p1-X509_implement-EMFILE-mitigation-for-ssh-agent.patch || die
+		rm "${WORKDIR}"/patch/2025_all_openssh-7.7p1-X509_prefer-argv0-to-ssh-when-re-executing-ssh-for-proxyjump.patch || die
 	fi
 
 	if use ldap ; then
@@ -216,6 +229,12 @@ src_prepare() {
 			-e "s/^#define SSH_RELEASE.*/#define SSH_RELEASE     SSH_VERSION SSH_PORTABLE ${PATCHSET_VERSION_MACROS[*]}/" \
 			"${S}"/version.h || die "Failed to patch SSH_RELEASE (version.h)"
 	fi
+
+	sed -i \
+		-e "/#UseLogin no/d" \
+		"${S}"/sshd_config || die "Failed to remove removed UseLogin option (sshd_config)"
+
+	eapply "${WORKDIR}"/patch/*.patch
 
 	use X509 || eapply "${FILESDIR}"/${PN}-7.5_p1-libressl_arc4random.patch
 	eapply_user #473004
@@ -310,14 +329,38 @@ src_test() {
 	[[ ${#failed[@]}  -gt 0 ]] && die "Some tests failed: ${failed[*]}"
 }
 
-src_install() {
-	emake install-nokeys DESTDIR="${D}"
-	fperms 600 /etc/ssh/sshd_config
-	dobin contrib/ssh-copy-id
-	newinitd "${FILESDIR}"/sshd.rc6.5 sshd
-	newconfd "${FILESDIR}"/sshd-r1.confd sshd
+# Gentoo tweaks to default config files.
+tweak_ssh_configs() {
+	local locale_vars=(
+		# These are language variables that POSIX defines.
+		# http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html#tag_08_02
+		LANG LC_ALL LC_COLLATE LC_CTYPE LC_MESSAGES LC_MONETARY LC_NUMERIC LC_TIME
 
-	newpamd "${FILESDIR}"/sshd.pam_include.2 sshd
+		# These are the GNU extensions.
+		# https://www.gnu.org/software/autoconf/manual/html_node/Special-Shell-Variables.html
+		LANGUAGE LC_ADDRESS LC_IDENTIFICATION LC_MEASUREMENT LC_NAME LC_PAPER LC_TELEPHONE
+	)
+
+	# First the server config.
+	cat <<-EOF >> "${ED%/}"/etc/ssh/sshd_config
+
+	# Allow client to pass locale environment variables. #367017
+	AcceptEnv ${locale_vars[*]}
+
+	# Allow client to pass COLORTERM to match TERM. #658540
+	AcceptEnv COLORTERM
+	EOF
+
+	# Then the client config.
+	cat <<-EOF >> "${ED%/}"/etc/ssh/ssh_config
+
+	# Send locale environment variables. #367017
+	SendEnv ${locale_vars[*]}
+
+	# Send COLORTERM to match TERM. #658540
+	SendEnv COLORTERM
+	EOF
+
 	if use pam ; then
 		sed -i \
 			-e "/^#UsePAM /s:.*:UsePAM yes:" \
@@ -327,23 +370,23 @@ src_install() {
 			"${ED%/}"/etc/ssh/sshd_config || die
 	fi
 
-	# Gentoo tweaks to default config files
-	cat <<-EOF >> "${ED%/}"/etc/ssh/sshd_config
-
-	# Allow client to pass locale environment variables #367017
-	AcceptEnv LANG LC_*
-	EOF
-	cat <<-EOF >> "${ED%/}"/etc/ssh/ssh_config
-
-	# Send locale environment variables #367017
-	SendEnv LANG LC_*
-	EOF
-
 	if use livecd ; then
 		sed -i \
 			-e '/^#PermitRootLogin/c# Allow root login with password on livecds.\nPermitRootLogin Yes' \
 			"${ED%/}"/etc/ssh/sshd_config || die
 	fi
+}
+
+src_install() {
+	emake install-nokeys DESTDIR="${D}"
+	fperms 600 /etc/ssh/sshd_config
+	dobin contrib/ssh-copy-id
+	newinitd "${FILESDIR}"/sshd.rc6.5 sshd
+	newconfd "${FILESDIR}"/sshd-r1.confd sshd
+
+	newpamd "${FILESDIR}"/sshd.pam_include.2 sshd
+
+	tweak_ssh_configs
 
 	if use ldap && [[ -n ${LDAP_PATCH} ]] ; then
 		insinto /etc/openldap/schema/

@@ -9,15 +9,15 @@ inherit user flag-o-matic multilib autotools pam systemd versionator
 # and _p? releases.
 PARCH=${P/_}
 
-HPN_VER="14v15-gentoo1" HPN_PATCH="${PARCH}-hpnssh${HPN_VER}.patch.xz"
-SCTP_VER="1.0" SCTP_PATCH="${PARCH}-sctp-${SCTP_VER}.patch.xz"
+HPN_VER="14v15-gentoo2" HPN_PATCH="${PARCH}-hpnssh${HPN_VER}.patch.xz"
+SCTP_VER="1.1" SCTP_PATCH="${PARCH}-sctp-${SCTP_VER}.patch.xz"
 X509_VER="11.3.1" X509_PATCH="${PARCH}-x509-${X509_VER}.patch.xz"
 
 # Disable LDAP support until someone will rewrite the patch,
 # upstream removed auth_parse_options() via commit 7c856857607112a3dfe6414696bf4c7ab7fb0cb3
 #LDAP_VER="0.3.14" LDAP_PATCH="${PN}-lpk-7.7p1-${LDAP_VER}.patch.xz"
 
-PATCH_SET="openssh-7.7p1-patches-1.0"
+PATCH_SET="openssh-7.7p1-patches-1.1"
 
 DESCRIPTION="Port of OpenBSD's free SSH release"
 HOMEPAGE="https://www.openssh.com/"
@@ -31,7 +31,7 @@ SRC_URI="mirror://openbsd/OpenSSH/portable/${PARCH}.tar.gz
 
 LICENSE="BSD GPL-2"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~ppc-aix ~x64-cygwin ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha amd64 ~arm ~arm64 ~hppa ia64 ~m68k ~mips ~ppc ~ppc64 ~s390 ~sh sparc x86 ~ppc-aix ~x64-cygwin ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~m68k-mint ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 # Probably want to drop ssl defaulting to on in a future version.
 IUSE="abi_mips_n32 audit bindist debug hpn kerberos kernel_linux ldap ldns libedit libressl livecd pam +pie sctp selinux skey +ssl static test X X509"
 REQUIRED_USE="ldns? ( ssl )
@@ -112,6 +112,7 @@ src_prepare() {
 
 	eapply "${FILESDIR}"/${PN}-7.7_p1-GSSAPI-dns.patch #165444 integrated into gsskex
 	eapply "${FILESDIR}"/${PN}-6.7_p1-openssl-ignore-status.patch
+	eapply "${FILESDIR}"/${PN}-7.5_p1-disable-conch-interop-tests.patch
 
 	local PATCHSET_VERSION_MACROS=()
 
@@ -140,6 +141,11 @@ src_prepare() {
 		# The following patches don't apply on top of X509 patch
 		rm "${WORKDIR}"/patch/2002_all_openssh-7.7p1_upstream_bug2840.patch || die
 		rm "${WORKDIR}"/patch/2009_all_openssh-7.7p1_make-shell-tests-portable.patch || die
+		rm "${WORKDIR}"/patch/2016_all_openssh-7.7p1_implement-EMFILE-mitigation-for-ssh-agent.patch || die
+		rm "${WORKDIR}"/patch/2025_all_openssh-7.7p1_prefer-argv0-to-ssh-when-re-executing-ssh-for-proxyjump.patch || die
+	else
+		rm "${WORKDIR}"/patch/2016_all_openssh-7.7p1-X509_implement-EMFILE-mitigation-for-ssh-agent.patch || die
+		rm "${WORKDIR}"/patch/2025_all_openssh-7.7p1-X509_prefer-argv0-to-ssh-when-re-executing-ssh-for-proxyjump.patch || die
 	fi
 
 	if use ldap ; then

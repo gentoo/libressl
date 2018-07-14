@@ -7,6 +7,7 @@
 	</maintainer>
 	<use>
 		<flag name="rubytests">Install ruby tests that can only be run after ruby is installed</flag>
+<<<<<<< HEAD
 		<flag name="readline">
 			Use the <pkg>sys-libs/readline</pkg> library to provide the
 			readline extension, used for instance by the irb tool. This flag
@@ -16,6 +17,8 @@
 			readline extension will not be built (and irb will lose line
 			editing functionality).
 		</flag>
+=======
+>>>>>>> a4b9fd25537566eb73bc178828a5dc90ff79e904
 		<flag name="rdoc">Install <pkg>dev-ruby/rdoc</pkg> after installing Ruby.</flag>
 		<flag name="jemalloc">Use <pkg>dev-libs/jemalloc</pkg> for memory allocation.</flag>
 	</use>
