@@ -41,9 +41,9 @@ CDEPEND="
 		dev-libs/cyrus-sasl
 	)
 	openssl? (
-                !libressl? ( dev-libs/openssl:0= )
-                libressl? ( dev-libs/libressl:0= )
-        )
+		!libressl? ( dev-libs/openssl:0= )
+		libressl? ( dev-libs/libressl:0= )
+	)
 	pam? ( virtual/pam )
 	sasl? ( dev-libs/cyrus-sasl )
 	skey? ( >=sys-auth/skey-1.1.5-r1 )
