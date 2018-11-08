@@ -14,11 +14,10 @@ SRC_URI="mirror://sourceforge/${PN}/${P}.tar.xz"
 LICENSE="GPL-2 public-domain"
 SLOT="0"
 KEYWORDS="alpha amd64 arm hppa ia64 ~mips ppc ppc64 s390 sh sparc x86 ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x86-macos ~sparc-solaris ~x64-solaris ~x86-solaris"
-IUSE="ssl nls kerberos hesiod tk socks libressl"
+IUSE="ssl nls kerberos tk socks libressl"
 REQUIRED_USE="tk? ( ${PYTHON_REQUIRED_USE} )"
 
-RDEPEND="hesiod? ( net-dns/hesiod )
-	ssl? (
+RDEPEND="ssl? (
 		!libressl? ( >=dev-libs/openssl-0.9.6:= )
 		libressl?  ( dev-libs/libressl:= )
 	)
@@ -67,7 +66,7 @@ src_configure() {
 		$(use kerberos && echo "--with-ssl=${EPREFIX}/usr") \
 		$(use_with kerberos gssapi) \
 		$(use_with kerberos kerberos5) \
-		$(use_with hesiod) \
+		--without-hesiod \
 		$(use_with socks)
 }
 
