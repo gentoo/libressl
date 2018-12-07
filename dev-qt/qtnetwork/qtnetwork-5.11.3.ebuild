@@ -29,10 +29,6 @@ RDEPEND="${DEPEND}
 	networkmanager? ( net-misc/networkmanager )
 "
 
-PATCHES=(
-	"${FILESDIR}"/${P}-libressl.patch
-	)
-
 QT5_TARGET_SUBDIRS=(
 	src/network
 	src/plugins/bearer/generic
@@ -52,6 +48,16 @@ QT5_GENTOO_PRIVATE_CONFIG=(
 pkg_setup() {
 	use connman && QT5_TARGET_SUBDIRS+=(src/plugins/bearer/connman)
 	use networkmanager && QT5_TARGET_SUBDIRS+=(src/plugins/bearer/networkmanager)
+}
+
+src_prepare() {
+	has_version '>=dev-libs/libressl-2.8.0' && \
+		eaplly "${FILESDIR}/${P}-libressl-2.8.patch"
+
+	has_version '<dev-libs/libressl-2.8.0' && \
+		eaplly "${FILESDIR}/${P}-libressl-2.6.patch"
+
+	default
 }
 
 src_configure() {
