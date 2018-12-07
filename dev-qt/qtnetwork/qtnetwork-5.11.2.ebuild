@@ -52,10 +52,10 @@ pkg_setup() {
 
 src_prepare() {
 	has_version '>=dev-libs/libressl-2.8.0' && \
-		eaplly "${FILESDIR}/${P}-libressl-2.8.patch"
+		eapply "${FILESDIR}/${P}-libressl-2.8.patch"
 
 	has_version '<dev-libs/libressl-2.8.0' && \
-		eaplly "${FILESDIR}/${P}-libressl-2.6.patch"
+		eapply "${FILESDIR}/${P}-libressl-2.6.patch"
 
 	default
 }
