@@ -53,7 +53,7 @@ COMMON_DEPEND="
 	lttng? ( dev-util/lttng-ust:= )
 	nss? ( dev-libs/nss:= )
 	fuse? ( sys-fs/fuse:0=[static-libs?] )
-	ssl? ( 
+	ssl? (
 		!libressl? ( <dev-libs/openssl-1.1:=[static-libs?] )
 		libressl? ( <dev-libs/libressl-2.8 )
 	)
