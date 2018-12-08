@@ -57,7 +57,7 @@ src_prepare() {
 	has_version '<dev-libs/libressl-2.8.0' && \
 		eapply "${FILESDIR}/${P}-libressl-2.6.patch"
 
-	default
+	qt5-build_src_prepare
 }
 
 src_configure() {
