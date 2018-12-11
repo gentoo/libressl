@@ -11,7 +11,7 @@ if [[ ${QT5_BUILD_TYPE} == release ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~ppc ~ppc64 ~sparc ~x86 ~amd64-fbsd"
 fi
 
-IUSE="bindist connman libproxy networkmanager libressl +ssl"
+IUSE="bindist connman libproxy libressl networkmanager +ssl"
 
 DEPEND="
 	~dev-qt/qtcore-${PV}
@@ -28,10 +28,6 @@ RDEPEND="${DEPEND}
 	connman? ( net-misc/connman )
 	networkmanager? ( net-misc/networkmanager )
 "
-
-PATCHES=(
-	"${FILESDIR}"/${P}-libressl.patch
-	)
 
 QT5_TARGET_SUBDIRS=(
 	src/network
@@ -52,6 +48,16 @@ QT5_GENTOO_PRIVATE_CONFIG=(
 pkg_setup() {
 	use connman && QT5_TARGET_SUBDIRS+=(src/plugins/bearer/connman)
 	use networkmanager && QT5_TARGET_SUBDIRS+=(src/plugins/bearer/networkmanager)
+}
+
+src_prepare() {
+	has_version '>=dev-libs/libressl-2.8.0' && \
+		eapply "${FILESDIR}/${P}-libressl-2.8.patch"
+
+	has_version '<dev-libs/libressl-2.8.0' && \
+		eapply "${FILESDIR}/${P}-libressl-2.6.patch"
+
+	qt5-build_src_prepare
 }
 
 src_configure() {
