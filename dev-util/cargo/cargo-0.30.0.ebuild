@@ -71,7 +71,7 @@ num_cpus-1.8.0
 openssl-0.10.15
 openssl-probe-0.1.2
 openssl-src-111.0.1+1.1.1
-openssl-sys-0.9.39
+openssl-sys-0.9.40
 owning_ref-0.3.3
 parking_lot-0.6.4
 parking_lot_core-0.3.1
