@@ -1,0 +1,11 @@
+--- a/SSLeay.xs	2019-03-02 13:45:09.118839178 -0500
++++ b/SSLeay.xs	2019-03-02 13:45:10.990835828 -0500
+@@ -5477,7 +5477,7 @@
+ 	const EVP_MD *h;
+ 	int md_size = -1;
+ 	c = s->enc_read_ctx->cipher;
+-#if OPENSSL_VERSION_NUMBER >= 0x10001000L
++#if OPENSSL_VERSION_NUMBER >= 0x10001000L && !defined(LIBRESSL_VERSION_NUMBER)
+ 	if (s->s3)
+ 	    md_size = s->s3->tmp.new_mac_secret_size;
+ #elif OPENSSL_VERSION_NUMBER >= 0x00909000L
