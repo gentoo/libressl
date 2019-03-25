@@ -18,10 +18,10 @@ KEYWORDS="~amd64 ~arm ~arm64 ~ppc ~ppc64 ~x86 ~amd64-linux ~x64-macos"
 IUSE="bundled-ssl cpu_flags_x86_sse2 debug doc icu inspector libressl +npm +snapshot +ssl systemtap test"
 REQUIRED_USE="
 	${PYTHON_REQUIRED_USE}
-	inspector? ( icu ssl )
-	npm? ( ssl )
-	libressl? ( bundled-ssl )
 	bundled-ssl? ( ssl )
+	inspector? ( icu ssl )
+	libressl? ( bundled-ssl )
+	npm? ( ssl )
 "
 
 RDEPEND="
