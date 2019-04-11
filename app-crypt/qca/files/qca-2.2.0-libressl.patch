@@ -1,23 +1,24 @@
-From 32e4f55732e42103cd7ba5e84ddd086bf8103948 Mon Sep 17 00:00:00 2001
+From bfc0dd038fea35f004867867935eb695b958f849 Mon Sep 17 00:00:00 2001
 From: Stefan Strogin <stefan.strogin@gmail.com>
-Date: Fri, 5 Apr 2019 09:57:14 +0300
+Date: Fri, 5 Apr 2019 09:17:23 +0300
 Subject: [PATCH] Fix build with LibreSSL
 
 Provide RSA_meth_set_{sign,verify} for LibreSSL.
 Do not redefine M_ASN1_IA5STRING_new and RSA_F_RSA_EAY_PRIVATE_DECRYPT.
+Disable HKDF.
 
 Upstream-Status: Submitted [https://phabricator.kde.org/D20259]
 Signed-off-by: Stefan Strogin <stefan.strogin@gmail.com>
 ---
  plugins/qca-ossl/ossl110-compat.h | 34 ++++++++++++++++---------------
- plugins/qca-ossl/qca-ossl.cpp     |  2 +-
- 2 files changed, 19 insertions(+), 17 deletions(-)
+ plugins/qca-ossl/qca-ossl.cpp     | 10 ++++-----
+ 2 files changed, 23 insertions(+), 21 deletions(-)
 
 diff --git a/plugins/qca-ossl/ossl110-compat.h b/plugins/qca-ossl/ossl110-compat.h
-index ec15475..2d47835 100644
+index b320707..d093e50 100644
 --- a/plugins/qca-ossl/ossl110-compat.h
 +++ b/plugins/qca-ossl/ossl110-compat.h
-@@ -213,22 +213,6 @@ static int RSA_meth_set_priv_dec(RSA_METHOD *rsa, int (*priv_dec) (int flen, con
+@@ -205,22 +205,6 @@ static int RSA_meth_set_priv_dec(RSA_METHOD *rsa, int (*priv_dec) (int flen, con
      return 1;
  }
  
@@ -40,7 +41,7 @@ index ec15475..2d47835 100644
  static int RSA_meth_set_finish(RSA_METHOD *meth, int (*finish) (RSA *rsa))
  {
      if (!meth) return 0;
-@@ -280,4 +264,22 @@ static void HMAC_CTX_free(HMAC_CTX *ctx)
+@@ -272,4 +256,22 @@ static void HMAC_CTX_free(HMAC_CTX *ctx)
  
  #endif // OPENSSL_VERSION_NUMBER < 0x10100000L
  
@@ -64,10 +65,10 @@ index ec15475..2d47835 100644
 +
  #endif // OSSL110COMPAT_H
 diff --git a/plugins/qca-ossl/qca-ossl.cpp b/plugins/qca-ossl/qca-ossl.cpp
-index 39dbc2b..1216bef 100644
+index 11ecdc9..75c48fc 100644
 --- a/plugins/qca-ossl/qca-ossl.cpp
 +++ b/plugins/qca-ossl/qca-ossl.cpp
-@@ -61,7 +61,7 @@
+@@ -62,12 +62,12 @@
  #endif
  
  // OpenSSL 1.1.0 compatibility macros
@@ -75,6 +76,39 @@ index 39dbc2b..1216bef 100644
 +#if defined(OSSL_110) && !defined(LIBRESSL_VERSION_NUMBER)
  #define M_ASN1_IA5STRING_new() ASN1_IA5STRING_new()
  #define RSA_F_RSA_EAY_PRIVATE_DECRYPT RSA_F_RSA_OSSL_PRIVATE_DECRYPT
+ #endif
+ 
+-#ifdef OSSL_110
++#if defined(OSSL_110) && !defined(LIBRESSL_VERSION_NUMBER)
+ #include <openssl/kdf.h>
+ #endif
+ 
+@@ -1280,7 +1280,7 @@ public:
+ protected:
+ };
+ 
+-#ifdef OSSL_110
++#if defined(OSSL_110) && !defined(LIBRESSL_VERSION_NUMBER)
+ class opensslHkdfContext : public HKDFContext
+ {
+ public:
+@@ -7416,7 +7416,7 @@ public:
+ #endif
+ 		list += "pbkdf1(sha1)";
+ 		list += "pbkdf2(sha1)";
+-#ifdef OSSL_110
++#if defined(OSSL_110) && !defined(LIBRESSL_VERSION_NUMBER)
+ 		list += "hkdf(sha256)";
+ #endif
+ 		list += "pkey";
+@@ -7489,7 +7489,7 @@ public:
+ #endif
+ 		else if ( type == "pbkdf2(sha1)" )
+ 			return new opensslPbkdf2Context( this, type );
+-#ifdef OSSL_110
++#if defined(OSSL_110) && !defined(LIBRESSL_VERSION_NUMBER)
+ 		else if ( type == "hkdf(sha256)" )
+ 			return new opensslHkdfContext( this, type );
  #endif
 -- 
 2.21.0

@@ -7,7 +7,7 @@ inherit cmake-utils qmake-utils
 
 DESCRIPTION="Qt Cryptographic Architecture (QCA)"
 HOMEPAGE="https://userbase.kde.org/QCA"
-SRC_URI="https://dev.gentoo.org/~asturm/distfiles/${P}.tar.xz"
+SRC_URI="mirror://kde/stable/${PN}/${PV}/${P}.tar.xz"
 
 LICENSE="LGPL-2.1"
 SLOT="2"
