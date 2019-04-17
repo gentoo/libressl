@@ -7,10 +7,12 @@ LibreSSL which don't have the 'libressl' USE flag yet.
 
 ## How to install the overlay
 
-With paludis: see [Paludis repository configuration](http://paludis.exherbo.org/configuration/repositories/index.html)
-
-With layman:
-```layman -f -o https://raw.githubusercontent.com/gentoo/libressl/master/libressl-overlay.xml -a libressl``` or ```layman -a libressl```
+Use [`eselect-repository`](https://wiki.gentoo.org/wiki/Eselect/Repository):
+```
+# eselect repository enable libressl
+```
+Now you can use `emerge --sync` or `emaint sync -r libressl` to sync this
+repository.
 
 ## links
 
