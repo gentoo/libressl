@@ -10,6 +10,7 @@ aho-corasick-0.6.8
 ansi_term-0.11.0
 arrayvec-0.4.7
 atty-0.2.11
+autocfg-0.1.2
 backtrace-0.3.9
 backtrace-sys-0.1.24
 bitflags-1.0.4
@@ -68,10 +69,10 @@ miniz-sys-0.1.10
 miow-0.3.3
 nodrop-0.1.12
 num_cpus-1.8.0
-openssl-0.10.15
+openssl-0.10.22
 openssl-probe-0.1.2
 openssl-src-111.0.1+1.1.1
-openssl-sys-0.9.40
+openssl-sys-0.9.46
 owning_ref-0.3.3
 parking_lot-0.6.4
 parking_lot_core-0.3.1
