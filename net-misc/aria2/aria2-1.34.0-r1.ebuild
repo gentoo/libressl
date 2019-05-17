@@ -1,4 +1,4 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="6"
@@ -10,7 +10,7 @@ HOMEPAGE="https://aria2.github.io/"
 SRC_URI="https://github.com/aria2/${PN}/releases/download/release-${PV}/${P}.tar.xz"
 
 LICENSE="GPL-2"
-KEYWORDS="~amd64 ~arm ~ppc ~ppc64 ~sparc ~x86 ~amd64-linux ~x86-linux"
+KEYWORDS="amd64 ~arm ~ppc ~ppc64 ~sparc x86 ~amd64-linux ~x86-linux"
 SLOT="0"
 IUSE="adns bittorrent +gnutls jemalloc libressl libuv +libxml2 metalink +nettle nls sqlite scripts ssh ssl tcmalloc test xmlrpc"
 
@@ -65,8 +65,10 @@ pkg_setup() {
 }
 
 src_prepare() {
-	eapply "${FILESDIR}"/aria2-libressl.patch
 	eapply "${FILESDIR}"/${P}-make_unique.patch
+	# https://bugs.gentoo.org/674622 (CVE-2019-3500)
+	eapply "${FILESDIR}"/${P}-mask-headers.patch
+	eapply "${FILESDIR}"/aria2-libressl.patch
 	default
 	sed -i -e "s|/tmp|${T}|" test/*.cc test/*.txt || die "sed failed"
 }
