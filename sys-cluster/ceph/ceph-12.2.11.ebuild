@@ -1,9 +1,8 @@
-# Copyright 1999-2018 Gentoo Authors
-# Copyright 2017-2018 Sony Interactive Entertainment Inc.
+# Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
-PYTHON_COMPAT=( python{2_7,3_{4,5,6}} )
+PYTHON_COMPAT=( python{2_7,3_{5,6}} )
 DISTUTILS_OPTIONAL=1
 
 inherit check-reqs cmake-utils distutils-r1 flag-o-matic multiprocessing \
@@ -15,7 +14,7 @@ if [[ ${PV} == *9999* ]]; then
 	SRC_URI=""
 else
 	SRC_URI="https://download.ceph.com/tarballs/${P}.tar.gz"
-	KEYWORDS="~amd64 ~x86"
+	KEYWORDS="amd64 ~x86"
 fi
 
 DESCRIPTION="Ceph distributed filesystem"
@@ -26,9 +25,8 @@ SLOT="0"
 
 CPU_FLAGS_X86=(sse{,2,3,4_1,4_2} ssse3)
 
-IUSE="babeltrace cephfs fuse jemalloc ldap libressl lttng"
-IUSE+=" +mgr nss +radosgw +ssl static-libs +system-boost"
-IUSE+=" systemd +tcmalloc test xfs zfs"
+IUSE="babeltrace cephfs fuse jemalloc ldap libressl lttng +mgr nss +radosgw +ssl"
+IUSE+=" static-libs +system-boost systemd +tcmalloc test xfs zfs"
 IUSE+=" $(printf "cpu_flags_x86_%s\n" ${CPU_FLAGS_X86[@]})"
 
 # unbundling code commented out pending bugs 584056 and 584058
@@ -53,12 +51,12 @@ COMMON_DEPEND="
 	lttng? ( dev-util/lttng-ust:= )
 	nss? ( dev-libs/nss:= )
 	fuse? ( sys-fs/fuse:0=[static-libs?] )
-	ssl? (
-		!libressl? ( <dev-libs/openssl-1.1:=[static-libs?] )
-		libressl? ( <dev-libs/libressl-2.8 )
-	)
 	xfs? ( sys-fs/xfsprogs:=[static-libs?] )
 	zfs? ( sys-fs/zfs:=[static-libs?] )
+	ssl? (
+		!libressl? ( <dev-libs/openssl-1.1:0=[static-libs?] )
+		libressl? ( <dev-libs/libressl-2.8 )
+	)
 	radosgw? (
 		dev-libs/expat:=[static-libs?]
 		!libressl? (
@@ -69,7 +67,7 @@ COMMON_DEPEND="
 			<dev-libs/libressl-2.8:=[static-libs?]
 			net-misc/curl:=[curl_ssl_libressl,static-libs?]
 		)
-
+		net-misc/curl:=[curl_ssl_openssl,static-libs?]
 	)
 	system-boost? (
 		=dev-libs/boost-1.66*:=[threads,context,python,static-libs?,${PYTHON_USEDEP}]
@@ -143,6 +141,7 @@ PATCHES=(
 	"${FILESDIR}/ceph-12.2.4-rocksdb-cflags.patch"
 	"${FILESDIR}/ceph-12.2.5-no-werror.patch"
 	"${FILESDIR}/ceph-13.2.2-dont-install-sysvinit-script.patch"
+	"${FILESDIR}/ceph-12.2.11-fix-min-call.patch"
 )
 
 check-reqs_export_vars() {
@@ -178,7 +177,7 @@ src_prepare() {
 	cmake-utils_src_prepare
 
 	if use system-boost; then
-		eapply "${FILESDIR}/ceph-12.2.5-boost-sonames.patch"
+		eapply "${FILESDIR}/ceph-12.2.11-boost-sonames.patch"
 	fi
 
 	# remove tests that need root access
@@ -272,14 +271,14 @@ src_install() {
 	newexe "${CMAKE_BUILD_DIR}/bin/init-ceph" ceph_init.sh
 
 	insinto /etc/logrotate.d/
-	newins "${FILESDIR}"/ceph.logrotate-r1 ${PN}
+	newins "${FILESDIR}"/ceph.logrotate-r2 ${PN}
 
 	keepdir /var/lib/${PN}{,/tmp} /var/log/${PN}/stat
 
 	fowners -R ceph:ceph /var/lib/ceph /var/log/ceph
 
 	newinitd "${FILESDIR}/rbdmap.initd" rbdmap
-	newinitd "${FILESDIR}/${PN}.initd-r10" ${PN}
+	newinitd "${FILESDIR}/${PN}.initd-r11" ${PN}
 	newconfd "${FILESDIR}/${PN}.confd-r5" ${PN}
 
 	insinto /etc/sysctl.d
