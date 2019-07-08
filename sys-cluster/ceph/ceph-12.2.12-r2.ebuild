@@ -1,9 +1,8 @@
-# Copyright 1999-2018 Gentoo Authors
-# Copyright 2017-2018 Sony Interactive Entertainment Inc.
+# Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
-PYTHON_COMPAT=( python{2_7,3_{4,5,6}} )
+EAPI=7
+PYTHON_COMPAT=( python{2_7,3_{5,6}} )
 DISTUTILS_OPTIONAL=1
 
 inherit check-reqs cmake-utils distutils-r1 flag-o-matic multiprocessing \
@@ -15,7 +14,7 @@ if [[ ${PV} == *9999* ]]; then
 	SRC_URI=""
 else
 	SRC_URI="https://download.ceph.com/tarballs/${P}.tar.gz"
-	KEYWORDS="~amd64 ~x86"
+	KEYWORDS="~amd64 ~arm64 ~x86"
 fi
 
 DESCRIPTION="Ceph distributed filesystem"
@@ -26,9 +25,8 @@ SLOT="0"
 
 CPU_FLAGS_X86=(sse{,2,3,4_1,4_2} ssse3)
 
-IUSE="babeltrace cephfs fuse jemalloc ldap libressl lttng"
-IUSE+=" +mgr nss +radosgw +ssl static-libs +system-boost"
-IUSE+=" systemd +tcmalloc test xfs zfs"
+IUSE="babeltrace cephfs fuse jemalloc ldap libressl lttng +mgr nss +radosgw +ssl"
+IUSE+=" static-libs +system-boost systemd +tcmalloc test xfs zfs"
 IUSE+=" $(printf "cpu_flags_x86_%s\n" ${CPU_FLAGS_X86[@]})"
 
 # unbundling code commented out pending bugs 584056 and 584058
@@ -53,12 +51,12 @@ COMMON_DEPEND="
 	lttng? ( dev-util/lttng-ust:= )
 	nss? ( dev-libs/nss:= )
 	fuse? ( sys-fs/fuse:0=[static-libs?] )
-	ssl? (
-		!libressl? ( <dev-libs/openssl-1.1:=[static-libs?] )
-		libressl? ( <dev-libs/libressl-2.8 )
-	)
 	xfs? ( sys-fs/xfsprogs:=[static-libs?] )
 	zfs? ( sys-fs/zfs:=[static-libs?] )
+	ssl? (
+		!libressl? ( dev-libs/openssl:0=[static-libs?] )
+		libressl? ( <dev-libs/libressl-2.8 )
+	)
 	radosgw? (
 		dev-libs/expat:=[static-libs?]
 		!libressl? (
@@ -69,7 +67,7 @@ COMMON_DEPEND="
 			<dev-libs/libressl-2.8:=[static-libs?]
 			net-misc/curl:=[curl_ssl_libressl,static-libs?]
 		)
-
+		net-misc/curl:=[curl_ssl_openssl,static-libs?]
 	)
 	system-boost? (
 		=dev-libs/boost-1.66*:=[threads,context,python,static-libs?,${PYTHON_USEDEP}]
@@ -90,7 +88,6 @@ DEPEND="${COMMON_DEPEND}
 	sys-devel/bc
 	virtual/pkgconfig
 	test? (
-		dev-python/tox[${PYTHON_USEDEP}]
 		dev-python/virtualenv[${PYTHON_USEDEP}]
 		sys-apps/grep[pcre]
 		sys-fs/btrfs-progs
@@ -127,7 +124,8 @@ RESTRICT+=" test"
 # false positives unless all USE flags are on
 CMAKE_WARN_UNUSED_CLI="no"
 
-STRIP_MASK="/usr/lib*/rados-classes/*"
+# ninja does not work at all
+CMAKE_MAKEFILE_GENERATOR="emake"
 
 UNBUNDLE_LIBS=(
 	src/erasure-code/jerasure/jerasure
@@ -143,6 +141,11 @@ PATCHES=(
 	"${FILESDIR}/ceph-12.2.4-rocksdb-cflags.patch"
 	"${FILESDIR}/ceph-12.2.5-no-werror.patch"
 	"${FILESDIR}/ceph-13.2.2-dont-install-sysvinit-script.patch"
+	"${FILESDIR}/ceph-12.2.11-fix-min-call.patch"
+	"${FILESDIR}/ceph-12.2.12-dont-use-bad-namespace.patch"
+	"${FILESDIR}/ceph-12.2.12-civetweb-openssl-1.1.1.patch"
+	"${FILESDIR}/ceph-12.2.12-qa-warning.patch"
+	"${FILESDIR}/ceph-12.2.12-ncurses-tinfo.patch"
 )
 
 check-reqs_export_vars() {
@@ -178,7 +181,7 @@ src_prepare() {
 	cmake-utils_src_prepare
 
 	if use system-boost; then
-		eapply "${FILESDIR}/ceph-12.2.5-boost-sonames.patch"
+		eapply "${FILESDIR}/ceph-12.2.11-boost-sonames.patch"
 	fi
 
 	# remove tests that need root access
@@ -190,6 +193,8 @@ src_prepare() {
 ceph_src_configure() {
 	local flag
 	local mycmakeargs=(
+		-DCMAKE_INSTALL_SYSCONFDIR="${EPREFIX}/etc"
+		-DCMAKE_INSTALL_DOCDIR="${EPREFIX}/usr/share/doc/${PN}-${PVR}"
 		-DWITH_BABELTRACE=$(usex babeltrace)
 		-DWITH_CEPHFS=$(usex cephfs)
 		-DWITH_FUSE=$(usex fuse)
@@ -204,7 +209,7 @@ ceph_src_configure() {
 		-DWITH_XFS=$(usex xfs)
 		-DWITH_ZFS=$(usex zfs)
 		-DENABLE_SHARED=$(usex static-libs '' 'yes' 'no')
-		-DALLOCATOR=$(usex tcmalloc 'tcmalloc' '' "$(usex jemalloc 'jemalloc' '' 'libc' '')" '')
+		-DALLOCATOR=$(usex tcmalloc 'tcmalloc' "$(usex jemalloc 'jemalloc' 'libc')")
 		-DWITH_SYSTEM_BOOST=$(usex system-boost)
 		-DBOOST_J=$(makeopts_jobs)
 		-DWITH_RDMA=no
@@ -222,7 +227,7 @@ ceph_src_configure() {
 
 	# bug #630232
 	sed -i "s:\"${T//:\\:}/${EPYTHON}/bin/python\":\"${PYTHON}\":" \
-		"${BUILD_DIR:-${CMAKE_BUILD_DIR:-${S}}}"/include/acconfig.h \
+		"${BUILD_DIR:--${S}}"/include/acconfig.h \
 		|| die "sed failed"
 }
 
@@ -247,7 +252,7 @@ src_compile() {
 	cmake-utils_src_make all
 
 	# we have to do this here to prevent from building everything multiple times
-	BUILD_DIR="${CMAKE_BUILD_DIR}" python_copy_sources
+	python_copy_sources
 	python_foreach_impl python_compile
 }
 
@@ -258,7 +263,7 @@ src_test() {
 python_install() {
 	local CMAKE_USE_DIR="${S}"
 	pushd "${BUILD_DIR}/src/pybind" >/dev/null || die
-	DESTDIR="${D}" emake install
+	DESTDIR="${ED}" emake install
 	popd >/dev/null || die
 }
 
@@ -266,20 +271,20 @@ src_install() {
 	cmake-utils_src_install
 	python_foreach_impl python_install
 
-	prune_libtool_files --all
+	find "${D}" -name '*.la' -delete || die
 
 	exeinto /usr/$(get_libdir)/ceph
-	newexe "${CMAKE_BUILD_DIR}/bin/init-ceph" ceph_init.sh
+	newexe "${BUILD_DIR}/bin/init-ceph" ceph_init.sh
 
 	insinto /etc/logrotate.d/
-	newins "${FILESDIR}"/ceph.logrotate-r1 ${PN}
+	newins "${FILESDIR}"/ceph.logrotate-r2 ${PN}
 
 	keepdir /var/lib/${PN}{,/tmp} /var/log/${PN}/stat
 
 	fowners -R ceph:ceph /var/lib/ceph /var/log/ceph
 
 	newinitd "${FILESDIR}/rbdmap.initd" rbdmap
-	newinitd "${FILESDIR}/${PN}.initd-r10" ${PN}
+	newinitd "${FILESDIR}/${PN}.initd-r12" ${PN}
 	newconfd "${FILESDIR}/${PN}.confd-r5" ${PN}
 
 	insinto /etc/sysctl.d
@@ -312,6 +317,9 @@ src_install() {
 	# python_fix_shebang apparently is not idempotent
 	sed -i -r  's:(/usr/lib/python-exec/python[0-9]\.[0-9]/python)[0-9]\.[0-9]:\1:' \
 		"${ED}"/usr/{sbin/ceph-disk,bin/ceph-detect-init} || die "sed failed"
+
+	local -a rados_classes=( "${D}/usr/$(get_libdir)/rados-classes"/* )
+	dostrip -x "${rados_classes[@]#${D}}"
 }
 
 pkg_postinst() {
