@@ -7,7 +7,7 @@ RESTRICT="test"
 PYTHON_COMPAT=( python2_7 )
 PYTHON_REQ_USE="threads"
 
-inherit bash-completion-r1 eutils flag-o-matic pax-utils python-single-r1 toolchain-funcs
+inherit bash-completion-r1 eutils flag-o-matic pax-utils python-any-r1 toolchain-funcs
 
 DESCRIPTION="A JavaScript runtime built on Chrome's V8 JavaScript engine"
 HOMEPAGE="https://nodejs.org/"
@@ -18,7 +18,6 @@ SLOT="0"
 KEYWORDS="~amd64 ~arm ~arm64 ~ppc ~ppc64 ~x86 ~amd64-linux ~x64-macos"
 IUSE="bundled-ssl cpu_flags_x86_sse2 debug doc icu inspector libressl +npm +snapshot +ssl systemtap test"
 REQUIRED_USE="
-	${PYTHON_REQUIRED_USE}
 	bundled-ssl? ( ssl )
 	inspector? ( icu ssl )
 	libressl? ( bundled-ssl )
@@ -29,7 +28,7 @@ RDEPEND="
 	>=dev-libs/libuv-1.23.2:=
 	>=net-dns/c-ares-1.10.1
 	>=net-libs/http-parser-2.9.0:=
-	>=net-libs/nghttp2-1.33.0
+	>=net-libs/nghttp2-1.39.2
 	sys-libs/zlib
 	icu? ( >=dev-libs/icu-60.1:= )
 	ssl? (
