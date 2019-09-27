@@ -67,7 +67,6 @@ src_prepare() {
 
 	# make sure we use python2.* while using gyp
 	sed -i -e "s/python/${EPYTHON}/" deps/npm/node_modules/node-gyp/gyp/gyp || die
-	#sed -i -e "s/|| 'python2'/|| '${EPYTHON}'/" deps/npm/node_modules/node-gyp/lib/configure.js || die
 
 	# less verbose install output (stating the same as portage, basically)
 	sed -i -e "/print/d" tools/install.py || die
