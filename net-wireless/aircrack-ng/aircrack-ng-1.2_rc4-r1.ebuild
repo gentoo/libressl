@@ -13,7 +13,7 @@ HOMEPAGE="http://www.aircrack-ng.org"
 
 MY_PV=${PV/_/-}
 SRC_URI="http://download.${PN}.org/${PN}-${MY_PV}.tar.gz"
-KEYWORDS="~amd64 ~arm ~ppc ~x86 ~x86-fbsd ~amd64-linux ~x86-linux"
+KEYWORDS="~amd64 ~arm ~ppc ~x86 ~amd64-linux ~x86-linux"
 
 LICENSE="GPL-2"
 SLOT="0"

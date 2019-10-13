@@ -19,7 +19,7 @@ if [[ ${PV} == "9999" ]] ; then
 else
 	MY_PV=${PV/_/-}
 	SRC_URI="http://download.${PN}.org/${PN}-${MY_PV}.tar.gz"
-	KEYWORDS="amd64 arm ppc x86 ~x86-fbsd ~amd64-linux ~x86-linux"
+	KEYWORDS="amd64 arm ppc x86 ~amd64-linux ~x86-linux"
 	S="${WORKDIR}/${PN}-${MY_PV}"
 fi
 
