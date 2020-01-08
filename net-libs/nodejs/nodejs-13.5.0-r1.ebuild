@@ -1,4 +1,4 @@
-# Copyright 1999-2019 Gentoo Authors
+# Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -26,7 +26,7 @@ REQUIRED_USE="
 RDEPEND="
 	>=dev-libs/libuv-1.34.0:=
 	>=net-dns/c-ares-1.15.0
-	>=net-libs/nghttp2-1.39.2
+	>=net-libs/nghttp2-1.40.0
 	sys-libs/zlib
 	icu? ( >=dev-libs/icu-64.2:= )
 	ssl? (
