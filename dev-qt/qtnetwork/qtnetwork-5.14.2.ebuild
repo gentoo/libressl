@@ -17,6 +17,7 @@ DEPEND="
 	~dev-qt/qtcore-${PV}
 	sys-libs/zlib:=
 	connman? ( ~dev-qt/qtdbus-${PV} )
+	gssapi? ( virtual/krb5 )
 	libproxy? ( net-libs/libproxy )
 	networkmanager? ( ~dev-qt/qtdbus-${PV} )
 	sctp? ( kernel_linux? ( net-misc/lksctp-tools ) )
