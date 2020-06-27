@@ -1,4 +1,4 @@
-# Copyright 1999-2019 Gentoo Authors
+# Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="6"
@@ -9,27 +9,29 @@ DESCRIPTION="A download utility with segmented downloading with BitTorrent suppo
 HOMEPAGE="https://aria2.github.io/"
 SRC_URI="https://github.com/aria2/${PN}/releases/download/release-${PV}/${P}.tar.xz"
 
-LICENSE="GPL-2"
+LICENSE="GPL-2+-with-openssl-exception"
 KEYWORDS="amd64 ~arm ~ppc ~ppc64 ~sparc x86 ~amd64-linux ~x86-linux"
 SLOT="0"
 IUSE="adns bittorrent +gnutls jemalloc libressl libuv +libxml2 metalink +nettle nls sqlite scripts ssh ssl tcmalloc test xmlrpc"
 
+# Crazy GnuTLS/OpenSSL/etc. logic below:
+# 1. Those libraries are used for two purposes: TLS & MD.
+# 2. Upstream preferences are:
+#    1) gnutls [tls]
+#    2) !gnutls? -> openssl [tls+md]
+#    3) !openssl? -> nettle [md]
+#    4) !openssl? !nettle? -> gcrypt [md]
+#    5) !*? -> bundled md routines (we don't use them)
+# 3. There's also gmp usage for bittorrent with nettle.
+# 4. You can't really control features, just dependencies.
+# (we are skipping native Apple/Windows TLS support)
+#
+# We map this into:
+# ssl? -> openssl || (gnutls + (nettle || libgcrypt ))
+# !ssl? -> nettle || libgcrypt
+
 CDEPEND="sys-libs/zlib:0=
-	ssl? (
-		app-misc/ca-certificates
-		gnutls? ( >=net-libs/gnutls-1.2.9:0= )
-		!gnutls? (
-			!libressl? ( dev-libs/openssl:0= )
-			libressl? ( dev-libs/libressl:0= ) ) )
 	adns? ( >=net-dns/c-ares-1.5.0:0= )
-	bittorrent? (
-		ssl? (
-			gnutls? (
-				nettle? ( >=dev-libs/nettle-2.4:0=[gmp] >=dev-libs/gmp-6:0= )
-				!nettle? ( >=dev-libs/libgcrypt-1.2.2:0= ) ) )
-		!ssl? (
-			nettle? ( >=dev-libs/nettle-2.4:0=[gmp] >=dev-libs/gmp-6:0= )
-			!nettle? ( >=dev-libs/libgcrypt-1.2.2:0= ) ) )
 	jemalloc? ( dev-libs/jemalloc )
 	libuv? ( >=dev-libs/libuv-1.13:0= )
 	metalink? (
@@ -37,6 +39,34 @@ CDEPEND="sys-libs/zlib:0=
 		!libxml2? ( dev-libs/expat:0= ) )
 	sqlite? ( dev-db/sqlite:3= )
 	ssh? ( net-libs/libssh2:= )
+	ssl? (
+		app-misc/ca-certificates
+		gnutls? (
+			>=net-libs/gnutls-1.2.9:0=
+			nettle? (
+				>=dev-libs/nettle-2.4:0=
+				bittorrent? (
+					>=dev-libs/nettle-2.4:0=[gmp]
+					>=dev-libs/gmp-6:0=
+				)
+			)
+			!nettle? ( >=dev-libs/libgcrypt-1.2.2:0= )
+		)
+		!gnutls? (
+			libressl? ( dev-libs/libressl:0= )
+			!libressl? ( dev-libs/openssl:0= )
+		)
+	)
+	!ssl? (
+		nettle? (
+			>=dev-libs/nettle-2.4:0=
+			bittorrent? (
+				>=dev-libs/nettle-2.4:0=[gmp]
+				>=dev-libs/gmp-6:0=
+			)
+		)
+		!nettle? ( >=dev-libs/libgcrypt-1.2.2:0= )
+	)
 	tcmalloc? ( dev-util/google-perftools )
 	xmlrpc? (
 		libxml2? ( >=dev-libs/libxml2-2.6.26:2= )
@@ -68,7 +98,7 @@ src_prepare() {
 	eapply "${FILESDIR}"/${P}-make_unique.patch
 	# https://bugs.gentoo.org/674622 (CVE-2019-3500)
 	eapply "${FILESDIR}"/${P}-mask-headers.patch
-	eapply "${FILESDIR}"/aria2-libressl.patch
+	eapply "${FILESDIR}/${PN}-libressl.patch"
 	default
 	sed -i -e "s|/tmp|${T}|" test/*.cc test/*.txt || die "sed failed"
 }
@@ -97,30 +127,28 @@ src_configure() {
 		$(use_with tcmalloc)
 	)
 
-	# SSL := gnutls / openssl
-	# USE=ssl
-	#  + USE=gnutls -> gnutls
-	#  + USE=-gnutls -> openssl
-
-	if use ssl; then
-		myconf+=( $(use_with gnutls) $(use_with !gnutls openssl) )
+	# See TLS/MD logic described above deps.
+	if use ssl && ! use gnutls; then
+		# 1. if ssl & !gnutls, use openssl and disable gnutls
+		myconf+=( --without-gnutls --with-openssl )
 	else
-		myconf+=( --without-gnutls --without-openssl )
-	fi
+		myconf+=(
+			# 2. otherwise, disable openssl
+			--without-openssl
+			# 3. if ssl & gnutls, use gnutls
+			$(use_with ssl gnutls)
 
-	# message-digest := nettle / gcrypt / openssl
-	# bignum := nettle+gmp / gcrypt / openssl
-	# bittorrent := message-digest + bignum
-	# USE=bittorrent
-	#  + USE=(ssl -gnutls) -> openssl
-	#  + USE=nettle -> nettle+gmp
-	#  + USE=-nettle -> gcrypt
+			# 4. switch between nettle & libgcrypt
+			$(use_with nettle libnettle)
+			$(use_with !nettle libgcrypt)
+		)
 
-	if use !bittorrent || use ssl && use !gnutls; then
-		myconf+=( --without-libgcrypt --without-libnettle --without-libgmp )
-	else
-		myconf+=( $(use_with !nettle libgcrypt)
-			$(use_with nettle libnettle) $(use_with nettle libgmp) )
+		# 5. if bittorrent is used along with nettle, use libgmp
+		if use bittorrent && use nettle; then
+			myconf+=( --with-libgmp )
+		else
+			myconf+=( --without-libgmp )
+		fi
 	fi
 
 	# metalink+xmlrpc := libxml2 / expat
