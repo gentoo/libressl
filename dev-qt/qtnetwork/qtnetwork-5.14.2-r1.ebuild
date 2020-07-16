@@ -32,6 +32,7 @@ RDEPEND="${DEPEND}
 "
 
 PATCHES=(
+	"${FILESDIR}/${P}-CVE-2020-13962.patch" # bug 727604, QTBUG-83450
 	"${FILESDIR}"/${PN}-5.12.1-libressl.patch
 	"${FILESDIR}"/${PN}-5.12.4-libressl.patch
 )
