@@ -1,0 +1,13 @@
+--- a/src/sbverify.c	2019-10-06 01:30:33.532387358 -0500
++++ b/src/sbverify.c	2019-10-06 01:36:58.605092951 -0500
+@@ -67,6 +67,10 @@
+ #endif
+ #endif
+ 
++#if defined(LIBRESSL_VERSION_NUMBER)
++#define X509_get_extended_key_usage(cert) ((cert)->ex_xkusage)
++#endif
++
+ static const char *toolname = "sbverify";
+ static const int cert_name_len = 160;
+ 
