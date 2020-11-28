@@ -2,6 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
+
 QT5_MODULE="qtbase"
 inherit qt5-build
 
@@ -11,7 +12,7 @@ if [[ ${QT5_BUILD_TYPE} == release ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~ppc ~ppc64 ~sparc ~x86"
 fi
 
-IUSE="bindist connman gssapi libproxy libressl networkmanager sctp +ssl"
+IUSE="bindist connman gssapi libressl libproxy networkmanager sctp +ssl"
 
 DEPEND="
 	~dev-qt/qtcore-${PV}:5=
@@ -22,7 +23,7 @@ DEPEND="
 	networkmanager? ( ~dev-qt/qtdbus-${PV} )
 	sctp? ( kernel_linux? ( net-misc/lksctp-tools ) )
 	ssl? (
-		!libressl? ( dev-libs/openssl:0=[bindist=] )
+		!libressl? ( >=dev-libs/openssl-1.1.1:0=[bindist=] )
 		libressl? ( dev-libs/libressl:0= )
 	)
 "
@@ -30,8 +31,6 @@ RDEPEND="${DEPEND}
 	connman? ( net-misc/connman )
 	networkmanager? ( net-misc/networkmanager )
 "
-
-PATCHES=( "${FILESDIR}"/${PN}-5.15.0-libressl.patch )
 
 QT5_TARGET_SUBDIRS=(
 	src/network
@@ -49,6 +48,8 @@ QT5_GENTOO_PRIVATE_CONFIG=(
 	:network
 )
 
+PATCHES=( "${FILESDIR}"/${P}-libressl.patch ) # Bug 562050, not upstreamable
+
 pkg_setup() {
 	use connman && QT5_TARGET_SUBDIRS+=(src/plugins/bearer/connman)
 	use networkmanager && QT5_TARGET_SUBDIRS+=(src/plugins/bearer/networkmanager)
@@ -64,4 +65,13 @@ src_configure() {
 		$(usex ssl -openssl-linked '')
 	)
 	qt5-build_src_configure
+}
+
+src_install() {
+	qt5-build_src_install
+	# workaround for bug 652650
+	if use ssl; then
+		sed -e "/^#define QT_LINKED_OPENSSL/s/$/ true/" \
+			-i "${D}${QT5_HEADERDIR}"/Gentoo/${PN}-qconfig.h || die
+	fi
 }
