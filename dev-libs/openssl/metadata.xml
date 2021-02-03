@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="project">
+		<email>libressl@gentoo.org</email>
+	</maintainer>
+	<slots>
+		<subslots>
+			Reflect ABI of dev-libs/libressl libcrypto.so and libssl.so only, NOT libtls.so.
+		</subslots>
+	</slots>
+</pkgmetadata>
+
