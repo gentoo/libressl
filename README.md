@@ -1,9 +1,9 @@
 # LibreSSL ebuilds testing repo
 
-LibreSSL is already in Gentoo, but still requires [a lot of ebuilds](https://github.com/gentoo/libressl/wiki/Transition-plan#packages-not-converted-yet)
+LibreSSL requires [a lot of ebuilds](https://github.com/gentoo/libressl/wiki/Transition-plan#packages-not-converted-yet)
 to be fixed. This overlay serves as a testing ground and makes testing easier
 by providing an openssl dummy ebuild, so you can compile packages against
-LibreSSL which don't have the 'libressl' USE flag yet.
+LibreSSL which don't have the 'libressl' USE flag.
 
 ## How to install the overlay
 
