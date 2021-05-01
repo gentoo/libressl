@@ -13,7 +13,7 @@ if [[ ${QT5_BUILD_TYPE} == release ]]; then
 	KEYWORDS="amd64 arm arm64 ~hppa ppc ppc64 ~sparc x86"
 fi
 
-IUSE="bindist connman gssapi libressl libproxy networkmanager sctp +ssl"
+IUSE="bindist connman dtls gssapi libressl libproxy networkmanager sctp +ssl"
 
 DEPEND="
 	~dev-qt/qtcore-${PV}:5=
@@ -67,6 +67,7 @@ src_configure() {
 		$(qt_use libproxy)
 		$(usex networkmanager -dbus-linked '')
 		$(qt_use sctp)
+		$(qt_use dtls)
 		$(usex ssl -openssl-linked '')
 	)
 	qt5-build_src_configure
