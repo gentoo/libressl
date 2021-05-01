@@ -1,0 +1,13 @@
+diff -puriN libp11-0.4.11.orig/src/p11_rsa.c libp11-0.4.11/src/p11_rsa.c
+--- libp11-0.4.11.orig/src/p11_rsa.c	2020-10-11 08:41:00.000000000 -0500
++++ libp11-0.4.11/src/p11_rsa.c	2021-01-15 06:00:38.000000000 -0600
+@@ -336,7 +336,7 @@ int pkcs11_get_key_size(PKCS11_KEY *key)
+ 	return RSA_size(rsa);
+ }
+ 
+-#if OPENSSL_VERSION_NUMBER < 0x10100005L || defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER < 0x10100005L || ( defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3000000L )
+ 
+ int (*RSA_meth_get_priv_enc(const RSA_METHOD *meth))
+ 		(int flen, const unsigned char *from,
+
