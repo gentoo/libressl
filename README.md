@@ -3,7 +3,13 @@
 LibreSSL requires [a lot of ebuilds](https://github.com/gentoo/libressl/wiki/Transition-plan#packages-not-converted-yet)
 to be fixed. This overlay serves as a testing ground and makes testing easier
 by providing an openssl dummy ebuild, so you can compile packages against
-LibreSSL which don't have the 'libressl' USE flag.
+LibreSSL.
+
+The `libressl` USE flag is no longer used on main portage tree.
+The dummy `dev-libs/openssl` package on this overlay only depends
+on `dev-libs/libressl` to fix dependency.
+This overlay goal is to provide ebuilds that require patches for build
+to succeed where dummy package dependency isn’t enough.
 
 ## How to install the overlay
 
