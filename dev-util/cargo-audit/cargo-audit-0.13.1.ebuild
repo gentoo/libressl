@@ -260,11 +260,10 @@ SRC_URI="https://github.com/RustSec/${PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz
 LICENSE="Apache-2.0 Apache-2.0-with-LLVM-exceptions Boost-1.0 MIT MPL-2.0 Unlicense"
 SLOT="0"
 KEYWORDS="~amd64 ~ppc64"
-IUSE="fix libressl"
+IUSE="fix"
 
 RDEPEND="
-	!libressl? ( dev-libs/openssl:0= )
-	libressl? ( dev-libs/libressl:0= )
+	dev-libs/openssl:0=
 	dev-libs/libgit2:=
 "
 DEPEND="${RDEPEND}"
