@@ -12,7 +12,7 @@ SRC_URI="mirror://gnu/commoncpp/${P}.tar.gz"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="amd64 ppc ppc64 x86"
-IUSE="debug doc examples gnutls ipv6 libressl ssl static-libs"
+IUSE="debug doc examples gnutls ipv6 ssl static-libs"
 
 RDEPEND="
 	sys-libs/zlib:=
@@ -21,10 +21,7 @@ RDEPEND="
 			dev-libs/libgcrypt:0=
 			net-libs/gnutls:=
 		)
-		!gnutls? (
-			!libressl? ( dev-libs/openssl:0= )
-			libressl? ( dev-libs/libressl:0= )
-		)
+		!gnutls? ( dev-libs/openssl:0= )
 	)"
 DEPEND="${RDEPEND}
 	doc? ( >=app-doc/doxygen-1.3.6 )"
