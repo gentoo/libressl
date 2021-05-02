@@ -1,4 +1,4 @@
-# Copyright 1999-2017 Gentoo Foundation
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="6"
@@ -14,12 +14,9 @@ SRC_URI="http://hostap.epitest.fi/releases/${P}.tar.gz"
 LICENSE="|| ( GPL-2 BSD )"
 SLOT="0"
 KEYWORDS="amd64 ~arm ~mips ppc x86"
-IUSE="ipv6 libressl logwatch netlink sqlite +ssl +wps +crda"
+IUSE="ipv6 logwatch netlink sqlite +ssl +wps +crda"
 
-DEPEND="ssl? (
-	!libressl? ( dev-libs/openssl:*[-bindist] )
-	libressl? ( dev-libs/libressl:= )
-	)
+DEPEND="ssl? ( dev-libs/openssl:*[-bindist] )
 	kernel_linux? (
 		dev-libs/libnl:3
 		crda? ( net-wireless/crda )

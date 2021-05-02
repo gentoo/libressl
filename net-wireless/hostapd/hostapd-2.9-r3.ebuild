@@ -28,17 +28,10 @@ fi
 
 LICENSE="BSD"
 SLOT="0"
-IUSE="internal-tls ipv6 libressl logwatch netlink sqlite +suiteb +wps +crda"
-
-# suiteb impl uses openssl feature not available in libressl, see bug 710992
-REQUIRED_USE="?? ( libressl suiteb )"
+IUSE="ipv6 logwatch netlink sqlite +wps +crda"
 
 DEPEND="
-	libressl? ( dev-libs/libressl:0= )
-	!libressl? (
-		internal-tls? ( dev-libs/libtommath )
-		!internal-tls? ( dev-libs/openssl:0=[-bindist] )
-	)
+	dev-libs/openssl:0=[-bindist]
 	kernel_linux? (
 		dev-libs/libnl:3
 		crda? ( net-wireless/crda )
@@ -47,16 +40,6 @@ DEPEND="
 	sqlite? ( >=dev-db/sqlite-3 )"
 
 RDEPEND="${DEPEND}"
-
-pkg_pretend() {
-	if use internal-tls; then
-		if use libressl; then
-			elog "libressl flag takes precedence over internal-tls"
-		else
-			ewarn "internal-tls implementation is experimental and provides fewer features"
-		fi
-	fi
-}
 
 src_unpack() {
 	# Override default one because we need the SRC_URI ones even in case of 9999 ebuilds
@@ -102,27 +85,18 @@ src_configure() {
 	echo "CONFIG_ERP=y" >> ${CONFIG} || die
 	echo "CONFIG_EAP_MD5=y" >> ${CONFIG} || die
 
-	if use suiteb; then
-		echo "CONFIG_SUITEB=y" >> ${CONFIG} || die
-		echo "CONFIG_SUITEB192=y" >> ${CONFIG} || die
-	fi
-
-	if use internal-tls && ! use libressl; then
-		echo "CONFIG_TLS=internal" >> ${CONFIG} || die
-	else
-		# SSL authentication methods
-		echo "CONFIG_DPP=y" >> ${CONFIG} || die
-		echo "CONFIG_EAP_FAST=y" >> ${CONFIG} || die
-		echo "CONFIG_EAP_MSCHAPV2=y" >> ${CONFIG} || die
-		echo "CONFIG_EAP_PEAP=y" >> ${CONFIG} || die
-		echo "CONFIG_EAP_PWD=y" >> ${CONFIG} || die
-		echo "CONFIG_EAP_TLS=y" >> ${CONFIG} || die
-		echo "CONFIG_EAP_TTLS=y" >> ${CONFIG} || die
-		echo "CONFIG_OWE=y" >> ${CONFIG} || die
-		echo "CONFIG_SAE=y" >> ${CONFIG} || die
-		echo "CONFIG_TLSV11=y" >> ${CONFIG} || die
-		echo "CONFIG_TLSV12=y" >> ${CONFIG} || die
-	fi
+	# SSL authentication methods
+	echo "CONFIG_DPP=y" >> ${CONFIG} || die
+	echo "CONFIG_EAP_FAST=y" >> ${CONFIG} || die
+	echo "CONFIG_EAP_MSCHAPV2=y" >> ${CONFIG} || die
+	echo "CONFIG_EAP_PEAP=y" >> ${CONFIG} || die
+	echo "CONFIG_EAP_PWD=y" >> ${CONFIG} || die
+	echo "CONFIG_EAP_TLS=y" >> ${CONFIG} || die
+	echo "CONFIG_EAP_TTLS=y" >> ${CONFIG} || die
+	echo "CONFIG_OWE=y" >> ${CONFIG} || die
+	echo "CONFIG_SAE=y" >> ${CONFIG} || die
+	echo "CONFIG_TLSV11=y" >> ${CONFIG} || die
+	echo "CONFIG_TLSV12=y" >> ${CONFIG} || die
 
 	if use wps; then
 		# Enable Wi-Fi Protected Setup
@@ -211,10 +185,8 @@ src_configure() {
 src_compile() {
 	emake V=1
 
-	if use libressl || ! use internal-tls; then
-		emake V=1 nt_password_hash
-		emake V=1 hlr_auc_gw
-	fi
+	emake V=1 nt_password_hash
+	emake V=1 hlr_auc_gw
 }
 
 src_install() {
@@ -226,9 +198,7 @@ src_install() {
 	dosbin ${PN}
 	dobin ${PN}_cli
 
-	if use libressl || ! use internal-tls; then
-		dobin nt_password_hash hlr_auc_gw
-	fi
+	dobin nt_password_hash hlr_auc_gw
 
 	newinitd "${WORKDIR}/${EXTRAS_NAME}"/${PN}-init.d ${PN}
 	newconfd "${WORKDIR}/${EXTRAS_NAME}"/${PN}-conf.d ${PN}
