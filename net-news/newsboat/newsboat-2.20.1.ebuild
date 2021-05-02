@@ -117,7 +117,6 @@ SRC_URI="
 LICENSE="Apache-2.0 BSD-2 Boost-1.0 CC0-1.0 ISC MIT Unlicense"
 SLOT="0"
 KEYWORDS="amd64 ~arm ~ppc64 x86"
-IUSE="libressl"
 
 RDEPEND="
 	>=dev-db/sqlite-3.5:3
@@ -132,8 +131,7 @@ DEPEND="${RDEPEND}
 	virtual/pkgconfig
 	sys-devel/gettext
 	sys-libs/zlib
-	!libressl? ( <dev-libs/openssl-1.1.2:0= )
-	libressl? ( <dev-libs/libressl-3.1:0= )
+	<dev-libs/libressl-3.1:0=
 "
 
 PATCHES=(
