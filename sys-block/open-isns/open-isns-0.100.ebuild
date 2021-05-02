@@ -12,14 +12,9 @@ SRC_URI="https://github.com/open-iscsi/${PN}/archive/v${PV}.tar.gz -> ${P}.tar.g
 LICENSE="LGPL-2.1"
 SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~ia64 ~mips ~ppc ~ppc64 ~sparc ~x86"
-IUSE="debug libressl ssl static"
+IUSE="debug ssl static"
 
-DEPEND="
-	ssl? (
-		!libressl? ( dev-libs/openssl:0= )
-		libressl? ( dev-libs/libressl:0= )
-	)
-"
+DEPEND="ssl? ( dev-libs/openssl:0= )"
 RDEPEND="${DEPEND}"
 
 PATCHES=(
