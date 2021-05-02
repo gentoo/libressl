@@ -17,17 +17,14 @@ S="${WORKDIR}/${MY_PN}-${PV}"
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~x64-macos"
-IUSE="libressl test"
+IUSE="test"
 RESTRICT="!test? ( test )"
 
 BDEPEND="
 	>=dev-lang/swig-2.0.9
 	test? ( dev-python/parameterized[${PYTHON_USEDEP}] )
 "
-RDEPEND="
-	!libressl? ( dev-libs/openssl:0= )
-	libressl? ( dev-libs/libressl:0= )
-"
+RDEPEND="dev-libs/openssl:0="
 DEPEND="${RDEPEND}"
 
 PATCHES=(
