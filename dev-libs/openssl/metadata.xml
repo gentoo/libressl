@@ -9,5 +9,8 @@
 			Reflect ABI of dev-libs/libressl libcrypto.so and libssl.so only, NOT libtls.so.
 		</subslots>
 	</slots>
+        <use>
+                <flag name="asm">Enables assembly</flag>
+        </use>
 </pkgmetadata>
 
