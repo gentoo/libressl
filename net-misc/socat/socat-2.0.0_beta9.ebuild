@@ -14,13 +14,10 @@ S="${WORKDIR}/${MY_P}"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS=""
-IUSE="libressl ssl readline ipv6 tcpd"
+IUSE="ssl readline ipv6 tcpd"
 
 DEPEND="
-	ssl? (
-		!libressl? ( dev-libs/openssl:0= )
-		libressl? ( dev-libs/libressl:= )
-	)
+	ssl? ( dev-libs/openssl:0= )
 	readline? ( sys-libs/readline:= )
 	tcpd? ( sys-apps/tcp-wrappers )
 "
