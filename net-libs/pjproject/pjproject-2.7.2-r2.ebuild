@@ -15,7 +15,7 @@ SLOT="0"
 CODEC_FLAGS="g711 g722 g7221 gsm ilbc speex l16"
 VIDEO_FLAGS="sdl ffmpeg v4l2 openh264 libyuv"
 SOUND_FLAGS="alsa oss portaudio"
-IUSE="amr debug doc epoll examples ipv6 libressl opus resample silk ssl static-libs webrtc ${CODEC_FLAGS} ${VIDEO_FLAGS} ${SOUND_FLAGS}"
+IUSE="amr debug doc epoll examples ipv6 opus resample silk ssl static-libs webrtc ${CODEC_FLAGS} ${VIDEO_FLAGS} ${SOUND_FLAGS}"
 
 PATCHES=(
 	"${FILESDIR}"/${P}-ssl-flipflop.patch
@@ -37,10 +37,7 @@ RDEPEND="alsa? ( media-libs/alsa-lib )
 	openh264? ( media-libs/openh264 )
 	resample? ( media-libs/libsamplerate )
 
-	ssl? (
-		!libressl? ( dev-libs/openssl:0= )
-		libressl? ( dev-libs/libressl:0= )
-	)
+	ssl? ( dev-libs/openssl:0= )
 
 	net-libs/libsrtp:0"
 DEPEND="${RDEPEND}
