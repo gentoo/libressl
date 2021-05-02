@@ -1,4 +1,4 @@
-# Copyright 1999-2019 Gentoo Authors
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="6"
@@ -12,15 +12,13 @@ SRC_URI="https://github.com/aria2/${PN}/releases/download/release-${PV}/${P}.tar
 LICENSE="GPL-2"
 KEYWORDS="amd64 ~arm ~ppc ~ppc64 ~sparc x86 ~amd64-linux ~x86-linux"
 SLOT="0"
-IUSE="adns bittorrent +gnutls jemalloc libressl libuv +libxml2 metalink +nettle nls sqlite scripts ssh ssl tcmalloc test xmlrpc"
+IUSE="adns bittorrent +gnutls jemalloc libuv +libxml2 metalink +nettle nls sqlite scripts ssh ssl tcmalloc test xmlrpc"
 
 CDEPEND="sys-libs/zlib:0=
 	ssl? (
 		app-misc/ca-certificates
 		gnutls? ( >=net-libs/gnutls-1.2.9:0= )
-		!gnutls? (
-			!libressl? ( dev-libs/openssl:0= )
-			libressl? ( dev-libs/libressl:0= ) ) )
+		!gnutls? ( dev-libs/openssl:0= ) )
 	adns? ( >=net-dns/c-ares-1.5.0:0= )
 	bittorrent? (
 		ssl? (
