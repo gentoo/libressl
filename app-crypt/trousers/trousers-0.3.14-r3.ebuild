@@ -12,7 +12,7 @@ SRC_URI="mirror://sourceforge/trousers/${PN}/${P}.tar.gz"
 LICENSE="CPL-1.0 GPL-2"
 SLOT="0"
 KEYWORDS="amd64 arm arm64 ~m68k ~ppc ppc64 ~s390 x86"
-IUSE="doc libressl selinux" # gtk
+IUSE="doc selinux" # gtk
 
 # gtk support presently does NOT compile.
 #	gtk? ( >=x11-libs/gtk+-2 )
@@ -20,8 +20,7 @@ IUSE="doc libressl selinux" # gtk
 DEPEND="acct-group/tss
 	acct-user/tss
 	>=dev-libs/glib-2
-	!libressl? ( >=dev-libs/openssl-0.9.7:0= )
-	libressl? ( dev-libs/libressl:0= )"
+	>=dev-libs/openssl-0.9.7:0="
 RDEPEND="${DEPEND}
 	selinux? ( sec-policy/selinux-tcsd )"
 BDEPEND="virtual/pkgconfig"
