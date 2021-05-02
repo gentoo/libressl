@@ -12,7 +12,7 @@ SRC_URI="https://github.com/mongodb/mongo-c-driver/archive/${PV}.tar.gz -> ${P}.
 LICENSE="Apache-2.0"
 SLOT="0"
 KEYWORDS="~amd64 ~hppa ~s390 ~x86"
-IUSE="debug examples libressl sasl ssl static-libs test"
+IUSE="debug examples sasl ssl static-libs test"
 REQUIRED_USE="test? ( static-libs )"
 
 RDEPEND="app-arch/snappy:=
@@ -20,10 +20,7 @@ RDEPEND="app-arch/snappy:=
 	dev-python/sphinx
 	sys-libs/zlib:=
 	sasl? ( dev-libs/cyrus-sasl:= )
-	ssl? (
-		!libressl? ( dev-libs/openssl:0= )
-		libressl? ( dev-libs/libressl:0= )
-	)"
+	ssl? ( dev-libs/openssl:0= )"
 DEPEND="${RDEPEND}
 	test? (
 		dev-db/mongodb
@@ -60,7 +57,7 @@ src_configure() {
 		-DENABLE_SNAPPY=SYSTEM
 		-DENABLE_ZLIB=SYSTEM
 		-DENABLE_SASL="$(usex sasl CYRUS OFF)"
-		-DENABLE_SSL="$(usex ssl $(usex libressl LIBRESSL OPENSSL) OFF)"
+		-DENABLE_SSL="$(usex ssl LIBRESSL OFF)"
 		-DENABLE_STATIC="$(usex static-libs ON OFF)"
 		-DENABLE_TESTS="$(usex test ON OFF)"
 		-DENABLE_TRACING="$(usex debug ON OFF)"
