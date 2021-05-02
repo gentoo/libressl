@@ -14,12 +14,12 @@ SRC_URI="mirror://apache/${PN}/${P}.tar.bz2"
 LICENSE="Apache-2.0"
 SLOT="1"
 KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~m68k ~mips ppc ppc64 ~s390 sparc x86 ~x64-cygwin ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x64-solaris"
-IUSE="kerberos static-libs libressl"
+IUSE="kerberos static-libs"
 RESTRICT="test"
 
 RDEPEND="dev-libs/apr:1=
 	dev-libs/apr-util:1=
-	!libressl? ( dev-libs/openssl:0= ) libressl? ( dev-libs/libressl:0= )
+	dev-libs/openssl:0=
 	sys-libs/zlib:0=
 	kerberos? ( virtual/krb5 )"
 DEPEND="${RDEPEND}
