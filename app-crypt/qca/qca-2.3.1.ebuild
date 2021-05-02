@@ -1,4 +1,4 @@
-# Copyright 1999-2020 Gentoo Authors
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -12,7 +12,7 @@ SRC_URI="mirror://kde/stable/${PN}/${PV}/${P}.tar.xz"
 LICENSE="LGPL-2.1"
 SLOT="2"
 KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~ppc ~ppc64 ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~sparc-solaris"
-IUSE="botan debug doc examples gcrypt gpg libressl logger nss pkcs11 sasl softstore +ssl test"
+IUSE="botan debug doc examples gcrypt gpg logger nss pkcs11 sasl softstore +ssl test"
 
 RESTRICT="!test? ( test )"
 
@@ -26,15 +26,11 @@ RDEPEND="
 	gpg? ( app-crypt/gnupg )
 	nss? ( dev-libs/nss )
 	pkcs11? (
-		!libressl? ( >=dev-libs/openssl-1.1 )
-		libressl? ( dev-libs/libressl:0= )
+		>=dev-libs/openssl-1.1
 		dev-libs/pkcs11-helper
 	)
 	sasl? ( dev-libs/cyrus-sasl:2 )
-	ssl? (
-		!libressl? ( >=dev-libs/openssl-1.1:0= )
-		libressl? ( dev-libs/libressl:= )
-	)
+	ssl? ( >=dev-libs/openssl-1.1:0= )
 "
 DEPEND="${RDEPEND}
 	test? (
