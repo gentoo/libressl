@@ -18,11 +18,10 @@ SRC_URI="ftp://ftp.stunnel.org/stunnel/archive/${PV%%.*}.x/${P}.tar.gz
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~alpha"
-IUSE="ipv6 libressl selinux stunnel3 tcpd"
+IUSE="ipv6 selinux stunnel3 tcpd"
 
 DEPEND="tcpd? ( sys-apps/tcp-wrappers )
-	!libressl? ( dev-libs/openssl:0= )
-	libressl? ( dev-libs/libressl:0= )"
+	dev-libs/openssl:0="
 RDEPEND="${DEPEND}
 	stunnel3? ( dev-lang/perl )
 	selinux? ( sec-policy/selinux-stunnel )"
