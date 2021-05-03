@@ -15,13 +15,12 @@ SRC_URI="https://github.com/${PN}/${PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 LICENSE="MIT"
 SLOT="0"
 KEYWORDS="amd64 x86"
-IUSE="libh2o libressl +mruby"
+IUSE="libh2o +mruby"
 
 RDEPEND="dev-lang/perl
 	sys-libs/zlib
 	libh2o? ( dev-libs/libuv )
-	!libressl? ( dev-libs/openssl:0= )
-	libressl? ( dev-libs/libressl:0= )"
+	dev-libs/openssl:0="
 DEPEND="${RDEPEND}
 	libh2o? ( virtual/pkgconfig )
 	mruby? (
