@@ -1,4 +1,4 @@
-# Copyright 1999-2019 Gentoo Authors
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -20,7 +20,7 @@ else
 fi
 LICENSE="MIT"
 SLOT="0"
-IUSE="chamelium doc libressl man overlay sound valgrind video_cards_amdgpu video_cards_intel video_cards_nouveau X xv"
+IUSE="chamelium doc man overlay sound valgrind video_cards_amdgpu video_cards_intel video_cards_nouveau X xv"
 REQUIRED_USE="
 	|| ( video_cards_amdgpu video_cards_intel video_cards_nouveau )
 	overlay? (
@@ -45,8 +45,7 @@ RDEPEND="
 		sci-libs/gsl
 		x11-libs/pixman
 	)
-	!libressl? ( dev-libs/openssl:0= )
-	libressl? ( dev-libs/libressl:0= )
+	dev-libs/openssl:0=
 	overlay? (
 		>=x11-libs/libXrandr-1.3
 		xv? (
