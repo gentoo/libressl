@@ -1,4 +1,4 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -12,11 +12,10 @@ SRC_URI="http://www.keepalived.org/software/${P}.tar.gz"
 LICENSE="GPL-2"
 SLOT="0"
 KEYWORDS="~alpha ~amd64 ~hppa ~ia64 ~ppc ~ppc64 ~s390 ~sparc ~x86"
-IUSE="dbus debug ipv6 -json libressl snmp"
+IUSE="dbus debug ipv6 -json snmp"
 
 RDEPEND="dev-libs/libnl:=
-	!libressl? ( dev-libs/openssl:0= )
-	libressl? ( dev-libs/libressl:0= )
+	dev-libs/openssl:0=
 	dev-libs/popt
 	net-libs/libnfnetlink
 	sys-apps/iproute2
