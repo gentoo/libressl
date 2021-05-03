@@ -15,7 +15,7 @@ SRC_URI="http://pub.ks-and-ks.ne.jp/prog/pub/${MY_P}.tar.gz"
 SLOT="0"
 LICENSE="w3m"
 KEYWORDS="amd64 ppc x86"
-IUSE="gpm libressl nls ssl"
+IUSE="gpm nls ssl"
 
 DEPEND=">=dev-libs/boehm-gc-7.2
 	dev-libs/libmoe
@@ -24,10 +24,7 @@ DEPEND=">=dev-libs/boehm-gc-7.2
 	sys-libs/zlib
 	gpm? ( sys-libs/gpm )
 	nls? ( sys-devel/gettext )
-	ssl? (
-		!libressl? ( dev-libs/openssl:0= )
-		libressl? ( dev-libs/libressl:0= )
-	)"
+	ssl? ( dev-libs/openssl:0= )"
 RDEPEND="${DEPEND}"
 S="${WORKDIR}/${MY_P}"
 
