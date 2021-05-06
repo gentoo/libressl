@@ -11,7 +11,8 @@ LICENSE="metapackage"
 
 SLOT="0/48" # .so version of libssl/libcrypto
 KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~mips ppc ppc64 ~s390 sparc x86 ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
-IUSE="+asm bindist static-libs test"
+IUSE="+asm bindist sslv3 static-libs test"
+REQUIRED_USE="!sslv3"
 
 RDEPEND="dev-libs/libressl:${SLOT}[asm=,static-libs=,test=,${MULTILIB_USEDEP}]"
 
