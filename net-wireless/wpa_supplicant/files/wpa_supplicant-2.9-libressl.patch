@@ -1,0 +1,12 @@
+diff --git a/src/crypto/tls_openssl.c b/src/crypto/tls_openssl.c
+index 345a35ee1..fc6a606d0 100644
+--- a/src/crypto/tls_openssl.c
++++ b/src/crypto/tls_openssl.c
+@@ -3034,7 +3034,7 @@ static int tls_set_conn_flags(struct tls_connection *conn, unsigned int flags,
+ 	/* Start with defaults from BoringSSL */
+ 	SSL_CTX_set_verify_algorithm_prefs(conn->ssl_ctx, NULL, 0);
+ #endif /* OPENSSL_IS_BORINGSSL */
+-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
++#if OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(LIBRESSL_VERSION_NUMBER)
+ 	if (flags & TLS_CONN_SUITEB_NO_ECDH) {
+ 		const char *ciphers = "DHE-RSA-AES256-GCM-SHA384";
