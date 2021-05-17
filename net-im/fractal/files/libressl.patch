@@ -1,0 +1,28 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index b7b87bd..42dea13 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -1656,7 +1656,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
+ 
+ [[package]]
+ name = "openssl"
+-version = "0.10.24"
++version = "0.10.34"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ dependencies = [
+  "bitflags 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+@@ -1669,12 +1669,12 @@ dependencies = [
+ 
+ [[package]]
+ name = "openssl-probe"
+-version = "0.1.2"
++version = "0.1.4"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ 
+ [[package]]
+ name = "openssl-sys"
+-version = "0.9.48"
++version = "0.9.63"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+ dependencies = [
+  "autocfg 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
