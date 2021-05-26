@@ -37,3 +37,5 @@ repository.
 
 ## Contact
 [![Gitter chat](https://badges.gitter.im/gentoo/libressl.png)](https://gitter.im/gentoo/libressl)
+
+[IRC on Libera.Chat #gentoo-libressl](irc://irc.libera.chat/gentoo-libressl)
