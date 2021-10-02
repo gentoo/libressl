@@ -1,0 +1,24 @@
+From 3cea3697bfc75ab3e5f4725eb1588ed9c4bff27a Mon Sep 17 00:00:00 2001
+From: Alexander Bluhm <alexander.bluhm@gmx.net>
+Date: Mon, 30 Aug 2021 21:31:20 +0200
+Subject: [PATCH] Use SSL_SESSION_get_master_key() for LibreSSL.
+
+Since version 2.7 LibreSSL implements SSL_SESSION_get_master_key().
+Use this instead of accessing internal struct fields.
+---
+ SSLeay.xs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/SSLeay.xs b/SSLeay.xs
+index c2257fa..5377ba6 100644
+--- a/SSLeay.xs
++++ b/SSLeay.xs
+@@ -6281,7 +6281,7 @@ SSL_total_renegotiations(ssl)
+   OUTPUT:
+   RETVAL
+ 
+-#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
++#if (OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)) || (LIBRESSL_VERSION_NUMBER >= 0x2070000fL)
+ void
+ SSL_SESSION_get_master_key(s)
+      SSL_SESSION *   s
