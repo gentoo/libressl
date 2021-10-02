@@ -1,19 +1,18 @@
-From e540d3285f92d1e8d7d6249b8a6e36948e619fe4 Mon Sep 17 00:00:00 2001
+From 52e3455eaa515a9f4ce4077ff169c6c2c40e9904 Mon Sep 17 00:00:00 2001
 From: Charlie Li <git@vishwin.info>
 Date: Mon, 19 Apr 2021 17:25:22 -0400
-Subject: [PATCH 1/4] LibreSSL 3.3.2 supports SSL_OP_NO_DTLS*
+Subject: [PATCH 1/5] LibreSSL 3.3.2 supports SSL_OP_NO_DTLS*
 
 While here, bump CI
 ---
  src/_cffi_src/openssl/cryptography.py | 9 +++++++++
- src/_cffi_src/openssl/ssl.py          | 2 +-
- 2 files changed, 10 insertions(+), 1 deletions(-)
+ 1 file changed, 9 insertions(+)
 
 diff --git a/src/_cffi_src/openssl/cryptography.py b/src/_cffi_src/openssl/cryptography.py
-index e2b5a13235a..ab296343906 100644
+index e2b5a13..ab29634 100644
 --- a/src/_cffi_src/openssl/cryptography.py
 +++ b/src/_cffi_src/openssl/cryptography.py
-@@ -32,6 +32,13 @@
+@@ -32,6 +32,13 @@ INCLUDES = """
  #include <Winsock2.h>
  #endif
  
@@ -27,7 +26,7 @@ index e2b5a13235a..ab296343906 100644
  #define CRYPTOGRAPHY_OPENSSL_110F_OR_GREATER \
      (OPENSSL_VERSION_NUMBER >= 0x1010006f && !CRYPTOGRAPHY_IS_LIBRESSL)
  
-@@ -59,6 +66,8 @@
+@@ -59,6 +66,8 @@ static const int CRYPTOGRAPHY_OPENSSL_LESS_THAN_111B;
  static const int CRYPTOGRAPHY_NEEDS_OSRANDOM_ENGINE;
  
  static const int CRYPTOGRAPHY_IS_LIBRESSL;
@@ -36,64 +35,24 @@ index e2b5a13235a..ab296343906 100644
  """
  
  FUNCTIONS = """
-diff --git a/src/_cffi_src/openssl/ssl.py b/src/_cffi_src/openssl/ssl.py
-index 11a7d63a961..23cbc5ff425 100644
---- a/src/_cffi_src/openssl/ssl.py
-+++ b/src/_cffi_src/openssl/ssl.py
-@@ -585,7 +585,7 @@
- static const long TLS_ST_OK = 0;
- #endif
- 
--#if CRYPTOGRAPHY_IS_LIBRESSL
-+#if CRYPTOGRAPHY_IS_LIBRESSL && !CRYPTOGRAPHY_LIBRESSL_332_OR_GREATER
- static const long SSL_OP_NO_DTLSv1 = 0;
- static const long SSL_OP_NO_DTLSv1_2 = 0;
- long (*DTLS_set_link_mtu)(SSL *, long) = NULL;
+-- 
+2.32.0
 
-From ec2a1701a34a28783e2353befb9c5c057f65d782 Mon Sep 17 00:00:00 2001
-From: Charlie Li <git@vishwin.info>
-Date: Mon, 19 Apr 2021 17:41:33 -0400
-Subject: [PATCH 2/4] Fix preprocessor guards for LibreSSL's SSL_OP_NO_DTLS*
-
-DTLS_set_link_mtu and DTLS_get_link_min_mtu are not part of 3.3.2
----
- src/_cffi_src/openssl/ssl.py | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/src/_cffi_src/openssl/ssl.py b/src/_cffi_src/openssl/ssl.py
-index 23cbc5ff425..a0b1641454e 100644
---- a/src/_cffi_src/openssl/ssl.py
-+++ b/src/_cffi_src/openssl/ssl.py
-@@ -585,9 +585,11 @@
- static const long TLS_ST_OK = 0;
- #endif
- 
--#if CRYPTOGRAPHY_IS_LIBRESSL && !CRYPTOGRAPHY_LIBRESSL_332_OR_GREATER
-+#if CRYPTOGRAPHY_IS_LIBRESSL
-+#if !CRYPTOGRAPHY_LIBRESSL_332_OR_GREATER
- static const long SSL_OP_NO_DTLSv1 = 0;
- static const long SSL_OP_NO_DTLSv1_2 = 0;
-+#endif
- long (*DTLS_set_link_mtu)(SSL *, long) = NULL;
- long (*DTLS_get_link_min_mtu)(SSL *) = NULL;
- #endif
-
-From 7d03d4477b4f06a3e1ec412afa0f2e4edb4e3893 Mon Sep 17 00:00:00 2001
+From ca19df93826de2eb115756fe4989cc324fa69b6e Mon Sep 17 00:00:00 2001
 From: Charlie Li <git@vishwin.info>
 Date: Mon, 19 Apr 2021 18:16:14 -0400
-Subject: [PATCH 3/4] Switch to LESS_THAN context for LibreSSL 3.3.2
+Subject: [PATCH 2/5] Switch to LESS_THAN context for LibreSSL 3.3.2
 
 While here, fix indents
 ---
  src/_cffi_src/openssl/cryptography.py | 8 ++++----
- src/_cffi_src/openssl/ssl.py          | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/src/_cffi_src/openssl/cryptography.py b/src/_cffi_src/openssl/cryptography.py
-index ab296343906..0b468c8d719 100644
+index ab29634..0b468c8 100644
 --- a/src/_cffi_src/openssl/cryptography.py
 +++ b/src/_cffi_src/openssl/cryptography.py
-@@ -33,10 +33,10 @@
+@@ -33,10 +33,10 @@ INCLUDES = """
  #endif
  
  #if CRYPTOGRAPHY_IS_LIBRESSL
@@ -107,7 +66,7 @@ index ab296343906..0b468c8d719 100644
  #endif
  
  #define CRYPTOGRAPHY_OPENSSL_110F_OR_GREATER \
-@@ -67,7 +67,7 @@
+@@ -67,7 +67,7 @@ static const int CRYPTOGRAPHY_NEEDS_OSRANDOM_ENGINE;
  
  static const int CRYPTOGRAPHY_IS_LIBRESSL;
  
@@ -116,24 +75,13 @@ index ab296343906..0b468c8d719 100644
  """
  
  FUNCTIONS = """
-diff --git a/src/_cffi_src/openssl/ssl.py b/src/_cffi_src/openssl/ssl.py
-index a0b1641454e..081ef041fa3 100644
---- a/src/_cffi_src/openssl/ssl.py
-+++ b/src/_cffi_src/openssl/ssl.py
-@@ -586,7 +586,7 @@
- #endif
- 
- #if CRYPTOGRAPHY_IS_LIBRESSL
--#if !CRYPTOGRAPHY_LIBRESSL_332_OR_GREATER
-+#if CRYPTOGRAPHY_LIBRESSL_LESS_THAN_332
- static const long SSL_OP_NO_DTLSv1 = 0;
- static const long SSL_OP_NO_DTLSv1_2 = 0;
- #endif
+-- 
+2.32.0
 
-From 843ef2dbfff33ea3018b04d926ccd6d1b629ef87 Mon Sep 17 00:00:00 2001
+From 0fd8db239ba8a8218229a53da248261bc36b1207 Mon Sep 17 00:00:00 2001
 From: Charlie Li <git@vishwin.info>
 Date: Mon, 19 Apr 2021 18:22:20 -0400
-Subject: [PATCH 4/4] Remove extra C variable declaration
+Subject: [PATCH 3/5] Remove extra C variable declaration
 
 The variable is not actually used from Python
 ---
@@ -141,10 +89,10 @@ The variable is not actually used from Python
  1 file changed, 2 deletions(-)
 
 diff --git a/src/_cffi_src/openssl/cryptography.py b/src/_cffi_src/openssl/cryptography.py
-index 0b468c8d719..b9c7a793b3b 100644
+index 0b468c8..b9c7a79 100644
 --- a/src/_cffi_src/openssl/cryptography.py
 +++ b/src/_cffi_src/openssl/cryptography.py
-@@ -66,8 +66,6 @@
+@@ -66,8 +66,6 @@ static const int CRYPTOGRAPHY_OPENSSL_LESS_THAN_111B;
  static const int CRYPTOGRAPHY_NEEDS_OSRANDOM_ENGINE;
  
  static const int CRYPTOGRAPHY_IS_LIBRESSL;
@@ -153,3 +101,85 @@ index 0b468c8d719..b9c7a793b3b 100644
  """
  
  FUNCTIONS = """
+-- 
+2.32.0
+
+From 71bb8c1b32cb7da6221b09dc416616031a4de5fb Mon Sep 17 00:00:00 2001
+From: orbea <orbea@riseup.net>
+Date: Fri, 1 Oct 2021 23:17:30 -0700
+Subject: [PATCH 4/5] security/py-cryptography: fix build after
+ EVP_Digest{Sign,Verify} addition
+
+Patch from OpenBSD.
+
+https://cvsweb.openbsd.org/cgi-bin/cvsweb/ports/security/py-cryptography/patches/patch-src__cffi_src_openssl_evp_py
+
+Signed-off-by: orbea <orbea@riseup.net>
+---
+ src/_cffi_src/openssl/evp.py | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
+
+diff --git a/src/_cffi_src/openssl/evp.py b/src/_cffi_src/openssl/evp.py
+index 2b2f995..dcece6f 100644
+--- a/src/_cffi_src/openssl/evp.py
++++ b/src/_cffi_src/openssl/evp.py
+@@ -204,14 +204,10 @@ int (*EVP_PKEY_set1_tls_encodedpoint)(EVP_PKEY *, const unsigned char *,
+ #endif
+ 
+ #if CRYPTOGRAPHY_OPENSSL_LESS_THAN_111
+-static const long Cryptography_HAS_ONESHOT_EVP_DIGEST_SIGN_VERIFY = 0;
++static const long Cryptography_HAS_ONESHOT_EVP_DIGEST_SIGN_VERIFY = 1;
+ static const long Cryptography_HAS_RAW_KEY = 0;
+ static const long Cryptography_HAS_EVP_DIGESTFINAL_XOF = 0;
+ int (*EVP_DigestFinalXOF)(EVP_MD_CTX *, unsigned char *, size_t) = NULL;
+-int (*EVP_DigestSign)(EVP_MD_CTX *, unsigned char *, size_t *,
+-                      const unsigned char *tbs, size_t) = NULL;
+-int (*EVP_DigestVerify)(EVP_MD_CTX *, const unsigned char *, size_t,
+-                        const unsigned char *, size_t) = NULL;
+ EVP_PKEY *(*EVP_PKEY_new_raw_private_key)(int, ENGINE *, const unsigned char *,
+                                        size_t) = NULL;
+ EVP_PKEY *(*EVP_PKEY_new_raw_public_key)(int, ENGINE *, const unsigned char *,
+-- 
+2.32.0
+
+From bb02823e94f79f6ff3eda254558aeacc0daa97a0 Mon Sep 17 00:00:00 2001
+From: orbea <orbea@riseup.net>
+Date: Fri, 1 Oct 2021 23:26:38 -0700
+Subject: [PATCH 5/5] security/py-cryptography: SSL_OP_NO_DTLSv1{,_2} were
+ added to libcrypto
+
+From OpenBSD
+
+https://cvsweb.openbsd.org/cgi-bin/cvsweb/~checkout~/ports/security/py-cryptography/patches/patch-src__cffi_src_openssl_ssl_py?rev=1.8&content-type=text/plain
+
+Signed-off-by: orbea <orbea@riseup.net>
+---
+ src/_cffi_src/openssl/ssl.py | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/src/_cffi_src/openssl/ssl.py b/src/_cffi_src/openssl/ssl.py
+index 11a7d63..1d326f1 100644
+--- a/src/_cffi_src/openssl/ssl.py
++++ b/src/_cffi_src/openssl/ssl.py
+@@ -586,8 +586,6 @@ static const long TLS_ST_OK = 0;
+ #endif
+ 
+ #if CRYPTOGRAPHY_IS_LIBRESSL
+-static const long SSL_OP_NO_DTLSv1 = 0;
+-static const long SSL_OP_NO_DTLSv1_2 = 0;
+ long (*DTLS_set_link_mtu)(SSL *, long) = NULL;
+ long (*DTLS_get_link_min_mtu)(SSL *) = NULL;
+ #endif
+@@ -681,7 +679,8 @@ int (*SSL_set_tlsext_use_srtp)(SSL *, const char *) = NULL;
+ SRTP_PROTECTION_PROFILE * (*SSL_get_selected_srtp_profile)(SSL *) = NULL;
+ #endif
+ 
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_111
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_111 && \
++    !(CRYPTOGRAPHY_IS_LIBRESSL && defined(TLS1_3_VERSION))
+ static const long Cryptography_HAS_TLSv1_3 = 0;
+ static const long TLS1_3_VERSION = 0;
+ static const long SSL_OP_NO_TLSv1_3 = 0;
+-- 
+2.32.0
+
