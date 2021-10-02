@@ -40,6 +40,7 @@ src_prepare() {
 		Makefile.in || die "Removing tests failed"
 	fi
 
+	eapply "${FILESDIR}"/${PN}-3.4.0-x509.patch
 	eapply "${FILESDIR}"/${PN}-2.8.3-solaris10.patch
 	#eapply "${FILESDIR}"/${PN}-3.2.2-build.patch
 	eapply_user
