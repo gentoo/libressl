@@ -14,7 +14,7 @@ LICENSE="ISC openssl"
 # we'll try to use the max of either. However, if either change between
 # versions, we have to change the subslot to trigger rebuild of consumers.
 SLOT="0/48"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86 ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 IUSE="+asm static-libs test"
 RESTRICT="!test? ( test )"
 REQUIRED_USE="test? ( static-libs )"
@@ -41,7 +41,6 @@ src_prepare() {
 	fi
 
 	eapply "${FILESDIR}"/${PN}-2.8.3-solaris10.patch
-	#eapply "${FILESDIR}"/${PN}-3.2.2-build.patch
 	eapply_user
 
 	elibtoolize  # for Solaris
