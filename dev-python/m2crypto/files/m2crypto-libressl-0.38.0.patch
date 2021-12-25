@@ -1,0 +1,185 @@
+$OpenBSD: patch-src_M2Crypto_BIO_py,v 1.1 2021/07/24 20:02:04 sthen Exp $
+
+Partially revert https://gitlab.com/m2crypto/m2crypto/commit/738cd0bf3dc2ee619f598290d5bf4c2190987f16:
+
+ * Fix BIO.File ... return type of BIO.readline() and close properly.
+   That is, flush BIO.File() before closing and close also underlying
+   system file.
+
+For Python 2 this results in:
+
+python2 -c "import M2Crypto; M2Crypto.BIO.openfile('/etc/ssl/cert.pem')"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/local/lib/python2.7/site-packages/M2Crypto/BIO.py", line 284, in openfile
+    return File(f)
+  File "/usr/local/lib/python2.7/site-packages/M2Crypto/BIO.py", line 239, in __init__
+    pyfile.flush()
+IOError: [Errno 9] Bad file descriptor
+
+https://gitlab.com/m2crypto/m2crypto/issues/211
+
+Index: src/M2Crypto/BIO.py
+--- a/src/M2Crypto/BIO.py.orig
++++ b/src/M2Crypto/BIO.py
+@@ -235,8 +235,9 @@ class File(BIO):
+         #
+         #  https://docs.python.org/3.3/c-api/file.html
+         #
+-        pyfile.flush()
+-        self.fname = pyfile.name
++        if six.PY3:
++            pyfile.flush()
++            self.fname = pyfile.name
+         self.pyfile = pyfile
+         # Be wary of https://github.com/openssl/openssl/pull/1925
+         # BIO_new_fd is NEVER to be used before OpenSSL 1.1.1
+@@ -246,7 +247,8 @@ class File(BIO):
+             self.bio = m2.bio_new_pyfile(pyfile, m2.bio_noclose)
+ 
+         self.close_pyfile = close_pyfile
+-        self.closed = False
++        if six.PY3:
++            self.closed = False
+ 
+     def flush(self):
+         # type: () -> None
+@@ -255,8 +257,9 @@ class File(BIO):
+ 
+     def close(self):
+         # type: () -> None
+-        self.flush()
+-        super(File, self).close()
++        if six.PY3:
++            self.flush()
++            super(File, self).close()
+         if self.close_pyfile:
+             self.pyfile.close()
+ 
+$OpenBSD: patch-src_SWIG__lib11_compat_i,v 1.2 2021/10/07 22:32:54 tb Exp $
+
+Provide CRYPTO_zalloc to fix build with LibreSSL
+
+Index: src/SWIG/_lib11_compat.i
+--- a/src/SWIG/_lib11_compat.i.orig
++++ b/src/SWIG/_lib11_compat.i
+@@ -8,7 +8,7 @@
+  */
+ 
+ %{
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+ 
+ #include <string.h>
+ #include <openssl/engine.h>
+@@ -24,6 +24,8 @@ static void *CRYPTO_zalloc(size_t num, const char *fil
+       return ret;
+ }
+ 
++#endif
++#if OPENSSL_VERSION_NUMBER < 0x10100000L
+ #include <openssl/bn.h>
+ 
+ #ifndef BN_F_BN_GENCB_NEW
+$OpenBSD: patch-src_SWIG__lib_i,v 1.2 2021/10/07 22:32:54 tb Exp $
+
+Fix build with LibreSSL
+
+Index: src/SWIG/_lib.i
+--- a/src/SWIG/_lib.i.orig
++++ b/src/SWIG/_lib.i
+@@ -21,7 +21,7 @@
+ 
+ %{
+ /* OpenSSL 1.0.2 copmatbility shim */
+-#if OPENSSL_VERSION_NUMBER < 0x10002000L
++#if OPENSSL_VERSION_NUMBER < 0x10002000L || defined(LIBRESSL_VERSION_NUMBER)
+ typedef void (*OPENSSL_sk_freefunc)(void *);
+ typedef void *(*OPENSSL_sk_copyfunc)(const void *);
+ typedef struct stack_st OPENSSL_STACK;
+$OpenBSD: patch-src_SWIG__threads_i,v 1.1 2021/07/24 20:02:04 sthen Exp $
+
+Fix build with LibreSSL
+
+Index: src/SWIG/_threads.i
+--- a/src/SWIG/_threads.i.orig
++++ b/src/SWIG/_threads.i
+@@ -5,7 +5,7 @@
+ #include <pythread.h>
+ #include <openssl/crypto.h>
+ 
+-#if defined(THREADING) && OPENSSL_VERSION_NUMBER < 0x10100000L
++#if defined(THREADING) && OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+ #define CRYPTO_num_locks()      (CRYPTO_NUM_LOCKS)
+ static PyThread_type_lock lock_cs[CRYPTO_num_locks()];
+ static long lock_count[CRYPTO_num_locks()];
+@@ -13,7 +13,7 @@ static int thread_mode = 0;
+ #endif
+ 
+ void threading_locking_callback(int mode, int type, const char *file, int line) {
+-#if defined(THREADING) && OPENSSL_VERSION_NUMBER < 0x10100000L
++#if defined(THREADING) && OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+         if (mode & CRYPTO_LOCK) {
+                 PyThread_acquire_lock(lock_cs[type], WAIT_LOCK);
+                 lock_count[type]++;
+@@ -25,7 +25,7 @@ void threading_locking_callback(int mode, int type, co
+ }
+ 
+ unsigned long threading_id_callback(void) {
+-#if defined(THREADING) && OPENSSL_VERSION_NUMBER < 0x10100000L
++#if defined(THREADING) && OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+     return (unsigned long)PyThread_get_thread_ident();
+ #else
+     return (unsigned long)0;
+@@ -35,7 +35,7 @@ unsigned long threading_id_callback(void) {
+ 
+ %inline %{
+ void threading_init(void) {
+-#if defined(THREADING) && OPENSSL_VERSION_NUMBER < 0x10100000L
++#if defined(THREADING) && OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+     int i;
+     if (!thread_mode) {
+         for (i=0; i<CRYPTO_num_locks(); i++) {
+@@ -50,7 +50,7 @@ void threading_init(void) {
+ }
+ 
+ void threading_cleanup(void) {
+-#if defined(THREADING) && OPENSSL_VERSION_NUMBER < 0x10100000L
++#if defined(THREADING) && OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+     int i;
+     if (thread_mode) {
+         CRYPTO_set_locking_callback(NULL);
+$OpenBSD: patch-SWIG__bio_i,v 1.4 2018/04/25 16:51:05 jasper Exp $
+
+BIO_meth_new() and BIO_meth_free() are non-static in LibreSSL
+
+Index: SWIG/_bio.i
+--- a/src/SWIG/_bio.i.orig
++++ a/src/SWIG/_bio.i
+@@ -293,8 +293,12 @@ int bio_should_write(BIO* a) {
+ }
+ 
+ /* Macros for things not defined before 1.1.0 */
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+-static BIO_METHOD *
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++
++#if !defined(LIBRESSL_VERSION_NUMBER)
++static
++#endif
++BIO_METHOD *
+ BIO_meth_new( int type, const char *name )
+ {
+     BIO_METHOD *method = malloc( sizeof(BIO_METHOD) );
+@@ -306,7 +310,10 @@ BIO_meth_new( int type, const char *name )
+     return method;
+ }
+ 
+-static void
++#if !defined(LIBRESSL_VERSION_NUMBER)
++static
++#endif
++void
+ BIO_meth_free( BIO_METHOD *meth )
+ {
+     if ( meth == NULL ) {
