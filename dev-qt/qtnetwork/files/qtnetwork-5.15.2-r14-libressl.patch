@@ -36,31 +36,31 @@ index d0a428c2..319cfc00 100644
 @@ -77,9 +77,9 @@ extern "C" int q_verify_cookie_callback(SSL *ssl, const unsigned char *cookie,
  }
  #endif // dtls
- 
+
 -#ifdef TLS1_3_VERSION
 +#if defined(TLS1_3_VERSION) && !defined(LIBRESSL_VERSION_NUMBER)
  extern "C" int q_ssl_sess_set_new_cb(SSL *context, SSL_SESSION *session);
 -#endif // TLS1_3_VERSION
 +#endif // TLS1_3_VERSION && LIBRESSL_VERSION_NUMBER
- 
+
  // Defined in qsslsocket.cpp
  QList<QSslCipher> q_getDefaultDtlsCiphers();
 @@ -351,9 +351,11 @@ init_context:
          return;
      }
- 
+
 +#ifndef LIBRESSL_VERSION_NUMBER
      // A nasty hacked OpenSSL using a level that will make our auto-tests fail:
      if (q_SSL_CTX_get_security_level(sslContext->ctx) > 1 && *forceSecurityLevel())
          q_SSL_CTX_set_security_level(sslContext->ctx, 1);
 +#endif // LIBRESSL_VERSION_NUMBER
- 
+
      const long anyVersion =
  #if QT_CONFIG(dtls)
 @@ -627,14 +629,14 @@ init_context:
                               q_X509Callback);
      }
- 
+
 -#ifdef TLS1_3_VERSION
 +#if defined(TLS1_3_VERSION) && !defined(LIBRESSL_VERSION_NUMBER)
      // NewSessionTicket callback:
@@ -68,16 +68,16 @@ index d0a428c2..319cfc00 100644
          q_SSL_CTX_sess_set_new_cb(sslContext->ctx, q_ssl_sess_set_new_cb);
          q_SSL_CTX_set_session_cache_mode(sslContext->ctx, SSL_SESS_CACHE_CLIENT);
      }
- 
+
 -#endif // TLS1_3_VERSION
 +#endif // TLS1_3_VERSION && LIBRESSL_VERSION_NUMBER
- 
+
  #if QT_CONFIG(dtls)
      // DTLS cookies:
 @@ -722,6 +724,7 @@ void QSslContext::applyBackendConfig(QSslContext *sslContext)
      }
  #endif // ocsp
- 
+
 +#ifndef LIBRESSL_VERSION_NUMBER
      QSharedPointer<SSL_CONF_CTX> cctx(q_SSL_CONF_CTX_new(), &q_SSL_CONF_CTX_free);
      if (cctx) {
@@ -98,9 +98,9 @@ index 70cb97aa..01a61cf5 100644
 --- a/src/network/ssl/qsslcontext_openssl_p.h
 +++ b/src/network/ssl/qsslcontext_openssl_p.h
 @@ -61,6 +61,13 @@
- 
+
  QT_BEGIN_NAMESPACE
- 
+
 +#ifndef DTLS_ANY_VERSION
 +#define DTLS_ANY_VERSION 0x1FFFF
 +#endif
@@ -109,7 +109,7 @@ index 70cb97aa..01a61cf5 100644
 +#endif
 +
  #ifndef QT_NO_SSL
- 
+
  class QSslContextPrivate;
 diff --git a/src/network/ssl/qsslsocket_openssl.cpp b/src/network/ssl/qsslsocket_openssl.cpp
 index af47dbf9..f4381efa 100644
@@ -118,7 +118,7 @@ index af47dbf9..f4381efa 100644
 @@ -653,7 +653,7 @@ bool QSslSocketBackendPrivate::initSslContext()
      else if (mode == QSslSocket::SslServerMode)
          q_SSL_set_psk_server_callback(ssl, &q_ssl_psk_server_callback);
- 
+
 -#if OPENSSL_VERSION_NUMBER >= 0x10101006L
 +#if OPENSSL_VERSION_NUMBER >= 0x10101006L && !defined(LIBRESSL_VERSION_NUMBER)
      // Set the client callback for TLSv1.3 PSK
@@ -128,7 +128,7 @@ diff --git a/src/network/ssl/qsslsocket_openssl_symbols.cpp b/src/network/ssl/qs
 index 0f48e498..0b47ccde 100644
 --- a/src/network/ssl/qsslsocket_openssl_symbols.cpp
 +++ b/src/network/ssl/qsslsocket_openssl_symbols.cpp
-@@ -145,10 +145,13 @@ DEFINEFUNC(const BIO_METHOD *, BIO_s_mem, void, DUMMYARG, return nullptr, return
+@@ -145,10 +145,15 @@ DEFINEFUNC(const BIO_METHOD *, BIO_s_mem, void, DUMMYARG, return nullptr, return
  DEFINEFUNC2(int, BN_is_word, BIGNUM *a, a, BN_ULONG w, w, return 0, return)
  DEFINEFUNC(int, EVP_CIPHER_CTX_reset, EVP_CIPHER_CTX *c, c, return 0, return)
  DEFINEFUNC(int, EVP_PKEY_up_ref, EVP_PKEY *a, a, return 0, return)
@@ -138,8 +138,10 @@ index 0f48e498..0b47ccde 100644
  DEFINEFUNC(void, EVP_PKEY_CTX_free, EVP_PKEY_CTX *ctx, ctx, return, return)
 +#endif // OPENSSL_NO_DEPRECATED_3_0
  DEFINEFUNC(int, RSA_bits, RSA *a, a, return 0, return)
-+#ifndef LIBRESSL_VERSION_NUMBER
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER >= 0x3050000fL)
  DEFINEFUNC(int, DSA_bits, DSA *a, a, return 0, return)
++#endif
++#ifndef LIBRESSL_VERSION_NUMBER
  DEFINEFUNC(int, OPENSSL_sk_num, OPENSSL_STACK *a, a, return -1, return)
  DEFINEFUNC2(void, OPENSSL_sk_pop_free, OPENSSL_STACK *a, a, void (*b)(void*), b, return, DUMMYARG)
 @@ -156,10 +159,20 @@ DEFINEFUNC(OPENSSL_STACK *, OPENSSL_sk_new_null, DUMMYARG, DUMMYARG, return null
@@ -179,7 +181,7 @@ index 0f48e498..0b47ccde 100644
              ASN1_OCTET_STRING **piKeyHash, piKeyHash, ASN1_INTEGER **pserial, pserial, OCSP_CERTID *cid, cid,
              return 0, return)
  DEFINEFUNC2(OCSP_RESPONSE *, OCSP_response_create, int status, status, OCSP_BASICRESP *bs, bs, return nullptr, return)
-+#ifndef LIBRESSL_VERSION_NUMBER
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER >= 0x3050000fL)
  DEFINEFUNC(const STACK_OF(X509) *, OCSP_resp_get0_certs, const OCSP_BASICRESP *bs, bs, return nullptr, return)
 +#endif
  DEFINEFUNC2(int, OCSP_id_cmp, OCSP_CERTID *a, a, OCSP_CERTID *b, b, return -1, return)
@@ -213,20 +215,20 @@ index 0f48e498..0b47ccde 100644
      RESOLVEFUNC(OPENSSL_sk_new_null)
      RESOLVEFUNC(OPENSSL_sk_push)
 @@ -902,7 +925,9 @@ bool q_resolveOpenSslSymbols()
- 
+
      RESOLVEFUNC(SSL_SESSION_get_ticket_lifetime_hint)
      RESOLVEFUNC(DH_bits)
-+#ifndef LIBRESSL_VERSION_NUMBER
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER >= 0x3050000fL)
      RESOLVEFUNC(DSA_bits)
 +#endif
- 
+
  #if QT_CONFIG(dtls)
      RESOLVEFUNC(DTLSv1_listen)
 @@ -932,7 +957,9 @@ bool q_resolveOpenSslSymbols()
      RESOLVEFUNC(OCSP_check_validity)
      RESOLVEFUNC(OCSP_cert_to_id)
      RESOLVEFUNC(OCSP_id_get0_info)
-+#ifndef LIBRESSL_VERSION_NUMBER
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER >= 0x3050000fL)
      RESOLVEFUNC(OCSP_resp_get0_certs)
 +#endif
      RESOLVEFUNC(OCSP_basic_sign)
@@ -252,9 +254,9 @@ index b36d0bc1..99412bf2 100644
 --- a/src/network/ssl/qsslsocket_openssl_symbols_p.h
 +++ b/src/network/ssl/qsslsocket_openssl_symbols_p.h
 @@ -80,6 +80,13 @@ QT_BEGIN_NAMESPACE
- 
+
  #define DUMMYARG
- 
+
 +#ifdef LIBRESSL_VERSION_NUMBER
 +typedef _STACK STACK;
 +typedef STACK OPENSSL_STACK;
@@ -268,12 +270,12 @@ index b36d0bc1..99412bf2 100644
 @@ -230,19 +237,42 @@ const unsigned char * q_ASN1_STRING_get0_data(const ASN1_STRING *x);
  Q_AUTOTEST_EXPORT BIO *q_BIO_new(const BIO_METHOD *a);
  Q_AUTOTEST_EXPORT const BIO_METHOD *q_BIO_s_mem();
- 
+
 -int q_DSA_bits(DSA *a);
-+#ifndef LIBRESSL_VERSION_NUMBER
-+int q_DSA_bits(DSA *a);o#else
-+#else
++#if defined(LIBRESSL_VERSION_NUMBER) && (LIBRESSL_VERSION_NUMBER < 0x3050000fL)
 +#define q_DSA_bits(dsa) q_BN_num_bits((dsa)->p)
++#else
++int q_DSA_bits(DSA *a);
 +#endif
  int q_EVP_CIPHER_CTX_reset(EVP_CIPHER_CTX *c);
  Q_AUTOTEST_EXPORT int q_EVP_PKEY_up_ref(EVP_PKEY *a);
@@ -312,7 +314,7 @@ index b36d0bc1..99412bf2 100644
 @@ -268,8 +298,13 @@ int q_DH_bits(DH *dh);
  # define q_SSL_load_error_strings() q_OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS \
                                                         | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL)
- 
+
 +#ifndef LIBRESSL_VERSION_NUMBER
  #define q_SKM_sk_num(type, st) ((int (*)(const STACK_OF(type) *))q_OPENSSL_sk_num)(st)
  #define q_SKM_sk_value(type, st,i) ((type * (*)(const STACK_OF(type) *, int))q_OPENSSL_sk_value)(st, i)
@@ -320,19 +322,19 @@ index b36d0bc1..99412bf2 100644
 +#define q_SKM_sk_num(type, st) ((int (*)(const STACK_OF(type) *))q_sk_num)(st)
 +#define q_SKM_sk_value(type, st,i) ((type * (*)(const STACK_OF(type) *, int))q_sk_value)(st, i)
 +#endif // LIBRESSL_VERSION_NUMBER
- 
+
  #define q_OPENSSL_add_all_algorithms_conf()  q_OPENSSL_init_crypto(OPENSSL_INIT_ADD_ALL_CIPHERS \
                                                                     | OPENSSL_INIT_ADD_ALL_DIGESTS \
 @@ -278,7 +313,11 @@ int q_DH_bits(DH *dh);
                                                                      | OPENSSL_INIT_ADD_ALL_DIGESTS, NULL)
- 
+
  int q_OPENSSL_init_crypto(uint64_t opts, const OPENSSL_INIT_SETTINGS *settings);
 +#ifndef LIBRESSL_VERSION_NUMBER
  void q_CRYPTO_free(void *str, const char *file, int line);
 +#else
 +void q_CRYPTO_free(void *a);
 +#endif
- 
+
  long q_OpenSSL_version_num();
  const char *q_OpenSSL_version(int type);
 @@ -496,12 +535,14 @@ int q_SSL_CTX_use_PrivateKey(SSL_CTX *a, EVP_PKEY *b);
@@ -353,15 +355,15 @@ index b36d0bc1..99412bf2 100644
 @@ -723,7 +764,11 @@ int q_OCSP_check_validity(ASN1_GENERALIZEDTIME *thisupd, ASN1_GENERALIZEDTIME *n
  int q_OCSP_id_get0_info(ASN1_OCTET_STRING **piNameHash, ASN1_OBJECT **pmd, ASN1_OCTET_STRING **pikeyHash,
                          ASN1_INTEGER **pserial, OCSP_CERTID *cid);
- 
-+#ifndef LIBRESSL_VERSION_NUMBER
- const STACK_OF(X509) *q_OCSP_resp_get0_certs(const OCSP_BASICRESP *bs);
+
++#if defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3050000fL
++#  define q_OCSP_resp_get0_certs(bs) ((bs)->certs)
 +#else
-+#define q_OCSP_resp_get0_certs(bs) ((bs)->certs)
+ const STACK_OF(X509) *q_OCSP_resp_get0_certs(const OCSP_BASICRESP *bs);
 +#endif
  Q_AUTOTEST_EXPORT OCSP_CERTID *q_OCSP_cert_to_id(const EVP_MD *dgst, X509 *subject, X509 *issuer);
  Q_AUTOTEST_EXPORT void q_OCSP_CERTID_free(OCSP_CERTID *cid);
  int q_OCSP_id_cmp(OCSP_CERTID *a, OCSP_CERTID *b);
--- 
+--
 2.34.1
 
