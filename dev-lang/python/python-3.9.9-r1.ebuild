@@ -94,6 +94,7 @@ src_prepare() {
 
 	local PATCHES=(
 		"${WORKDIR}/${PATCHSET}"
+		"${FILESDIR}"/${PN}-3.9.9-r1-libressl.patch
 	)
 
 	default
