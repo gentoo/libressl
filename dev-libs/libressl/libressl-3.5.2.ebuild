@@ -1,9 +1,9 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=7
+EAPI=8
 
-inherit multilib-minimal libtool
+inherit autotools multilib-minimal
 
 DESCRIPTION="Free version of the SSL/TLS protocol forked from OpenSSL"
 HOMEPAGE="https://www.libressl.org/"
@@ -19,38 +19,26 @@ IUSE="+asm static-libs test"
 RESTRICT="!test? ( test )"
 REQUIRED_USE="test? ( static-libs )"
 
-DEPEND="${RDEPEND}"
 PDEPEND="app-misc/ca-certificates"
 
+PATCHES=(
+	"${FILESDIR}"/${PN}-2.8.3-solaris10.patch
+)
+
 src_prepare() {
-	touch crypto/Makefile.in
+	default
 
-	sed -i \
-		-e '/^[ \t]*CFLAGS=/s#-g ##' \
-		-e '/^[ \t]*CFLAGS=/s#-g"#"#' \
-		-e '/^[ \t]*CFLAGS=/s#-O2 ##' \
-		-e '/^[ \t]*CFLAGS=/s#-O2"#"#' \
-		-e '/^[ \t]*USER_CFLAGS=/s#-O2 ##' \
-		-e '/^[ \t]*USER_CFLAGS=/s#-O2"#"#' \
-		configure || die "fixing CFLAGS failed"
-
-	if ! use test ; then
-	sed -i \
-		-e '/^[ \t]*SUBDIRS =/s#tests##' \
-		Makefile.in || die "Removing tests failed"
-	fi
-
-	eapply "${FILESDIR}"/${PN}-2.8.3-solaris10.patch || die
-
-	eapply_user
-
-	elibtoolize  # for Solaris
+	eautoreconf
 }
 
 multilib_src_configure() {
-	ECONF_SOURCE="${S}" econf \
-		$(use_enable asm) \
+	local ECONF_SOURCE="${S}"
+	local args=(
+		$(use_enable asm)
 		$(use_enable static-libs static)
+		$(use_enable test tests)
+	)
+	econf "${args[@]}"
 }
 
 multilib_src_test() {
