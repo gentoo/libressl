@@ -1,28 +1,34 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=7
+EAPI=8
 
-PYTHON_COMPAT=( python3_{7..10} pypy3 )
+DISTUTILS_USE_PEP517=setuptools
+PYTHON_COMPAT=( python3_{8..10} pypy3 )
 PYTHON_REQ_USE="threads(+)"
 
 inherit distutils-r1 multiprocessing
 
 VEC_P=cryptography_vectors-${PV}
 DESCRIPTION="Library providing cryptographic recipes and primitives"
-HOMEPAGE="https://github.com/pyca/cryptography/ https://pypi.org/project/cryptography/"
-SRC_URI="mirror://pypi/${PN:0:1}/${PN}/${P}.tar.gz
-	test? ( mirror://pypi/c/cryptography_vectors/${VEC_P}.tar.gz )"
+HOMEPAGE="
+	https://github.com/pyca/cryptography/
+	https://pypi.org/project/cryptography/
+"
+SRC_URI="
+	mirror://pypi/${PN:0:1}/${PN}/${P}.tar.gz
+	test? ( mirror://pypi/c/cryptography_vectors/${VEC_P}.tar.gz )
+"
 
 LICENSE="|| ( Apache-2.0 BSD )"
 SLOT="0"
-KEYWORDS="~alpha amd64 arm arm64 hppa ~ia64 ~m68k ~mips ppc ppc64 ~riscv sparc x86"
+KEYWORDS="~alpha amd64 arm arm64 hppa ~ia64 ~m68k ~mips ppc ppc64 ~riscv ~s390 sparc x86 ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 
 RDEPEND="
 	$(python_gen_cond_dep '
 		>=dev-python/cffi-1.8:=[${PYTHON_USEDEP}]
 	' 'python*')
-	"
+"
 BDEPEND="
 	test? (
 		>=dev-python/hypothesis-1.11.4[${PYTHON_USEDEP}]
@@ -32,13 +38,14 @@ BDEPEND="
 		dev-python/pytz[${PYTHON_USEDEP}]
 		dev-python/pytest-subtests[${PYTHON_USEDEP}]
 		dev-python/pytest-xdist[${PYTHON_USEDEP}]
-	)"
+	)
+"
 
 distutils_enable_tests pytest
 
 DEPEND="
 	>=dev-libs/openssl-1.0.2o-r6:0=
-	"
+"
 RDEPEND+=${DEPEND}
 
 PATCHES=(
@@ -56,11 +63,9 @@ src_prepare() {
 	# work around availability macros not supported in GCC (yet)
 	if [[ ${CHOST} == *-darwin* ]] ; then
 		local darwinok=0
-		if [[ ${CHOST##*-darwin} -ge 16 ]] ; then
-			darwinok=1
-		fi
-		sed -i -e 's/__builtin_available(macOS 10\.12, \*)/'"${darwinok}"'/' \
-			src/_cffi_src/openssl/src/osrandom_engine.c || die
+		[[ ${CHOST##*-darwin} -ge 16 ]] && darwinok=1
+		sed -e 's/__builtin_available(macOS 10\.12, \*)/'"${darwinok}"'/' \
+			-i src/_cffi_src/openssl/src/osrandom_engine.c || die
 	fi
 
 	# this version does not really use Rust, it just creates a dummy
