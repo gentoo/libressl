@@ -3,11 +3,14 @@
 
 EAPI=8
 
-inherit autotools multilib-minimal
+inherit autotools multilib-minimal verify-sig
 
 DESCRIPTION="Free version of the SSL/TLS protocol forked from OpenSSL"
 HOMEPAGE="https://www.libressl.org/"
-SRC_URI="https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/${P}.tar.gz"
+SRC_URI="
+	https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/${P}.tar.gz
+	verify-sig? ( https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/${P}.tar.gz.asc )
+"
 
 LICENSE="ISC openssl"
 # Reflects ABI of libcrypto.so and libssl.so. Since these can differ,
@@ -20,6 +23,9 @@ RESTRICT="!test? ( test )"
 REQUIRED_USE="test? ( static-libs )"
 
 PDEPEND="app-misc/ca-certificates"
+BDEPEND="verify-sig? ( sec-keys/openpgp-keys-libressl )"
+
+VERIFY_SIG_OPENPGP_KEY_PATH="${BROOT}"/usr/share/openpgp-keys/libressl.asc
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.8.3-solaris10.patch
