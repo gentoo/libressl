@@ -1,8 +1,0 @@
-# 2021-10-02
-# LibreSSL 3.4.0 is causing build issues on many packages.
-# Masked until build issues are solved.
-=dev-libs/libressl-3.4.0-r1
-
-# 2021-10-02
-# This version is affected by a vulnerability: CVE-2021-41581
-=dev-libs/libressl-3.4.0
