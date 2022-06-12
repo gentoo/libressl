@@ -1,0 +1,28 @@
+Upstream-PR: https://gitlab.freedesktop.org/spice/spice/-/merge_requests/208
+From 81664d809965927c951bcb58a6ce1e3ddd326100 Mon Sep 17 00:00:00 2001
+From: orbea <orbea@riseup.net>
+Date: Sat, 11 Jun 2022 16:30:09 -0700
+Subject: [PATCH] server: Fix the build with libressl
+
+---
+ server/red-stream.cpp | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/server/red-stream.cpp b/server/red-stream.cpp
+index 2c45299c..196a8945 100644
+--- a/server/red-stream.cpp
++++ b/server/red-stream.cpp
+@@ -523,8 +523,8 @@ RedStreamSslStatus red_stream_ssl_accept(RedStream *stream)
+         return RED_STREAM_SSL_STATUS_OK;
+     }
+ 
+-#ifndef SSL_OP_NO_RENEGOTIATION
+-    // With OpenSSL 1.0.2 and earlier: disable client-side renogotiation
++#if !defined(SSL_OP_NO_RENEGOTIATION) && !defined(LIBRESSL_VERSION_NUMBER)
++    // With LibreSSL or OpenSSL 1.0.2 and earlier: disable client-side renogotiation
+     stream->priv->ssl->s3->flags |= SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS;
+ #endif
+ 
+-- 
+GitLab
+
