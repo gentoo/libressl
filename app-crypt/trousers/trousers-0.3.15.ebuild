@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -11,7 +11,7 @@ SRC_URI="mirror://sourceforge/trousers/${PN}/${P}.tar.gz"
 
 LICENSE="CPL-1.0 GPL-2"
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~arm64 ~m68k ~ppc ~ppc64 ~s390 ~x86"
+KEYWORDS="amd64 arm arm64 ~m68k ~ppc ppc64 ~riscv ~s390 x86"
 IUSE="doc selinux" # gtk
 
 # gtk support presently does NOT compile.
@@ -20,7 +20,8 @@ IUSE="doc selinux" # gtk
 DEPEND="acct-group/tss
 	acct-user/tss
 	>=dev-libs/glib-2
-	>=dev-libs/openssl-0.9.7:0="
+	>=dev-libs/openssl-0.9.7:0=
+	"
 RDEPEND="${DEPEND}
 	selinux? ( sec-policy/selinux-tcsd )"
 BDEPEND="virtual/pkgconfig"
@@ -57,9 +58,16 @@ src_install() {
 	keepdir /var/lib/tpm
 	use doc && dodoc doc/*
 	newinitd "${FILESDIR}"/tcsd.initd tcsd
-	newconfd "${FILESDIR}"/tcsd.confd tcsd
 	systemd_dounit "${FILESDIR}"/tcsd.service
 	udev_dorules "${FILESDIR}"/61-trousers.rules
 	fowners tss:tss /var/lib/tpm
 	readme.gentoo_create_doc
+}
+
+pkg_postinst() {
+	udev_reload
+}
+
+pkg_postrm() {
+	udev_reload
 }
