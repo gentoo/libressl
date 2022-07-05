@@ -11,7 +11,7 @@ SRC_URI="https://github.com/LibVNC/x11vnc/archive/${PV}.tar.gz -> ${P}.tar.gz"
 
 LICENSE="GPL-2+-with-openssl-exception"
 SLOT="0"
-KEYWORDS="~alpha amd64 arm ~arm64 ~hppa ~ia64 ~mips ppc ppc64 ~s390 sparc x86 ~amd64-linux ~x86-linux ~sparc-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha amd64 arm ~arm64 ~hppa ~ia64 ~mips ppc ppc64 ~riscv ~s390 sparc x86 ~amd64-linux ~x86-linux ~sparc-solaris ~x64-solaris ~x86-solaris"
 IUSE="crypt fbcon ssl +xcomposite +xdamage +xfixes xinerama +xrandr zeroconf"
 
 COMMON_DEPEND="
@@ -20,6 +20,7 @@ COMMON_DEPEND="
 	x11-libs/libXcursor
 	x11-libs/libXext
 	>=x11-libs/libXtst-1.1.0
+	virtual/libcrypt:=
 	ssl? ( dev-libs/openssl:0= )
 	xcomposite? ( x11-libs/libXcomposite )
 	xdamage? ( x11-libs/libXdamage )
@@ -73,6 +74,6 @@ src_configure() {
 
 src_install() {
 	default
-	newinitd "${FILESDIR}/x11vnc.init.d" x11vnc
+	newinitd "${FILESDIR}/x11vnc.init.d-r1" x11vnc
 	newconfd "${FILESDIR}/x11vnc.conf.d" x11vnc
 }
