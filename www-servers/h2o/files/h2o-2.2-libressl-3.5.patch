@@ -1,0 +1,29 @@
+Fix build with opaque RSA{,_METHOD} in LibreSSL 3.5. The relevant OpenSSL API
+has been available since LibreSSL 2.9. ECDSA support is thus also available.
+
+Index: deps/neverbleed/neverbleed.c
+--- a/deps/neverbleed/neverbleed.c.orig
++++ b/deps/neverbleed/neverbleed.c
+@@ -45,7 +45,7 @@
+ #endif
+ #include "neverbleed.h"
+ 
+-#if (!defined(LIBRESSL_VERSION_NUMBER) && OPENSSL_VERSION_NUMBER >= 0x1010000fL)
++#if ((!defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER >= 0x2090000fL) && OPENSSL_VERSION_NUMBER >= 0x1010000fL)
+ #define OPENSSL_1_1_API 1
+ #else
+ #define OPENSSL_1_1_API 0
+Silence compiler warning. The get_session_cb has had const since LibreSSL 2.8.
+
+Index: lib/common/socket.c
+--- a/lib/common/socket.c.orig
++++ b/lib/common/socket.c
+@@ -920,7 +920,7 @@ static void create_ossl(h2o_socket_t *sock)
+ }
+ 
+ static SSL_SESSION *on_async_resumption_get(SSL *ssl,
+-#if OPENSSL_VERSION_NUMBER >= 0x1010000fL && !defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER >= 0x1010000fL && (!defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER >= 0x2080000fL)
+                                             const
+ #endif
+                                             unsigned char *data,
