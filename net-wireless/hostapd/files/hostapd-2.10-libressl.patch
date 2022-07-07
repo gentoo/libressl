@@ -1,0 +1,23 @@
+From 87deed487d8f27feb7c6f8180535e67d9e1847ca Mon Sep 17 00:00:00 2001
+From: orbea <orbea@riseup.net>
+Date: Wed, 6 Jul 2022 17:24:11 -0700
+Subject: [PATCH] Fix build with libressl-3.5.x
+
+Fails with a undefined reference to SSL_set_cert_cb.
+---
+ src/crypto/tls_openssl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/crypto/tls_openssl.c b/src/crypto/tls_openssl.c
+index c9e00b3..5f44a73 100644
+--- a/src/crypto/tls_openssl.c
++++ b/src/crypto/tls_openssl.c
+@@ -3048,7 +3048,7 @@ static int tls_set_conn_flags(struct tls_connection *conn, unsigned int flags,
+ 	/* Start with defaults from BoringSSL */
+ 	SSL_CTX_set_verify_algorithm_prefs(conn->ssl_ctx, NULL, 0);
+ #endif /* OPENSSL_IS_BORINGSSL */
+-#if OPENSSL_VERSION_NUMBER >= 0x10002000L
++#if OPENSSL_VERSION_NUMBER >= 0x10002000L && !defined(LIBRESSL_VERSION_NUMBER)
+ 	if (flags & TLS_CONN_SUITEB_NO_ECDH) {
+ 		const char *ciphers = "DHE-RSA-AES256-GCM-SHA384";
+ 
