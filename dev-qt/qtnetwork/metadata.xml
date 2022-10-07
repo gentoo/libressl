@@ -7,7 +7,6 @@
 	</maintainer>
 	<use>
 		<flag name="connman">Enable <pkg>net-misc/connman</pkg>-based bearer plugin</flag>
-		<flag name="dtls">Support for Datagram Transport Layer Security (can cause build issues with libressl)</flag>
 		<flag name="gssapi">Enable support for GSSAPI (<pkg>virtual/krb5</pkg>)</flag>
 		<flag name="libproxy">Use <pkg>net-libs/libproxy</pkg> for automatic
 			HTTP/SOCKS proxy configuration</flag>
