@@ -65,7 +65,7 @@ PDEPEND="
 	xemacs? ( app-xemacs/ruby-modes )"
 
 src_prepare() {
-	eapply "${FILESDIR}"/${PN}-2.7-libressl.patch
+	eapply "${FILESDIR}"/${PN}-3.0-libressl.patch
 	eapply "${FILESDIR}"/"${SLOT}"/010*.patch
 
 	if use elibc_musl ; then
