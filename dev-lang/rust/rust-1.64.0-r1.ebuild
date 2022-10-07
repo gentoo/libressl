@@ -162,7 +162,7 @@ RESTRICT="test"
 VERIFY_SIG_OPENPGP_KEY_PATH=${BROOT}/usr/share/openpgp-keys/rust.asc
 
 PATCHES=(
-	"${FILESDIR}"/1.62.0-libressl.patch
+	"${FILESDIR}"/1.64.0-libressl.patch
 	"${FILESDIR}"/1.55.0-ignore-broken-and-non-applicable-tests.patch
 	"${FILESDIR}"/1.62.1-musl-dynamic-linking.patch
 	"${FILESDIR}"/${PV}-vendor-rustix-sparc-has-no-SIGSTKFLT.patch
@@ -291,6 +291,13 @@ src_prepare() {
 		"${WORKDIR}/${rust_stage0}"/install.sh --disable-ldconfig \
 			--without=rust-docs --destdir="${rust_stage0_root}" --prefix=/ || die
 	fi
+
+	# this libressl version check is terrible
+	sed -e 's/d397af804c0b786978867528635fa9148cd2ad0e6abd591ace21b5bd3719c38d/896afea18b1072d4c715421ff2ed7e428b57aadec44d4680dcb991a6229a1edc/' \
+		-i vendor/openssl-sys/.cargo-checksum.json || die
+	# fix for libressl
+	sed -e 's/7d5ca02f34cffe51db3568c500c9a8a70cef879871a0f466e3344142644acf12/e9eef35f1c18dd9844960d1d315e84ad99a05ab1247f0f54e3c2eab244988256/' \
+		-i vendor/libssh2-sys/.cargo-checksum.json || die
 
 	default
 }
