@@ -5,12 +5,12 @@ EAPI=7
 inherit autotools libtool xdg-utils
 
 DESCRIPTION="A sophisticated ftp/sftp/http/https/torrent client and file transfer program"
-HOMEPAGE="https://lftp.tech/"
-SRC_URI="https://lftp.tech/ftp/${P}.tar.xz"
+HOMEPAGE="http://lftp.yar.ru/"
+SRC_URI="http://lftp.yar.ru/ftp/${P}.tar.xz"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="~alpha amd64 arm ~arm64 ~hppa ~ia64 ~mips ppc ppc64 ~s390 sparc x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos"
+KEYWORDS="~alpha amd64 arm ~arm64 ~hppa ~ia64 ~mips ppc ppc64 ~riscv ~s390 sparc x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos"
 IUSE="convert-mozilla-cookies +gnutls idn ipv6 nls socks5 +ssl verify-file"
 RESTRICT="test"
 
@@ -77,7 +77,7 @@ src_configure() {
 		$(use_enable nls) \
 		$(use_with idn libidn2) \
 		$(use_with socks5 socksdante "${EPREFIX}"/usr) \
-		$(usex ssl "$(use_with !gnutls openssl ${EPREFIX}/usr)" '--without-openssl') \
+		$(usex ssl "$(use_with !gnutls openssl "${EPREFIX}"/usr)" '--without-openssl') \
 		$(usex ssl "$(use_with gnutls)" '--without-gnutls') \
 		--enable-packager-mode \
 		--sysconfdir="${EPREFIX}"/etc/${PN} \
