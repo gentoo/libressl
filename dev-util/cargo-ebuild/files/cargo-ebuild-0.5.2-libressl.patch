@@ -1,0 +1,14 @@
+From: orbea <orbea@riseup.net>
+Date: Fri, 7 Oct 2022 03:05:36 -0700
+Subject: [PATCH] Support libressl 3.x.x
+
+--- a/openssl-sys-0.9.75/build/main.rs
++++ b/openssl-sys-0.9.75/build/main.rs
+@@ -268,6 +268,7 @@ See rust-openssl README for more information:
+             (3, 4, 0) => ('3', '4', '0'),
+             (3, 4, _) => ('3', '4', 'x'),
+             (3, 5, _) => ('3', '5', 'x'),
++            (3, _, _) => ('3', 'x', 'x'),
+             _ => version_error(),
+         };
+ 
