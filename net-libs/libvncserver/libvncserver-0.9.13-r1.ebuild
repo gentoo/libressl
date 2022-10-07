@@ -1,7 +1,7 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=7
+EAPI=8
 
 inherit cmake
 
@@ -36,7 +36,7 @@ DEPEND="
 		)
 		gnutls? ( >=net-libs/gnutls-2.12.23-r6:0= )
 	)
-	jpeg? ( >=virtual/jpeg-0-r2:0 )
+	jpeg? ( media-libs/libjpeg-turbo:= )
 	lzo? ( dev-libs/lzo )
 	png? ( >=media-libs/libpng-1.6.10:0= )
 	sasl? ( dev-libs/cyrus-sasl )
@@ -50,6 +50,7 @@ DOCS=( AUTHORS ChangeLog NEWS.md README.md TODO.md )
 PATCHES=(
 	"${FILESDIR}"/${P}-test-fix-includetest.patch
 	"${FILESDIR}"/${P}-test-fix-tjunittest.patch
+	"${FILESDIR}"/${P}-CVE-2020-29260.patch
 	"${FILESDIR}"/${P}-libressl.patch
 )
 
