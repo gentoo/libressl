@@ -1,0 +1,67 @@
+https://github.com/nmap/nmap/pull/2485
+
+From 9d4d29979c8a24a17cd05968ecf1c42f913051c5 Mon Sep 17 00:00:00 2001
+From: Kyryl Melekhin <k.melekhin@gmail.com>
+Date: Thu, 9 Jun 2022 18:52:43 +0000
+Subject: [PATCH] Fix libressl >= 3.5.0 build
+
+diff --git a/ncat/ncat_ssl.c b/ncat/ncat_ssl.c
+index 7749b2964c..76209bc2d6 100644
+--- a/ncat/ncat_ssl.c
++++ b/ncat/ncat_ssl.c
+@@ -74,7 +74,9 @@
+ #include <openssl/x509.h>
+ #include <openssl/x509v3.h>
+ 
+-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined LIBRESSL_VERSION_NUMBER
++#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && \
++    ((!defined LIBRESSL_VERSION_NUMBER) || \
++    (defined LIBRESSL_VERSION_NUMBER && LIBRESSL_VERSION_NUMBER >= 0x30500000L))
+ #define HAVE_OPAQUE_STRUCTS 1
+ #define FUNC_ASN1_STRING_data ASN1_STRING_get0_data
+ #else
+diff --git a/nping/Crypto.cc b/nping/Crypto.cc
+index 850438352b..d5e537eef2 100644
+--- a/nping/Crypto.cc
++++ b/nping/Crypto.cc
+@@ -70,7 +70,9 @@
+ #include <openssl/evp.h>
+ #include <openssl/err.h>
+ 
+-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined LIBRESSL_VERSION_NUMBER
++#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && \
++    ((!defined LIBRESSL_VERSION_NUMBER) || \
++    (defined LIBRESSL_VERSION_NUMBER && LIBRESSL_VERSION_NUMBER >= 0x30500000L))
+ #define HAVE_OPAQUE_EVP_PKEY 1
+ #define FUNC_EVP_MD_CTX_init EVP_MD_CTX_reset
+ #define FUNC_EVP_MD_CTX_cleanup EVP_MD_CTX_reset
+diff --git a/nse_openssl.cc b/nse_openssl.cc
+index 92dea3ac8e..97987ca1a0 100644
+--- a/nse_openssl.cc
++++ b/nse_openssl.cc
+@@ -21,7 +21,9 @@
+ #include <openssl/ripemd.h>
+ #include <openssl/sha.h>
+ 
+-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined LIBRESSL_VERSION_NUMBER
++#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && \
++    ((!defined LIBRESSL_VERSION_NUMBER) || \
++    (defined LIBRESSL_VERSION_NUMBER && LIBRESSL_VERSION_NUMBER >= 0x30500000L))
+ #define HAVE_OPAQUE_STRUCTS 1
+ #define FUNC_EVP_MD_CTX_init EVP_MD_CTX_reset
+ #define FUNC_EVP_MD_CTX_cleanup EVP_MD_CTX_reset
+diff --git a/nse_ssl_cert.cc b/nse_ssl_cert.cc
+index 53f3ddaf5a..f63d77b829 100644
+--- a/nse_ssl_cert.cc
++++ b/nse_ssl_cert.cc
+@@ -81,7 +81,9 @@
+ #include <openssl/evp.h>
+ #include <openssl/err.h>
+ 
+-#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined LIBRESSL_VERSION_NUMBER
++#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && \
++    ((!defined LIBRESSL_VERSION_NUMBER) || \
++    (defined LIBRESSL_VERSION_NUMBER && LIBRESSL_VERSION_NUMBER >= 0x30500000L))
+ /* Technically some of these things were added in 0x10100006
+  * but that was pre-release. */
+ #define HAVE_OPAQUE_STRUCTS 1
