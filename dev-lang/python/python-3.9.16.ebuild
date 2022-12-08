@@ -28,10 +28,10 @@ S="${WORKDIR}/${MY_P}"
 
 LICENSE="PSF-2"
 SLOT="${PYVER}"
-KEYWORDS="~alpha amd64 arm arm64 hppa ~ia64 ~loong ~m68k ~mips ppc ppc64 ~riscv ~s390 sparc x86"
+KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~loong ~m68k ~mips ~ppc ppc64 ~riscv ~s390 sparc x86"
 IUSE="
 	bluetooth build +ensurepip examples gdbm hardened lto +ncurses pgo
-	+readline +sqlite +ssl test tk +xml
+	+readline +sqlite +ssl test tk valgrind +xml
 "
 RESTRICT="!test? ( test )"
 
@@ -68,11 +68,12 @@ DEPEND="
 	${RDEPEND}
 	bluetooth? ( net-wireless/bluez )
 	test? ( app-arch/xz-utils[extra-filters(+)] )
+	valgrind? ( dev-util/valgrind )
 "
 # autoconf-archive needed to eautoreconf
 BDEPEND="
 	sys-devel/autoconf-archive
-	virtual/awk
+	app-alternatives/awk
 	virtual/pkgconfig
 	verify-sig? ( sec-keys/openpgp-keys-python )
 "
@@ -218,12 +219,16 @@ src_configure() {
 
 		$(use_with lto)
 		$(use_enable pgo optimizations)
+		$(use_with valgrind)
 	)
 
 	# disable implicit optimization/debugging flags
 	local -x OPT=
 
 	if tc-is-cross-compiler ; then
+		# Hack to workaround get_libdir not being able to handle CBUILD, bug #794181
+		local cbuild_libdir=$(unset PKG_CONFIG_PATH ; $(tc-getBUILD_PKG_CONFIG) --keep-system-libs --libs-only-L libffi)
+
 		# pass system CFLAGS & LDFLAGS as _NODIST, otherwise they'll get
 		# propagated to sysconfig for built extensions
 		local -x CFLAGS_NODIST=${CFLAGS_FOR_BUILD}
@@ -234,6 +239,8 @@ src_configure() {
 		# bug #847910 and bug #864911.
 		local myeconfargs_cbuild=(
 			"${myeconfargs[@]}"
+
+			--libdir="${cbuild_libdir:2}"
 
 			# As minimal as possible for the mini CBUILD Python
 			# we build just for cross.
@@ -247,7 +254,10 @@ src_configure() {
 
 		mkdir "${WORKDIR}"/${P}-${CBUILD} || die
 		pushd "${WORKDIR}"/${P}-${CBUILD} &> /dev/null || die
-		ECONF_SOURCE="${S}" econf_build "${myeconfargs_cbuild[@]}"
+		# We disable _ctypes and _crypt for CBUILD because Python's setup.py can't handle locating
+		# libdir correctly for cross.
+		PYTHON_DISABLE_MODULES="${PYTHON_DISABLE_MODULES} _ctypes _crypt" \
+			ECONF_SOURCE="${S}" econf_build "${myeconfargs_cbuild[@]}"
 
 		# Avoid as many dependencies as possible for the cross build.
 		cat >> Makefile <<-EOF || die
@@ -270,7 +280,7 @@ src_configure() {
 		# not in src_compile, because CHOST configure for Python
 		# will check the existence of the Python it was pointed to
 		# immediately.
-		emake
+		PYTHON_DISABLE_MODULES="${PYTHON_DISABLE_MODULES} _ctypes _crypt" emake
 		popd &> /dev/null || die
 	fi
 
