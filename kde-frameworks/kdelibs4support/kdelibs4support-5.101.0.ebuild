@@ -13,7 +13,7 @@ inherit ecm frameworks.kde.org
 DESCRIPTION="Framework easing the development transition from KDELibs 4 to KF 5"
 
 LICENSE="LGPL-2+"
-KEYWORDS="amd64 ~arm arm64 ~loong ~ppc64 ~riscv x86"
+KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc64 ~riscv ~x86"
 IUSE="X"
 
 RESTRICT="test"
@@ -83,9 +83,6 @@ PATCHES=(
 	# downstream patches
 	"${FILESDIR}/${PN}-5.80.0-no-kdesignerplugin.patch" # bug 755956
 	"${FILESDIR}/${PN}-5.86.0-unused-dep.patch" # bug 755956
-	# pending upstream:
-	# https://invent.kde.org/frameworks/kdelibs4support/-/merge_requests/21
-	"${FILESDIR}/${P}-with_x11.patch"
     "${FILESDIR}/${PN}-kssl_certificate-0.96.0.patch"
     "${FILESDIR}/${PN}-kssl_openssl-5.96.0.patch"
 )
