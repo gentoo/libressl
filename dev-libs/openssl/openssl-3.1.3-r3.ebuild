@@ -9,8 +9,8 @@ DESCRIPTION="dummy package for dev-libs/libressl"
 HOMEPAGE="https://wiki.gentoo.org/wiki/Project:LibreSSL"
 LICENSE="metapackage"
 
-SLOT="0/53" # .so version of libssl/libcrypto
-KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+SLOT="0/54" # .so version of libssl/libcrypto
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 IUSE="+asm sslv3 static-libs test"
 REQUIRED_USE="!sslv3"
 
