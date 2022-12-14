@@ -1,0 +1,69 @@
+Upstream Bug: https://github.com/libressl-portable/portable/issues/754
+Upstream Commit: https://github.com/libressl-portable/portable/commit/4f0f6ebd1aa1038923e08af6730a32cde3202f62
+Upstream PR: https://github.com/libressl-portable/portable/pull/806
+
+From 4f0f6ebd1aa1038923e08af6730a32cde3202f62 Mon Sep 17 00:00:00 2001
+From: Brent Cook <busterb@gmail.com>
+Date: Tue, 13 Dec 2022 04:34:25 -0600
+Subject: [PATCH] Build a static test library with all symbols
+
+Build and link a special test library rather than assuming that the
+build has static libraries available.
+
+diff --git a/tests/Makefile.am b/tests/Makefile.am
+index 6fea2ebc9..26f6b7d73 100644
+--- a/tests/Makefile.am
++++ b/tests/Makefile.am
+@@ -1,5 +1,9 @@
+ include $(top_srcdir)/Makefile.am.common
+ 
++-include $(abs_top_builddir)/crypto/libcrypto_la_objects.mk
++-include $(abs_top_builddir)/ssl/libssl_la_objects.mk
++-include $(abs_top_builddir)/tls/libtls_la_objects.mk
++
+ AM_CPPFLAGS += -DLIBRESSL_CRYPTO_INTERNAL
+ 
+ AM_CPPFLAGS += -I $(top_srcdir)/crypto/asn1
+@@ -14,13 +18,15 @@ AM_CPPFLAGS += -I $(top_srcdir)/apps/openssl
+ AM_CPPFLAGS += -I $(top_srcdir)/apps/openssl/compat
+ AM_CPPFLAGS += -D_PATH_SSL_CA_FILE=\"$(top_srcdir)/cert.pem\"
+ 
+-LDADD = $(abs_top_builddir)/tls/.libs/libtls.a
+-LDADD += $(abs_top_builddir)/ssl/.libs/libssl.a
+-LDADD += $(abs_top_builddir)/crypto/.libs/libcrypto.a
+-LDADD += $(PLATFORM_LDADD) $(PROG_LDADD)
+-if HOST_ASM_MACOSX_X86_64
+-LDADD += $(abs_top_builddir)/crypto/.libs/libcrypto_la-cpuid-macosx-x86_64.o
+-endif
++noinst_LTLIBRARIES = libtest.la
++libtest_la_LIBADD = $(libcrypto_la_objects)
++libtest_la_LIBADD += $(libcompat_la_objects)
++libtest_la_LIBADD += $(libcompatnoopt_la_objects)
++libtest_la_LIBADD += $(libssl_la_objects)
++libtest_la_LIBADD += $(libtls_la_objects)
++libtest_la_SOURCES = empty.c
++
++LDADD = libtest.la $(PLATFORM_LDADD) $(PROG_LDADD)
+ 
+ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/tap-driver.sh
+ 
+diff --git a/tls/Makefile.am b/tls/Makefile.am
+index 4d31c9282..160359c3f 100644
+--- a/tls/Makefile.am
++++ b/tls/Makefile.am
+@@ -9,6 +9,15 @@ EXTRA_DIST = VERSION
+ EXTRA_DIST += CMakeLists.txt
+ EXTRA_DIST += tls.sym
+ 
++CLEANFILES = libtls_la_objects.mk
++
++EXTRA_libtls_la_DEPENDENCIES = libtls_la_objects.mk
++
++libtls_la_objects.mk: Makefile
++	@echo "libtls_la_objects= $(libtls_la_OBJECTS)" \
++	  | sed 's/  */ $$\(abs_top_builddir\)\/tls\//g' \
++	  > libtls_la_objects.mk
++
+ libtls_la_LDFLAGS = -version-info @LIBTLS_VERSION@ -no-undefined -export-symbols $(top_srcdir)/tls/tls.sym
+ libtls_la_LIBADD = $(libcrypto_la_objects)
+ libtls_la_LIBADD += $(libcompat_la_objects)
