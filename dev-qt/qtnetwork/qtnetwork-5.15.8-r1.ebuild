@@ -1,17 +1,17 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-QT5_KDEPATCHSET_REV=1
+if [[ ${PV} != *9999* ]]; then
+	QT5_KDEPATCHSET_REV=2
+	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86"
+fi
+
 QT5_MODULE="qtbase"
 inherit qt5-build
 
 DESCRIPTION="Network abstraction library for the Qt5 framework"
-
-if [[ ${QT5_BUILD_TYPE} == release ]]; then
-	KEYWORDS="amd64 arm arm64 ~hppa ~loong ppc ppc64 ~riscv ~sparc x86"
-fi
 
 IUSE="connman gssapi libproxy networkmanager sctp +ssl"
 
@@ -47,7 +47,7 @@ QT5_GENTOO_PRIVATE_CONFIG=(
 )
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-5.15.5-libressl.patch # Bug 562050, not upstreamable
+	"${FILESDIR}"/${PN}-5.15.7-libressl.patch # Bug 562050, not upstreamable
 )
 
 pkg_setup() {
