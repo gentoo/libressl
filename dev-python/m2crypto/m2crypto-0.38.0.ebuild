@@ -1,9 +1,9 @@
-# Copyright 2018-2021 Gentoo Authors
+# Copyright 2018-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
 
-PYTHON_COMPAT=( python3_{8..10} )
+PYTHON_COMPAT=( python3_{9..11} )
 PYTHON_REQ_USE="threads(+)"
 
 inherit distutils-r1 toolchain-funcs
@@ -16,8 +16,8 @@ S="${WORKDIR}/${MY_PN}-${PV}"
 
 LICENSE="MIT"
 SLOT="0"
-KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~mips ppc ppc64 ~riscv ~s390 sparc x86 ~amd64-linux ~x86-linux ~x64-macos"
-IUSE="test"
+KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~loong ~mips ppc ppc64 ~riscv ~s390 sparc x86 ~amd64-linux ~x86-linux ~x64-macos"
+IUSE="test abi_mips_n32 abi_mips_n64 abi_mips_o32"
 RESTRICT="!test? ( test )"
 
 BDEPEND="
@@ -62,6 +62,15 @@ python_compile() {
 
 	# https://bugs.gentoo.org/674112
 	swig_define __ARM_PCS_VFP
+
+	# Avoid similar errors to bug #688668 for MIPS
+	if use abi_mips_n32; then
+	    swig_define _MIPS_SIM = _ABIN32
+	elif use abi_mips_n64; then
+	    swig_define _MIPS_SIM = _ABI64
+	elif use abi_mips_o32; then
+	    swig_define _MIPS_SIM = _ABIO32
+	fi
 
 	distutils-r1_python_compile --openssl="${ESYSROOT}"/usr
 }
