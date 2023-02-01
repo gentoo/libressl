@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="7"
@@ -120,6 +120,10 @@ src_prepare() {
 		Modules/Setup.dist \
 		Modules/getpath.c \
 		setup.py || die "sed failed to replace @@GENTOO_LIBDIR@@"
+
+	if ! use wininst; then
+		rm Lib/distutils/command/wininst*.exe || die
+	fi
 
 	eautoreconf
 }
@@ -290,9 +294,6 @@ src_install() {
 	if ! use tk; then
 		rm -r "${ED}/usr/bin/idle${PYVER}" || die
 		rm -r "${libdir}/"{idlelib,lib-tk} || die
-	fi
-	if ! use wininst; then
-		rm "${libdir}/distutils/command/"wininst-*.exe || die
 	fi
 
 	dodoc Misc/{ACKS,HISTORY,NEWS}
