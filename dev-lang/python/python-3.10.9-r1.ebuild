@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI="7"
@@ -30,8 +30,8 @@ LICENSE="PSF-2"
 SLOT="${PYVER}"
 KEYWORDS="~alpha amd64 arm arm64 hppa ~ia64 ~loong ~m68k ~mips ppc ppc64 ~riscv ~s390 sparc x86"
 IUSE="
-	bluetooth build +ensurepip examples gdbm hardened lto +ncurses pgo
-	+readline +sqlite +ssl test tk valgrind +xml
+	bluetooth build +ensurepip examples gdbm hardened libedit lto
+	+ncurses pgo +readline +sqlite +ssl test tk valgrind +xml
 "
 RESTRICT="!test? ( test )"
 
@@ -43,8 +43,9 @@ RESTRICT="!test? ( test )"
 RDEPEND="
 	app-arch/bzip2:=
 	app-arch/xz-utils:=
-	dev-lang/python-exec[python_targets_python3_9(-)]
+	dev-lang/python-exec[python_targets_python3_10(-)]
 	dev-libs/libffi:=
+	dev-python/gentoo-common
 	sys-apps/util-linux:=
 	>=sys-libs/zlib-1.1.3:=
 	virtual/libcrypt:=
@@ -52,7 +53,10 @@ RDEPEND="
 	ensurepip? ( dev-python/ensurepip-wheels )
 	gdbm? ( sys-libs/gdbm:=[berkdb] )
 	ncurses? ( >=sys-libs/ncurses-5.2:= )
-	readline? ( >=sys-libs/readline-4.1:= )
+	readline? (
+		!libedit? ( >=sys-libs/readline-4.1:= )
+		libedit? ( dev-libs/libedit:= )
+	)
 	sqlite? ( >=dev-db/sqlite-3.3.8:3= )
 	ssl? ( >=dev-libs/openssl-1.1.1:= )
 	tk? (
@@ -62,13 +66,14 @@ RDEPEND="
 		dev-tcltk/tix
 	)
 	xml? ( >=dev-libs/expat-2.1:= )
+	!!<sys-apps/sandbox-2.21
 "
 # bluetooth requires headers from bluez
 DEPEND="
 	${RDEPEND}
 	bluetooth? ( net-wireless/bluez )
-	test? ( app-arch/xz-utils[extra-filters(+)] )
 	valgrind? ( dev-util/valgrind )
+	test? ( app-arch/xz-utils[extra-filters(+)] )
 "
 # autoconf-archive needed to eautoreconf
 BDEPEND="
@@ -107,11 +112,10 @@ src_prepare() {
 	# Ensure that internal copies of expat and libffi are not used.
 	rm -r Modules/expat || die
 	rm -r Modules/_ctypes/libffi* || die
-	rm "${WORKDIR}/${PATCHSET}"/0013-bpo-43998-Default-to-TLS-1.2-and-increase-cipher-sui.patch || die
 
 	local PATCHES=(
 		"${WORKDIR}/${PATCHSET}"
-		"${FILESDIR}"/${PN}-3.9.9-r1-libressl.patch
+		"${FILESDIR}"/${PN}-3.10.3-libressl.patch
 	)
 
 	default
@@ -205,6 +209,7 @@ src_configure() {
 		ac_cv_header_stropts_h=no
 
 		--enable-shared
+		--without-static-libpython
 		--enable-ipv6
 		--infodir='${prefix}/share/info'
 		--mandir='${prefix}/share/man'
@@ -219,6 +224,7 @@ src_configure() {
 
 		$(use_with lto)
 		$(use_enable pgo optimizations)
+		$(use_with readline readline "$(usex libedit editline readline)")
 		$(use_with valgrind)
 	)
 
@@ -241,6 +247,9 @@ src_configure() {
 			"${myeconfargs[@]}"
 
 			--libdir="${cbuild_libdir:2}"
+
+			# Avoid needing to load the right libpython.so.
+			--disable-shared
 
 			# As minimal as possible for the mini CBUILD Python
 			# we build just for cross.
@@ -375,6 +384,8 @@ src_test() {
 	# bug 660358
 	local -x COLUMNS=80
 	local -x PYTHONDONTWRITEBYTECODE=
+	# workaround https://bugs.gentoo.org/775416
+	addwrite "/usr/lib/python${PYVER}/site-packages"
 
 	nonfatal emake test EXTRATESTOPTS="${test_opts[*]}" \
 		CPPFLAGS= CFLAGS= LDFLAGS= < /dev/tty
@@ -389,9 +400,6 @@ src_install() {
 	local libdir=${ED}/usr/lib/python${PYVER}
 
 	emake DESTDIR="${D}" altinstall
-
-	# Remove static library
-	rm "${ED}"/usr/$(get_libdir)/libpython*.a || die
 
 	# Fix collisions between different slots of Python.
 	rm "${ED}/usr/$(get_libdir)/libpython3.so" || die
@@ -427,6 +435,8 @@ src_install() {
 		rm -r "${ED}/usr/bin/idle${PYVER}" || die
 		rm -r "${libdir}/"{idlelib,tkinter,test/test_tk*} || die
 	fi
+
+	ln -s ../python/EXTERNALLY-MANAGED "${libdir}/EXTERNALLY-MANAGED" || die
 
 	dodoc Misc/{ACKS,HISTORY,NEWS}
 
