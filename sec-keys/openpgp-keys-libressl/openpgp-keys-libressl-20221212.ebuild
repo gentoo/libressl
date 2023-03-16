@@ -1,14 +1,11 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
 DESCRIPTION="OpenPGP keys used by the libressl project"
 HOMEPAGE="https://www.libressl.org/"
-SRC_URI="
-	https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/key.asc
-		-> libressl-A1EB079B8D3EB92B4EBD3139663AF51BD5E4D8D5.asc
-"
+SRC_URI="https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl.asc"
 S=${WORKDIR}
 
 LICENSE="public-domain"
