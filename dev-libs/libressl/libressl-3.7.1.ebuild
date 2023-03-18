@@ -26,6 +26,8 @@ BDEPEND="verify-sig? ( sec-keys/openpgp-keys-libressl )"
 
 VERIFY_SIG_OPENPGP_KEY_PATH="${BROOT}"/usr/share/openpgp-keys/libressl.asc
 
+MULTILIB_WRAPPED_HEADERS=( /usr/include/openssl/opensslconf.h )
+
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.8.3-solaris10.patch
 )
