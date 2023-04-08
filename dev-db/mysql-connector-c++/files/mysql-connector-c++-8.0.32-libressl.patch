@@ -1,0 +1,49 @@
+https://github.com/mysql/mysql-connector-cpp/pull/33
+
+From d4db68edf0c475d26758a2eaf68b1858444c8e2d Mon Sep 17 00:00:00 2001
+From: Sam James <sam@gentoo.org>
+Date: Sun, 9 Apr 2023 04:07:59 +0100
+Subject: [PATCH] cdk: Use cmake's FindOpenSSL, not custom FindSSL module
+
+This avoids issues with detecting the version number with LibreSSL and also
+futureproofs mysql for future versions of OpenSSL.
+
+diff --git a/cdk/CMakeLists.txt b/cdk/CMakeLists.txt
+index 4fa43201d..59c96a3cd 100644
+--- a/cdk/CMakeLists.txt
++++ b/cdk/CMakeLists.txt
+@@ -93,7 +93,7 @@ add_config(CDK_BIG_ENDIAN ${BIG_ENDIAN})
+ #  Dependencies
+ #
+ 
+-find_dependency(SSL)
++find_package(OpenSSL)
+ #find_dependency(Protobuf)
+ find_dependency(RapidJSON)
+ find_dependency(Coverage)
+diff --git a/cdk/foundation/CMakeLists.txt b/cdk/foundation/CMakeLists.txt
+index 0982d1c82..e0e3ed5f2 100644
+--- a/cdk/foundation/CMakeLists.txt
++++ b/cdk/foundation/CMakeLists.txt
+@@ -90,7 +90,7 @@ target_include_directories(cdk_foundation PUBLIC
+ 
+ target_link_libraries(cdk_foundation
+   PUBLIC RapidJSON::rapidjson
+-  PRIVATE SSL::ssl
++  PRIVATE OpenSSL::SSL
+ )
+ 
+ IF(WIN32)
+diff --git a/cdk/mysqlx/CMakeLists.txt b/cdk/mysqlx/CMakeLists.txt
+index 246874ffb..89fb26844 100644
+--- a/cdk/mysqlx/CMakeLists.txt
++++ b/cdk/mysqlx/CMakeLists.txt
+@@ -51,7 +51,7 @@ ADD_LIBRARY(cdk_mysqlx STATIC
+ target_link_libraries(cdk_mysqlx PUBLIC cdk_proto_mysqlx cdk_foundation)
+ 
+ # this is used by auth_hash.cc
+-target_link_libraries(cdk_mysqlx PRIVATE SSL::ssl)
++target_link_libraries(cdk_mysqlx PRIVATE OpenSSL::SSL)
+ 
+ ADD_COVERAGE(cdk_mysqlx)
+ 
