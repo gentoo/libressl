@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -26,17 +26,14 @@ BDEPEND="verify-sig? ( sec-keys/openpgp-keys-libressl )"
 
 VERIFY_SIG_OPENPGP_KEY_PATH="${BROOT}"/usr/share/openpgp-keys/libressl.asc
 
+MULTILIB_WRAPPED_HEADERS=( /usr/include/openssl/opensslconf.h )
+
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.8.3-solaris10.patch
-	# https://github.com/libressl-portable/portable/pull/806
-	"${FILESDIR}"/${P}-no-static-tests.patch
 )
 
 src_prepare() {
 	default
-
-	# Required for the no-static-tests.patch
-	touch tests/empty.c || die
 
 	eautoreconf
 }
