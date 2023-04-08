@@ -1,7 +1,10 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
+
+# Re cleanups:
+# 2.5.x is an LTS release so we want to keep it for a while.
 
 inherit autotools flag-o-matic multilib multilib-minimal preserve-libs ssl-cert toolchain-funcs systemd tmpfiles
 
@@ -12,11 +15,12 @@ BIS_PV=20140524
 BIS_P="${BIS_PN}-${BIS_PV}"
 
 DESCRIPTION="LDAP suite of application and development tools"
-HOMEPAGE="https://www.OpenLDAP.org/"
-
+HOMEPAGE="https://www.openldap.org/"
 SRC_URI="
-	https://gitlab.com/openldap/${PN}/-/archive/OPENLDAP_REL_ENG_${MY_PV}/${PN}-OPENLDAP_REL_ENG_${MY_PV}.tar.gz
-	mirror://gentoo/${BIS_P}"
+	https://gitlab.com/openldap/${PN}/-/archive/OPENLDAP_REL_ENG_${MY_PV}/${PN}-OPENLDAP_REL_ENG_${MY_PV}.tar.bz2
+	mirror://gentoo/${BIS_P}
+"
+S="${WORKDIR}"/${PN}-OPENLDAP_REL_ENG_${MY_PV}
 
 LICENSE="OPENLDAP GPL-2"
 # Subslot added for bug #835654
@@ -36,10 +40,10 @@ REQUIRED_USE="cxx? ( sasl )
 	pbkdf2? ( ssl )
 	test? ( cleartext sasl )
 	autoca? ( !gnutls )
-	?? ( test minimal )"
+	?? ( test minimal )
+	kerberos? ( ?? ( kinit smbkrb5passwd ) )"
 
-S=${WORKDIR}/${PN}-OPENLDAP_REL_ENG_${MY_PV}
-
+SYSTEM_LMDB_VER=0.9.30
 # openssl is needed to generate lanman-passwords required by samba
 COMMON_DEPEND="
 	kernel_linux? ( sys-apps/util-linux )
@@ -56,7 +60,7 @@ COMMON_DEPEND="
 	!minimal? (
 		dev-libs/libltdl
 		sys-fs/e2fsprogs
-		>=dev-db/lmdb-0.9.18:=
+		>=dev-db/lmdb-${SYSTEM_LMDB_VER}:=
 		argon2? ( app-crypt/argon2:= )
 		crypt? ( virtual/libcrypt:= )
 		tcpd? ( sys-apps/tcp-wrappers )
@@ -69,7 +73,7 @@ COMMON_DEPEND="
 		smbkrb5passwd? (
 			dev-libs/openssl:0=
 			kerberos? ( app-crypt/heimdal )
-			)
+		)
 		kerberos? (
 			virtual/krb5
 			kinit? ( !app-crypt/heimdal )
@@ -139,9 +143,7 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-2.6.1-cloak.patch
 	"${FILESDIR}"/${PN}-2.6.1-flags.patch
 	"${FILESDIR}"/${PN}-2.6.1-fix-missing-mapping.patch
-	"${FILESDIR}"/${PN}-2.6.1-make-flags.patch
-	"${FILESDIR}"/${PN}-2.6.1-fix-bashism-configure.patch
-	"${FILESDIR}"/${PN}-2.6.1-parallel-build.patch
+	"${FILESDIR}"/${PN}-2.6.4-clang16.patch
 )
 
 openldap_filecount() {
@@ -167,7 +169,7 @@ openldap_find_versiontags() {
 	openldap_found_tag=0
 	have_files=0
 	for each in ${openldap_datadirs[@]} ; do
-		CURRENT_TAGDIR="${ROOT}$(sed "s:\/::" <<< ${each})"
+		CURRENT_TAGDIR="${EROOT}$(sed "s:\/::" <<< ${each})"
 		CURRENT_TAG="${CURRENT_TAGDIR}/${OPENLDAP_VERSIONTAG}"
 		if [[ -d "${CURRENT_TAGDIR}" ]] && [[ "${openldap_found_tag}" == 0 ]] ; then
 			einfo "- Checking ${each}..."
@@ -232,7 +234,27 @@ openldap_find_versiontags() {
 		OLDVER="$(/usr/bin/ldd ${SLAPD_PATH} \
 			| awk '/libdb-/{gsub("^libdb-","",$1);gsub(".so$","",$1);print $1}')"
 		local fail=0
-		if [[ -z "${OLDVER}" ]] && [[ -z "${NEWVER}" ]]; then
+
+		# This will not cover detection of cn=Config based configuration, but
+		# it's hopefully good enough.
+		if grep -sq '^backend.*shell' "${EROOT}"/etc/openldap/slapd.conf; then
+			eerror "    OpenLDAP >= 2.6.x has dropped support for Shell backend."
+			eerror "	You will need to migrate per upstream's migration notes"
+			eerror "	at https://www.openldap.org/doc/admin25/appendix-upgrading.html."
+			eerror "	Your existing database will not be accessible until it is"
+			eerror "	converted away from backend shell!"
+			echo
+			fail=1
+		fi
+		if has_version "${CATEGORY}/${PN}[berkdb]" || grep -sq '^backend.*(bdb|hdb)' /etc/openldap/slapd.conf; then
+			eerror "	OpenLDAP >= 2.6.x has dropped support for Berkeley DB."
+			eerror "	You will need to migrate per upstream's migration notes"
+			eerror "	at https://www.openldap.org/doc/admin25/appendix-upgrading.html."
+			eerror "	Your existing database will not be accessible until it is"
+			eerror "	converted to mdb!"
+			echo
+			fail=1
+		elif [[ -z "${OLDVER}" ]] && [[ -z "${NEWVER}" ]]; then
 			:
 			# Nothing wrong here.
 		elif [[ -z "${OLDVER}" ]] && [[ -n "${NEWVER}" ]]; then
@@ -288,8 +310,8 @@ openldap_upgrade_howto() {
 	eerror " 7. slapadd -l ${l}"
 	eerror " 8. chown ldap:ldap /var/lib/openldap-data/*"
 	eerror " 9. /etc/init.d/slapd start"
-	eerror "10. check that your data is intact."
-	eerror "11. set up the new replication system."
+	eerror "10. Check that your data is intact."
+	eerror "11. Set up the new replication system."
 	eerror
 	if [[ "${FORCE_UPGRADE}" != "1" ]]; then
 		die "You need to upgrade your database first"
@@ -314,25 +336,46 @@ pkg_setup() {
 }
 
 src_prepare() {
+	# The system copy of dev-db/lmdb must match the version that this copy
+	# of OpenLDAP shipped with! See bug #588792.
+	#
+	# Fish out MDB_VERSION_MAJOR/MDB_VERSION_MINOR/MDB_VERSION_PATCH from
+	# the bundled lmdb's header to find out the version.
+	local bundled_lmdb_version=$(sed -En '/^#define MDB_VERSION_(MAJOR|MINOR|PATCH)(\s+)?/{s/[^0-9.]//gp}' libraries/liblmdb/lmdb.h || die)
+	bundled_lmdb_version=$(printf "%s." ${bundled_lmdb_version})
+
+	if [[ ${SYSTEM_LMDB_VER}. != ${bundled_lmdb_version} ]] ; then
+		eerror "Source lmdb version: ${bundled_lmdb_version}"
+		eerror "Ebuild lmdb version: ${SYSTEM_LMDB_VER}"
+		die "Ebuild needs to update SYSTEM_LMDB_VER!"
+	fi
+
 	rm -r libraries/liblmdb || die 'could not removed bundled lmdb directory'
 
+	local filename
 	for filename in doc/drafts/draft-ietf-ldapext-acl-model-xx.txt; do
-		iconv -f iso-8859-1 -t utf-8 "$filename" > "$filename.utf8"
-		mv "$filename.utf8" "$filename"
+		iconv -f iso-8859-1 -t utf-8 "${filename}" > "${filename}.utf8"
+		mv "${filename}.utf8" "${filename}"
 	done
 
 	default
 
 	sed -i \
 		-e "s:\$(localstatedir)/run:${EPREFIX}/run:" \
+		-e '/MKDIR.*.(DESTDIR)\/run/d' \
+		-e '/MKDIR.*.(DESTDIR).*.(runstatedir)/d' \
 		servers/slapd/Makefile.in || die 'adjusting slapd Makefile.in failed'
 
 	pushd build &>/dev/null || die "pushd build"
 	einfo "Making sure upstream build strip does not do stripping too early"
 	sed -i.orig \
 		-e '/^STRIP/s,-s,,g' \
-		top.mk || die "Failed to remove to early stripping"
+		top.mk || die "Failed to remove too early stripping"
 	popd &>/dev/null || die
+
+	# Fails with OpenSSL 3, bug #848894
+	# https://bugs.openldap.org/show_bug.cgi?id=10009
+	rm tests/scripts/test076-authid-rewrite || die
 
 	eautoreconf
 	multilib_copy_sources
@@ -346,7 +389,7 @@ build_contrib_module() {
 	emake \
 		LDAP_BUILD="${BUILD_DIR}" prefix="${EPREFIX}/usr" \
 		CC="${CC}" libexecdir="${EPREFIX}/usr/$(get_libdir)/openldap" \
-		"$target"
+		"${target}"
 	popd &>/dev/null || die
 }
 
@@ -366,6 +409,14 @@ multilib_src_configure() {
 		--without-fetch
 	)
 
+	if use experimental ; then
+		# connectionless ldap per bug #342439
+		# connectionless is a unsupported feature according to Howard Chu
+		# see https://bugs.openldap.org/show_bug.cgi?id=9739
+		# (see also bug #892009)
+		append-flags -DLDAP_CONNECTIONLESS
+	fi
+
 	if ! use minimal && multilib_is_native_abi; then
 		# SLAPD (Standalone LDAP Daemon) Options
 		# overlay chaining requires '--enable-ldap' #296567
@@ -380,11 +431,6 @@ multilib_src_configure() {
 			$(use_enable tcpd wrappers)
 		)
 		if use experimental ; then
-			# connectionless ldap per bug #342439
-			# connectionless is a unsupported feature according to Howard Chu
-			# see https://bugs.openldap.org/show_bug.cgi?id=9739
-			append-cppflags -DLDAP_CONNECTIONLESS
-
 			myconf+=(
 				--enable-dynacl
 				# ACI build as dynamic module not supported (yet)
@@ -508,13 +554,14 @@ src_configure_cxx() {
 
 	mkdir -p "${BUILD_DIR}"/contrib/ldapc++ || die "could not create ${BUILD_DIR}/contrib/ldapc++ directory"
 	pushd "${BUILD_DIR}/contrib/ldapc++" &>/dev/null || die "pushd contrib/ldapc++"
-	local LDFLAGS=${LDFLAGS}
-	local CPPFLAGS=${CPPFLAGS}
-	append-ldflags -L"${BUILD_DIR}"/libraries/liblber/.libs \
-		-L"${BUILD_DIR}"/libraries/libldap/.libs
+
+	local LDFLAGS="${LDFLAGS}"
+	local CPPFLAGS="${CPPFLAGS}"
+
+	append-ldflags -L"${BUILD_DIR}"/libraries/liblber/.libs -L"${BUILD_DIR}"/libraries/libldap/.libs
 	append-cppflags -I"${BUILD_DIR}"/include
-	ECONF_SOURCE=${S}/contrib/ldapc++ \
-	econf "${myconf_ldapcpp[@]}"
+
+	ECONF_SOURCE="${S}"/contrib/ldapc++ econf "${myconf_ldapcpp[@]}"
 	popd &>/dev/null || die "popd contrib/ldapc++"
 }
 
@@ -605,6 +652,7 @@ multilib_src_compile() {
 		$(tc-getCC) -shared \
 			-I"${BUILD_DIR}"/include \
 			-I../../../include \
+			${CPPFLAGS} \
 			${CFLAGS} \
 			-fPIC \
 			${LDFLAGS} \
@@ -616,14 +664,23 @@ multilib_src_compile() {
 
 multilib_src_test() {
 	if multilib_is_native_abi; then
-		cd "tests"
+		cd tests || die
 		pwd
+
+		# Increase various test timeouts/delays, bug #894012
+		# We can't just double everything as there's a cumulative effect.
+		export SLEEP0=2 # originally 1
+		export SLEEP1=10 # originally 7
+		export SLEEP2=20 # originally 15
+		export TIMEOUT=16 # originally 8
+
 		# emake test => runs only lloadd & mdb, in serial; skips ldif,sql,wt,regression
 		# emake partests => runs ALL of the tests in parallel
 		# wt/WiredTiger is not supported in Gentoo
 		TESTS=( plloadd pmdb )
 		#TESTS+=( pldif ) # not done by default, so also exclude here
 		#use odbc && TESTS+=( psql ) # not done by default, so also exclude here
+
 		emake "${TESTS[@]}"
 	fi
 }
@@ -649,7 +706,7 @@ multilib_src_install() {
 		# use our config
 		rm "${ED}"/etc/openldap/slapd.conf
 		insinto /etc/openldap
-		newins "${FILESDIR}"/${PN}-2.4.40-slapd-conf slapd.conf
+		newins "${FILESDIR}"/${PN}-2.6.3-slapd-conf slapd.conf
 		configfile="${ED}"/etc/openldap/slapd.conf
 
 		# populate with built backends
@@ -669,11 +726,15 @@ multilib_src_install() {
 		doinitd "${T}"/slapd
 		newconfd "${FILESDIR}"/slapd-confd-2.6.1 slapd
 
-		einfo "Install systemd service"
-		sed -e "s,/usr/lib/,/usr/$(get_libdir)/," "${FILESDIR}"/slapd-2.6.1.service > "${T}"/slapd.service || die
-		systemd_dounit "${T}"/slapd.service
-		systemd_install_serviced "${FILESDIR}"/slapd.service.conf
-		newtmpfiles "${FILESDIR}"/slapd.tmpfilesd slapd.conf
+		if use systemd; then
+			# The systemd unit uses Type=notify, so it is useless without USE=systemd
+			einfo "Install systemd service"
+			rm -rf "${ED}"/{,usr/}lib/systemd
+			sed -e "s,/usr/lib/,/usr/$(get_libdir)/," "${FILESDIR}"/slapd-2.6.1.service > "${T}"/slapd.service || die
+			systemd_dounit "${T}"/slapd.service
+			systemd_install_serviced "${FILESDIR}"/slapd.service.conf
+			newtmpfiles "${FILESDIR}"/slapd.tmpfilesd slapd.conf
+		fi
 
 		# if built without SLP, we don't need to be before avahi
 			sed -i \
@@ -763,7 +824,9 @@ pkg_preinst() {
 
 pkg_postinst() {
 	if ! use minimal ; then
-		tmpfiles_process slapd.conf
+		if use systemd; then
+			tmpfiles_process slapd.conf
+		fi
 
 		# You cannot build SSL certificates during src_install that will make
 		# binary packages containing your SSL key, which is both a security risk

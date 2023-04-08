@@ -1,7 +1,10 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
+
+# Re cleanups:
+# 2.5.x is an LTS release so we want to keep it for a while.
 
 inherit autotools flag-o-matic multilib multilib-minimal preserve-libs ssl-cert toolchain-funcs systemd tmpfiles
 
@@ -12,16 +15,17 @@ BIS_PV=20140524
 BIS_P="${BIS_PN}-${BIS_PV}"
 
 DESCRIPTION="LDAP suite of application and development tools"
-HOMEPAGE="https://www.OpenLDAP.org/"
-
+HOMEPAGE="https://www.openldap.org/"
 SRC_URI="
 	https://gitlab.com/openldap/${PN}/-/archive/OPENLDAP_REL_ENG_${MY_PV}/${PN}-OPENLDAP_REL_ENG_${MY_PV}.tar.gz
-	mirror://gentoo/${BIS_P}"
+	mirror://gentoo/${BIS_P}
+"
+S="${WORKDIR}"/${PN}-OPENLDAP_REL_ENG_${MY_PV}
 
 LICENSE="OPENLDAP GPL-2"
 # Subslot added for bug #835654
 SLOT="0/$(ver_cut 1-2)"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~x86-solaris"
+KEYWORDS="~alpha amd64 arm arm64 hppa ~ia64 ~loong ~mips ~ppc ppc64 ~riscv ~s390 sparc x86 ~amd64-linux ~x86-linux ~x86-solaris"
 
 IUSE_DAEMON="argon2 +cleartext crypt experimental minimal samba tcpd"
 IUSE_OVERLAY="overlays perl autoca"
@@ -36,9 +40,8 @@ REQUIRED_USE="cxx? ( sasl )
 	pbkdf2? ( ssl )
 	test? ( cleartext sasl )
 	autoca? ( !gnutls )
-	?? ( test minimal )"
-
-S=${WORKDIR}/${PN}-OPENLDAP_REL_ENG_${MY_PV}
+	?? ( test minimal )
+	kerberos? ( ?? ( kinit smbkrb5passwd ) )"
 
 # openssl is needed to generate lanman-passwords required by samba
 COMMON_DEPEND="
@@ -69,7 +72,7 @@ COMMON_DEPEND="
 		smbkrb5passwd? (
 			dev-libs/openssl:0=
 			kerberos? ( app-crypt/heimdal )
-			)
+		)
 		kerberos? (
 			virtual/krb5
 			kinit? ( !app-crypt/heimdal )
@@ -140,7 +143,7 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-2.6.1-flags.patch
 	"${FILESDIR}"/${PN}-2.6.1-fix-missing-mapping.patch
 	"${FILESDIR}"/${PN}-2.6.1-fix-bashism-configure.patch
-	"${FILESDIR}"/${PN}-2.6.1-parallel-build.patch
+	"${FILESDIR}"/${PN}-2.6.3-clang16.patch
 )
 
 openldap_filecount() {
@@ -166,7 +169,7 @@ openldap_find_versiontags() {
 	openldap_found_tag=0
 	have_files=0
 	for each in ${openldap_datadirs[@]} ; do
-		CURRENT_TAGDIR="${ROOT}$(sed "s:\/::" <<< ${each})"
+		CURRENT_TAGDIR="${EROOT}$(sed "s:\/::" <<< ${each})"
 		CURRENT_TAG="${CURRENT_TAGDIR}/${OPENLDAP_VERSIONTAG}"
 		if [[ -d "${CURRENT_TAGDIR}" ]] && [[ "${openldap_found_tag}" == 0 ]] ; then
 			einfo "- Checking ${each}..."
@@ -231,7 +234,27 @@ openldap_find_versiontags() {
 		OLDVER="$(/usr/bin/ldd ${SLAPD_PATH} \
 			| awk '/libdb-/{gsub("^libdb-","",$1);gsub(".so$","",$1);print $1}')"
 		local fail=0
-		if [[ -z "${OLDVER}" ]] && [[ -z "${NEWVER}" ]]; then
+
+		# This will not cover detection of cn=Config based configuration, but
+		# it's hopefully good enough.
+		if grep -sq '^backend.*shell' "${EROOT}"/etc/openldap/slapd.conf; then
+			eerror "    OpenLDAP >= 2.6.x has dropped support for Shell backend."
+			eerror "	You will need to migrate per upstream's migration notes"
+			eerror "	at https://www.openldap.org/doc/admin25/appendix-upgrading.html."
+			eerror "	Your existing database will not be accessible until it is"
+			eerror "	converted away from backend shell!"
+			echo
+			fail=1
+		fi
+		if has_version "${CATEGORY}/${PN}[berkdb]" || grep -sq '^backend.*(bdb|hdb)' /etc/openldap/slapd.conf; then
+			eerror "	OpenLDAP >= 2.6.x has dropped support for Berkeley DB."
+			eerror "	You will need to migrate per upstream's migration notes"
+			eerror "	at https://www.openldap.org/doc/admin25/appendix-upgrading.html."
+			eerror "	Your existing database will not be accessible until it is"
+			eerror "	converted to mdb!"
+			echo
+			fail=1
+		elif [[ -z "${OLDVER}" ]] && [[ -z "${NEWVER}" ]]; then
 			:
 			# Nothing wrong here.
 		elif [[ -z "${OLDVER}" ]] && [[ -n "${NEWVER}" ]]; then
@@ -287,8 +310,8 @@ openldap_upgrade_howto() {
 	eerror " 7. slapadd -l ${l}"
 	eerror " 8. chown ldap:ldap /var/lib/openldap-data/*"
 	eerror " 9. /etc/init.d/slapd start"
-	eerror "10. check that your data is intact."
-	eerror "11. set up the new replication system."
+	eerror "10. Check that your data is intact."
+	eerror "11. Set up the new replication system."
 	eerror
 	if [[ "${FORCE_UPGRADE}" != "1" ]]; then
 		die "You need to upgrade your database first"
@@ -324,6 +347,8 @@ src_prepare() {
 
 	sed -i \
 		-e "s:\$(localstatedir)/run:${EPREFIX}/run:" \
+		-e '/MKDIR.*.(DESTDIR)\/run/d' \
+		-e '/MKDIR.*.(DESTDIR).*.(runstatedir)/d' \
 		servers/slapd/Makefile.in || die 'adjusting slapd Makefile.in failed'
 
 	pushd build &>/dev/null || die "pushd build"
@@ -648,7 +673,7 @@ multilib_src_install() {
 		# use our config
 		rm "${ED}"/etc/openldap/slapd.conf
 		insinto /etc/openldap
-		newins "${FILESDIR}"/${PN}-2.4.40-slapd-conf slapd.conf
+		newins "${FILESDIR}"/${PN}-2.6.3-slapd-conf slapd.conf
 		configfile="${ED}"/etc/openldap/slapd.conf
 
 		# populate with built backends
@@ -668,11 +693,15 @@ multilib_src_install() {
 		doinitd "${T}"/slapd
 		newconfd "${FILESDIR}"/slapd-confd-2.6.1 slapd
 
-		einfo "Install systemd service"
-		sed -e "s,/usr/lib/,/usr/$(get_libdir)/," "${FILESDIR}"/slapd-2.6.1.service > "${T}"/slapd.service || die
-		systemd_dounit "${T}"/slapd.service
-		systemd_install_serviced "${FILESDIR}"/slapd.service.conf
-		newtmpfiles "${FILESDIR}"/slapd.tmpfilesd slapd.conf
+		if use systemd; then
+			# The systemd unit uses Type=notify, so it is useless without USE=systemd
+			einfo "Install systemd service"
+			rm -rf "${ED}"/{,usr/}lib/systemd
+			sed -e "s,/usr/lib/,/usr/$(get_libdir)/," "${FILESDIR}"/slapd-2.6.1.service > "${T}"/slapd.service || die
+			systemd_dounit "${T}"/slapd.service
+			systemd_install_serviced "${FILESDIR}"/slapd.service.conf
+			newtmpfiles "${FILESDIR}"/slapd.tmpfilesd slapd.conf
+		fi
 
 		# if built without SLP, we don't need to be before avahi
 			sed -i \
@@ -762,7 +791,9 @@ pkg_preinst() {
 
 pkg_postinst() {
 	if ! use minimal ; then
-		tmpfiles_process slapd.conf
+		if use systemd; then
+			tmpfiles_process slapd.conf
+		fi
 
 		# You cannot build SSL certificates during src_install that will make
 		# binary packages containing your SSL key, which is both a security risk
