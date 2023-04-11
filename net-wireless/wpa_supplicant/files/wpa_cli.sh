@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2011 Gentoo Foundation
 # Written by Roy Marples <uberlord@gentoo.org>
 # Distributed under the terms of the GNU General Public License v2
 # Alternatively, this file may be distributed under the terms of the BSD License
