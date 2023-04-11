@@ -26,7 +26,7 @@ RDEPEND="
 	jemalloc? ( dev-libs/jemalloc:= )
 	jit? ( || ( sys-devel/gcc:* sys-devel/clang:* ) )
 	ssl? (
-		dev-libs/openssl:0=
+		dev-libs/openssl:=
 	)
 	socks5? ( >=net-proxy/dante-1.1.13 )
 	systemtap? ( dev-util/systemtap )
