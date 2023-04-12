@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -29,6 +29,10 @@ VERIFY_SIG_OPENPGP_KEY_PATH="${BROOT}"/usr/share/openpgp-keys/libressl.asc
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.8.3-solaris10.patch
+	# Gentoo's ssl-cert.eclass uses 'openssl genrsa -rand'
+	# which LibreSSL doesn't support.
+	# https://github.com/libressl/portable/issues/839
+	"${FILESDIR}"/${PN}-3.6.2-genrsa-rand.patch
 )
 
 src_prepare() {

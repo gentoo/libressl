@@ -1,0 +1,26 @@
+Gentoo's ssl-cert.eclass uses 'openssl genrsa -rand'.
+
+Upstream Issue: https://github.com/libressl/portable/issues/839
+
+--- a/apps/openssl/genrsa.c.orig
++++ b/apps/openssl/genrsa.c
+@@ -90,6 +90,7 @@ static struct {
+ 	unsigned long f4;
+ 	char *outfile;
+ 	char *passargout;
++	char *rand_dummy;
+ } cfg;
+ 
+ static int
+@@ -251,6 +252,11 @@ static const struct option genrsa_option
+ 		.desc = "Output file passphrase source",
+ 		.type = OPTION_ARG,
+ 		.opt.arg = &cfg.passargout,
++	},
++	{
++		.name = "rand",
++		.type = OPTION_ARG,
++		.opt.arg = &cfg.rand_dummy,
+ 	},
+ 	{ NULL },
+ };

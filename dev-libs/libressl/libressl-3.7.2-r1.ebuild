@@ -30,6 +30,10 @@ MULTILIB_WRAPPED_HEADERS=( /usr/include/openssl/opensslconf.h )
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.8.3-solaris10.patch
+	# Gentoo's ssl-cert.eclass uses 'openssl genrsa -rand'
+	# which LibreSSL doesn't support.
+	# https://github.com/libressl/portable/issues/839
+	"${FILESDIR}"/${PN}-3.7.2-genrsa-rand.patch
 )
 
 src_prepare() {
