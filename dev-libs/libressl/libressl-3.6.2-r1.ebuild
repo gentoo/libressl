@@ -20,7 +20,6 @@ SLOT="0/53"
 KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~s390 ~sparc x86 ~amd64-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 IUSE="+asm static-libs test"
 RESTRICT="!test? ( test )"
-REQUIRED_USE="test? ( static-libs )"
 
 PDEPEND="app-misc/ca-certificates"
 BDEPEND="verify-sig? ( sec-keys/openpgp-keys-libressl )"
@@ -33,10 +32,15 @@ PATCHES=(
 	# which LibreSSL doesn't support.
 	# https://github.com/libressl/portable/issues/839
 	"${FILESDIR}"/${PN}-3.6.2-genrsa-rand.patch
+	# https://github.com/libressl-portable/portable/pull/806
+	"${FILESDIR}"/${PN}-3.7.0-no-static-tests.patch
 )
 
 src_prepare() {
 	default
+
+	# Required for the no-static-tests.patch
+	touch tests/empty.c || die
 
 	eautoreconf
 }
@@ -49,10 +53,6 @@ multilib_src_configure() {
 		$(use_enable test tests)
 	)
 	econf "${args[@]}"
-}
-
-multilib_src_test() {
-	emake check
 }
 
 multilib_src_install_all() {
