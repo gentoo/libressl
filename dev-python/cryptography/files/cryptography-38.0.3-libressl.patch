@@ -1,0 +1,95 @@
+From OpenBSD:
+
+https://github.com/openbsd/ports/blob/23b2d6921bd5e5203c7da6354290e8f03f4901ab/security/py-cryptography/patches/patch-src__cffi_src_openssl_crypto_py
+https://github.com/openbsd/ports/blob/23b2d6921bd5e5203c7da6354290e8f03f4901ab/security/py-cryptography/patches/patch-src__cffi_src_openssl_cryptography_py
+https://github.com/openbsd/ports/blob/23b2d6921bd5e5203c7da6354290e8f03f4901ab/security/py-cryptography/patches/patch-src__cffi_src_openssl_evp_py
+https://github.com/openbsd/ports/blob/23b2d6921bd5e5203c7da6354290e8f03f4901ab/security/py-cryptography/patches/patch-src_cryptography_hazmat_backends_openssl_backend_py
+
+LibreSSL 3.6 and later has OPENSSL_cleanup()
+
+Index: src/_cffi_src/openssl/crypto.py
+--- a/src/_cffi_src/openssl/crypto.py.orig
++++ b/src/_cffi_src/openssl/crypto.py
+@@ -75,7 +75,7 @@ CUSTOMIZATIONS = """
+ # define OPENSSL_DIR             SSLEAY_DIR
+ #endif
+ 
+-#if CRYPTOGRAPHY_IS_LIBRESSL
++#if 0
+ static const long Cryptography_HAS_OPENSSL_CLEANUP = 0;
+ void (*OPENSSL_cleanup)(void) = NULL;
+ #else
+https://github.com/pyca/cryptography/pull/7803
+
+Index: src/_cffi_src/openssl/cryptography.py
+--- a/src/_cffi_src/openssl/cryptography.py.orig
++++ b/src/_cffi_src/openssl/cryptography.py
+@@ -47,12 +47,15 @@ INCLUDES = """
+     (LIBRESSL_VERSION_NUMBER < 0x3040000f)
+ #define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_350 \
+     (LIBRESSL_VERSION_NUMBER < 0x3050000f)
++#define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_370 \
++    (LIBRESSL_VERSION_NUMBER < 0x3070000f)
+ 
+ #else
+ #define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_322 (0)
+ #define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_332 (0)
+ #define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_340 (0)
+ #define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_350 (0)
++#define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_370 (0)
+ #endif
+ 
+ #if OPENSSL_VERSION_NUMBER < 0x10100000
+@@ -91,6 +94,7 @@ static const int CRYPTOGRAPHY_NEEDS_OSRANDOM_ENGINE;
+ 
+ static const int CRYPTOGRAPHY_LIBRESSL_LESS_THAN_340;
+ static const int CRYPTOGRAPHY_LIBRESSL_LESS_THAN_350;
++static const int CRYPTOGRAPHY_LIBRESSL_LESS_THAN_370;
+ 
+ static const int CRYPTOGRAPHY_IS_LIBRESSL;
+ static const int CRYPTOGRAPHY_IS_BORINGSSL;
+https://github.com/pyca/cryptography/pull/7803
+
+Index: src/_cffi_src/openssl/evp.py
+--- a/src/_cffi_src/openssl/evp.py.orig
++++ b/src/_cffi_src/openssl/evp.py
+@@ -215,9 +215,10 @@ static const long Cryptography_HAS_ONESHOT_EVP_DIGEST_
+ #endif
+ 
+ #if CRYPTOGRAPHY_OPENSSL_LESS_THAN_111
+-static const long Cryptography_HAS_RAW_KEY = 0;
+ static const long Cryptography_HAS_EVP_DIGESTFINAL_XOF = 0;
+ int (*EVP_DigestFinalXOF)(EVP_MD_CTX *, unsigned char *, size_t) = NULL;
++#if CRYPTOGRAPHY_LIBRESSL_LESS_THAN_370
++static const long Cryptography_HAS_RAW_KEY = 0;
+ EVP_PKEY *(*EVP_PKEY_new_raw_private_key)(int, ENGINE *, const unsigned char *,
+                                        size_t) = NULL;
+ EVP_PKEY *(*EVP_PKEY_new_raw_public_key)(int, ENGINE *, const unsigned char *,
+@@ -226,6 +227,9 @@ int (*EVP_PKEY_get_raw_private_key)(const EVP_PKEY *, 
+                                     size_t *) = NULL;
+ int (*EVP_PKEY_get_raw_public_key)(const EVP_PKEY *, unsigned char *,
+                                    size_t *) = NULL;
++#else
++static const long Cryptography_HAS_RAW_KEY = 1;
++#endif
+ #else
+ static const long Cryptography_HAS_RAW_KEY = 1;
+ static const long Cryptography_HAS_EVP_DIGESTFINAL_XOF = 1;
+Enable Ed25519 tests. Seven X25519 tests need EVP_PKEY_get1_tls_encodedpoint()
+which LibreSSL does not plan to support.
+
+Index: src/cryptography/hazmat/backends/openssl/backend.py
+--- a/src/cryptography/hazmat/backends/openssl/backend.py.orig
++++ b/src/cryptography/hazmat/backends/openssl/backend.py
+@@ -1987,7 +1987,10 @@ class Backend:
+     def ed25519_supported(self) -> bool:
+         if self._fips_enabled:
+             return False
+-        return not self._lib.CRYPTOGRAPHY_OPENSSL_LESS_THAN_111B
++        return (
++            not self._lib.CRYPTOGRAPHY_OPENSSL_LESS_THAN_111B
++            or not self._lib.CRYPTOGRAPHY_LIBRESSL_LESS_THAN_370
++        )
+ 
+     def ed25519_load_public_bytes(
+         self, data: bytes

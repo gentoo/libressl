@@ -1,0 +1,100 @@
+From OpenBSD:
+
+https://github.com/openbsd/ports/blob/471efc19921614d2338c8f1c485ef12d33836227/security/py-cryptography/patches/patch-src__cffi_src_openssl_cryptography_py
+https://github.com/openbsd/ports/blob/471efc19921614d2338c8f1c485ef12d33836227/security/py-cryptography/patches/patch-src__cffi_src_openssl_evp_py
+https://github.com/openbsd/ports/blob/471efc19921614d2338c8f1c485ef12d33836227/security/py-cryptography/patches/patch-src_cryptography_hazmat_backends_openssl_backend_py
+
+From 95a2b50841648c06bacca7b3d37a3b99d4f71d1e Mon Sep 17 00:00:00 2001
+From: Theo Buehler <botovq@users.noreply.github.com>
+Date: Tue, 22 Nov 2022 16:33:32 +0100
+Subject: [PATCH] LibreSSL 3.7 adds support for Ed25519 (#7803)
+
+Index: src/_cffi_src/openssl/cryptography.py
+--- a/src/_cffi_src/openssl/cryptography.py.orig
++++ b/src/_cffi_src/openssl/cryptography.py
+@@ -49,6 +49,8 @@ INCLUDES = """
+     (LIBRESSL_VERSION_NUMBER < 0x3050000f)
+ #define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_360 \
+     (LIBRESSL_VERSION_NUMBER < 0x3060000f)
++#define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_370 \
++    (LIBRESSL_VERSION_NUMBER < 0x3070000f)
+ 
+ #else
+ #define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_322 (0)
+@@ -56,6 +58,7 @@ INCLUDES = """
+ #define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_340 (0)
+ #define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_350 (0)
+ #define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_360 (0)
++#define CRYPTOGRAPHY_LIBRESSL_LESS_THAN_370 (0)
+ #endif
+ 
+ #if OPENSSL_VERSION_NUMBER < 0x10100000
+@@ -81,6 +84,10 @@ INCLUDES = """
+ #else
+ #define CRYPTOGRAPHY_NEEDS_OSRANDOM_ENGINE 0
+ #endif
++/* Ed25519 support is available from OpenSSL 1.1.1b and LibreSSL 3.7.0. */
++#define CRYPTOGRAPHY_HAS_WORKING_ED25519 \
++    (!CRYPTOGRAPHY_OPENSSL_LESS_THAN_111B || \
++    (CRYPTOGRAPHY_IS_LIBRESSL && !CRYPTOGRAPHY_LIBRESSL_LESS_THAN_370))
+ """
+ 
+ TYPES = """
+@@ -91,6 +98,7 @@ static const int CRYPTOGRAPHY_OPENSSL_LESS_THAN_111;
+ static const int CRYPTOGRAPHY_OPENSSL_LESS_THAN_111B;
+ static const int CRYPTOGRAPHY_OPENSSL_LESS_THAN_111E;
+ static const int CRYPTOGRAPHY_NEEDS_OSRANDOM_ENGINE;
++static const int CRYPTOGRAPHY_HAS_WORKING_ED25519;
+ 
+ static const int CRYPTOGRAPHY_LIBRESSL_LESS_THAN_340;
+ static const int CRYPTOGRAPHY_LIBRESSL_LESS_THAN_350;
+From 95a2b50841648c06bacca7b3d37a3b99d4f71d1e Mon Sep 17 00:00:00 2001
+From: Theo Buehler <botovq@users.noreply.github.com>
+Date: Tue, 22 Nov 2022 16:33:32 +0100
+Subject: [PATCH] LibreSSL 3.7 adds support for Ed25519 (#7803)
+
+(tweaked slightly; py-cryptography dropped OpenSSL 1.1 support on main
+but not the 38.0.x branch)
+
+Index: src/_cffi_src/openssl/evp.py
+--- a/src/_cffi_src/openssl/evp.py.orig
++++ b/src/_cffi_src/openssl/evp.py
+@@ -215,9 +215,10 @@ static const long Cryptography_HAS_ONESHOT_EVP_DIGEST_
+ #endif
+ 
+ #if CRYPTOGRAPHY_OPENSSL_LESS_THAN_111
+-static const long Cryptography_HAS_RAW_KEY = 0;
+ static const long Cryptography_HAS_EVP_DIGESTFINAL_XOF = 0;
+ int (*EVP_DigestFinalXOF)(EVP_MD_CTX *, unsigned char *, size_t) = NULL;
++#if CRYPTOGRAPHY_LIBRESSL_LESS_THAN_370 || !CRYPTOGRAPHY_IS_LIBRESSL
++static const long Cryptography_HAS_RAW_KEY = 0;
+ EVP_PKEY *(*EVP_PKEY_new_raw_private_key)(int, ENGINE *, const unsigned char *,
+                                        size_t) = NULL;
+ EVP_PKEY *(*EVP_PKEY_new_raw_public_key)(int, ENGINE *, const unsigned char *,
+@@ -227,6 +228,9 @@ int (*EVP_PKEY_get_raw_private_key)(const EVP_PKEY *, 
+ int (*EVP_PKEY_get_raw_public_key)(const EVP_PKEY *, unsigned char *,
+                                    size_t *) = NULL;
+ #else
++static const long Cryptography_HAS_RAW_KEY = 1;
++#endif
++#else
+ static const long Cryptography_HAS_RAW_KEY = 1;
+ static const long Cryptography_HAS_EVP_DIGESTFINAL_XOF = 1;
+ #endif
+From 95a2b50841648c06bacca7b3d37a3b99d4f71d1e Mon Sep 17 00:00:00 2001
+From: Theo Buehler <botovq@users.noreply.github.com>
+Date: Tue, 22 Nov 2022 16:33:32 +0100
+Subject: [PATCH] LibreSSL 3.7 adds support for Ed25519 (#7803)
+
+Index: src/cryptography/hazmat/backends/openssl/backend.py
+--- a/src/cryptography/hazmat/backends/openssl/backend.py.orig
++++ b/src/cryptography/hazmat/backends/openssl/backend.py
+@@ -1987,7 +1987,7 @@ class Backend:
+     def ed25519_supported(self) -> bool:
+         if self._fips_enabled:
+             return False
+-        return not self._lib.CRYPTOGRAPHY_OPENSSL_LESS_THAN_111B
++        return self._lib.CRYPTOGRAPHY_HAS_WORKING_ED25519
+ 
+     def ed25519_load_public_bytes(
+         self, data: bytes

@@ -81,8 +81,9 @@ SRC_URI="
 	)
 "
 
-# extra licenses come from Rust deps
-LICENSE="Apache-2.0 BSD BSD-2 MIT Unicode-DFS-2016"
+LICENSE="|| ( Apache-2.0 BSD )"
+# Dependent crate licenses
+LICENSE+=" Apache-2.0 BSD-2 BSD MIT Unicode-DFS-2016"
 SLOT="0"
 KEYWORDS="amd64 arm arm64 ppc ppc64 ~riscv ~s390 sparc x86"
 
@@ -109,7 +110,7 @@ BDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-38.0.3-libressl.patch
+	"${FILESDIR}"/${PN}-38.0.4-libressl.patch
 )
 
 # Files built without CFLAGS/LDFLAGS, acceptable for rust
