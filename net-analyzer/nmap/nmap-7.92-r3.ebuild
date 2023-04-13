@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -13,9 +13,6 @@ if [[ ${PV} == *9999* ]] ; then
 	inherit git-r3
 
 	EGIT_REPO_URI="https://github.com/nmap/nmap"
-
-	# Just in case for now as future seems undecided.
-	LICENSE="NPSL"
 else
 	VERIFY_SIG_OPENPGP_KEY_PATH="${BROOT}"/usr/share/openpgp-keys/nmap.asc
 	inherit verify-sig
@@ -25,13 +22,13 @@ else
 
 	KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~mips ppc ppc64 ~riscv ~s390 sparc x86 ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos"
 
-	LICENSE="|| ( NPSL GPL-2 )"
+	LICENSE="|| ( NPSL-0.92 NPSL-0.95 GPL-2 )"
 fi
 
 SLOT="0"
-IUSE="ipv6 libssh2 ncat nping +nse ssl symlink +system-lua"
+IUSE="ipv6 libssh2 ncat nping +nse ssl symlink"
 REQUIRED_USE="
-	system-lua? ( nse ${LUA_REQUIRED_USE} )
+	nse? ( ${LUA_REQUIRED_USE} )
 	symlink? ( ncat )
 "
 
@@ -43,13 +40,15 @@ RDEPEND="
 		net-libs/libssh2[zlib]
 		sys-libs/zlib
 	)
-	nse? ( sys-libs/zlib )
+	nse? (
+		${LUA_DEPS}
+		sys-libs/zlib
+	)
 	ssl? ( dev-libs/openssl:0= )
 	symlink? (
 		!net-analyzer/netcat
 		!net-analyzer/openbsd-netcat
 	)
-	system-lua? ( ${LUA_DEPS} )
 "
 DEPEND="${RDEPEND}"
 
@@ -71,7 +70,7 @@ PATCHES=(
 )
 
 pkg_setup() {
-	use system-lua && lua-single_pkg_setup
+	use nse && lua-single_pkg_setup
 }
 
 src_prepare() {
@@ -103,9 +102,9 @@ src_configure() {
 		$(use_with libssh2) \
 		$(use_with ncat) \
 		$(use_with nping) \
+		$(use_with nse liblua) \
 		$(use_with ssl openssl) \
 		$(usex libssh2 --with-zlib) \
-		$(usex nse --with-liblua=$(usex system-lua yes included '' '') --without-liblua) \
 		$(usex nse --with-zlib) \
 		--cache-file="${S}"/config.cache \
 		--with-libdnet=included \

@@ -28,9 +28,9 @@ fi
 # https://github.com/nmap/nmap/issues/2199
 LICENSE="|| ( NPSL-0.94 NPSL-0.95 )"
 SLOT="0"
-IUSE="ipv6 libssh2 ncat nping +nse ssl symlink +system-lua"
+IUSE="ipv6 libssh2 ncat nping +nse ssl symlink"
 REQUIRED_USE="
-	system-lua? ( nse ${LUA_REQUIRED_USE} )
+	nse? ( ${LUA_REQUIRED_USE} )
 	symlink? ( ncat )
 "
 
@@ -42,7 +42,10 @@ RDEPEND="
 		net-libs/libssh2[zlib]
 		sys-libs/zlib
 	)
-	nse? ( sys-libs/zlib )
+	nse? (
+		${LUA_DEPS}
+		sys-libs/zlib
+	)
 	ssl? ( dev-libs/openssl:0= )
 	symlink? (
 		ncat? (
@@ -50,7 +53,6 @@ RDEPEND="
 			!net-analyzer/openbsd-netcat
 		)
 	)
-	system-lua? ( ${LUA_DEPS} )
 "
 DEPEND="${RDEPEND}"
 BDEPEND="
@@ -80,7 +82,7 @@ PATCHES=(
 pkg_setup() {
 	python-any-r1_pkg_setup
 
-	use system-lua && lua-single_pkg_setup
+	use nse && lua-single_pkg_setup
 }
 
 src_prepare() {
@@ -115,9 +117,9 @@ src_configure() {
 		$(use_with libssh2) \
 		$(use_with ncat) \
 		$(use_with nping) \
+		$(use_with nse liblua) \
 		$(use_with ssl openssl) \
 		$(usex libssh2 --with-zlib) \
-		$(usex nse --with-liblua=$(usex system-lua yes included '' '') --without-liblua) \
 		$(usex nse --with-zlib) \
 		--cache-file="${S}"/config.cache \
 		--with-libdnet=included \
