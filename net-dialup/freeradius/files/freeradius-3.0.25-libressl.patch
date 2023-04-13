@@ -3,6 +3,7 @@ From OpenBSD:
 https://cvsweb.openbsd.org/cgi-bin/cvsweb/ports/net/freeradius/patches/patch-src_main_cb_c
 https://cvsweb.openbsd.org/cgi-bin/cvsweb/ports/net/freeradius/patches/patch-src_main_tls_c
 https://cvsweb.openbsd.org/cgi-bin/cvsweb/ports/net/freeradius/patches/patch-src_modules_rlm_eap_types_rlm_eap_fast_rlm_eap_fast_c
+https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_modules_rlm_pap_rlm_pap_c
 
 Index: src/main/cb.c
 --- a/src/main/cb.c.orig
@@ -146,3 +147,15 @@ Index: src/main/tls.c
  	SSL_CTX_set_max_early_data(ctx, 0);
  #endif
  
+Index: src/modules/rlm_pap/rlm_pap.c
+--- a/src/modules/rlm_pap/rlm_pap.c.orig
++++ b/src/modules/rlm_pap/rlm_pap.c
+@@ -930,7 +930,7 @@ static inline rlm_rcode_t CC_HINT(nonnull) pap_auth_pb
+ 		digest_len = SHA512_DIGEST_LENGTH;
+ 		break;
+ 
+-#  if OPENSSL_VERSION_NUMBER >= 0x10101000L
++#  if OPENSSL_VERSION_NUMBER >= 0x10101000L && !defined(LIBRESSL_VERSION_NUMBER)
+ 	case PW_SSHA3_224_PASSWORD:
+ 		evp_md = EVP_sha3_224();
+ 		digest_len = SHA224_DIGEST_LENGTH;
