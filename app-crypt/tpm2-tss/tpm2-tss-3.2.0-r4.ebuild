@@ -65,6 +65,10 @@ multilib_src_configure() {
 	# tests fail with LTO enabbled. See bug 865275 and 865279
 	filter-lto
 
+	# Disable for libressl for now
+	# https://github.com/tpm2-software/tpm2-tss/pull/2380
+	# $(multilib_native_use_enable test self-generated-certificate) \
+
 	ECONF_SOURCE=${S} econf \
 		--localstatedir=/var \
 		$(multilib_native_use_enable doc doxygen-doc) \
@@ -72,7 +76,6 @@ multilib_src_configure() {
 		$(use_enable static-libs static) \
 		$(multilib_native_use_enable test unit) \
 		$(multilib_native_use_enable test integration) \
-		$(multilib_native_use_enable test self-generated-certificate) \
 		--disable-tcti-libtpms \
 		--disable-defaultflags \
 		--disable-weakcrypto \

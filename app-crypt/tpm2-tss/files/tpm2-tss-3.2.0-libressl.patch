@@ -1,32 +1,37 @@
 Upstream-PR: https://github.com/tpm2-software/tpm2-tss/pull/2380
 
-From bf6831c474334cbb923de0193d7431ad7805f484 Mon Sep 17 00:00:00 2001
 From: orbea <orbea@riseup.net>
-Date: Mon, 4 Jul 2022 23:55:18 -0700
+Date: Thu, 13 Apr 2023 17:11:07 -0700
 Subject: [PATCH] Support LibreSSL
 
 This works with LibreSSL 3.5.x.
 
+Still missing in LibreSSL:
+
+* RAND_OpenSSL
+* NID_sm2
+
 Signed-off-by: orbea <orbea@riseup.net>
 ---
- src/tss2-esys/esys_crypto_ossl.c | 13 ++++++++++---
+ src/tss2-esys/esys_crypto_ossl.c | 14 +++++++++++---
  src/tss2-fapi/fapi_crypto.c      |  4 ++--
- 2 files changed, 12 insertions(+), 5 deletions(-)
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
 diff --git a/src/tss2-esys/esys_crypto_ossl.c b/src/tss2-esys/esys_crypto_ossl.c
-index 89d312f70..961d7707f 100644
+index a92ecc46..2baae814 100644
 --- a/src/tss2-esys/esys_crypto_ossl.c
 +++ b/src/tss2-esys/esys_crypto_ossl.c
-@@ -392,7 +392,7 @@ iesys_cryptossl_hmac_start(ESYS_CRYPTO_CONTEXT_BLOB ** context,
+@@ -392,7 +392,8 @@ iesys_cryptossl_hmac_start(ESYS_CRYPTO_CONTEXT_BLOB ** context,
                     "Error EVP_MD_CTX_create", cleanup);
      }
  
 -#if OPENSSL_VERSION_NUMBER < 0x10101000L
-+#if OPENSSL_VERSION_NUMBER < 0x10101000L || defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER < 0x10101000L || \
++    ( defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3070000fL )
      if (!(hkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL, key, size))) {
  #else
      /* this is preferred, but available since OpenSSL 1.1.1 only */
-@@ -558,7 +558,11 @@ iesys_cryptossl_random2b(
+@@ -558,7 +559,11 @@ iesys_cryptossl_random2b(
      int rc;
  #if OPENSSL_VERSION_NUMBER < 0x30000000L
      const RAND_METHOD *rand_save = RAND_get_rand_method();
@@ -38,7 +43,7 @@ index 89d312f70..961d7707f 100644
  #else
      OSSL_LIB_CTX *libctx = OSSL_LIB_CTX_new();
      if (!libctx)
-@@ -615,8 +619,11 @@ iesys_cryptossl_pk_encrypt(TPM2B_PUBLIC * pub_tpm_key,
+@@ -615,8 +620,11 @@ iesys_cryptossl_pk_encrypt(TPM2B_PUBLIC * pub_tpm_key,
      RSA *rsa_key = NULL;
      const EVP_MD * hashAlg = NULL;
      const RAND_METHOD *rand_save = RAND_get_rand_method();
@@ -51,7 +56,7 @@ index 89d312f70..961d7707f 100644
  #else
      OSSL_LIB_CTX *libctx = NULL;
      EVP_MD * hashAlg = NULL;
-@@ -919,7 +926,7 @@ iesys_cryptossl_get_ecdh_point(TPM2B_PUBLIC *key,
+@@ -919,7 +927,7 @@ iesys_cryptossl_get_ecdh_point(TPM2B_PUBLIC *key,
          curveId = NID_secp521r1;
          key_size = 66;
          break;
@@ -61,7 +66,7 @@ index 89d312f70..961d7707f 100644
          curveId = NID_sm2;
          key_size = 32;
 diff --git a/src/tss2-fapi/fapi_crypto.c b/src/tss2-fapi/fapi_crypto.c
-index 2fe37c0c4..c1563237a 100644
+index 3f11b3d6..0d03c5b1 100644
 --- a/src/tss2-fapi/fapi_crypto.c
 +++ b/src/tss2-fapi/fapi_crypto.c
 @@ -544,7 +544,7 @@ ossl_ecc_pub_from_tpm(const TPM2B_PUBLIC *tpmPublicKey, EVP_PKEY **evpPublicKey)
@@ -73,7 +78,7 @@ index 2fe37c0c4..c1563237a 100644
      case TPM2_ECC_SM2_P256:
          curveId = NID_sm2;
          break;
-@@ -1155,7 +1155,7 @@ get_ecc_tpm2b_public_from_evp(
+@@ -1195,7 +1195,7 @@ get_ecc_tpm2b_public_from_evp(
      case NID_secp521r1:
          tpmCurveId = TPM2_ECC_NIST_P521;
          break;
