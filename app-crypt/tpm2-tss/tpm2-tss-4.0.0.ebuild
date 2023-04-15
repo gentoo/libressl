@@ -38,6 +38,7 @@ BDEPEND="sys-apps/acl
 
 PATCHES=(
 	"${FILESDIR}/${PN}-3.2.0-libressl.patch"
+	"${FILESDIR}/${PN}-4.0.0-libressl-no-cert-tests.patch"
 	"${FILESDIR}/${PN}-4.0.0-Dont-install-files-into-run.patch"
 	)
 
