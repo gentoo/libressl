@@ -93,6 +93,7 @@ DEPEND="
 		x11-libs/libX11
 		>=x11-libs/libxcb-1.12:=
 		>=x11-libs/libxkbcommon-0.5.0[X]
+		x11-libs/xcb-util-cursor
 		x11-libs/xcb-util-image
 		x11-libs/xcb-util-keysyms
 		x11-libs/xcb-util-renderutil
@@ -103,7 +104,8 @@ DEPEND="
 RDEPEND="${DEPEND}"
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-6.4.2-libressl.patch # from OpenBSD ports, not upstreamable
+	"${FILESDIR}/${PN}-6.5.0-libressl.patch"
+	"${FILESDIR}/${PN}-6.5.0-setActiveWindow-deprecated-version.patch"
 )
 
 src_configure() {
@@ -137,6 +139,7 @@ src_configure() {
 	use gui && mycmakeargs+=(
 		$(qt_feature accessibility accessibility_atspi_bridge)
 		$(qt_feature egl)
+		$(qt_feature egl xcb_egl_plugin)
 		$(qt_feature eglfs eglfs_egldevice)
 		$(qt_feature eglfs eglfs_gbm)
 		$(qt_feature evdev)
@@ -162,12 +165,14 @@ src_configure() {
 	fi
 	use network && mycmakeargs+=(
 		$(qt_feature brotli)
-		-DQT_FEATURE_dtls=OFF
 		$(qt_feature gssapi)
 		$(qt_feature libproxy)
 		$(qt_feature sctp)
-		$(qt_feature ssl openssl_linked)
 		$(qt_feature vnc)
+
+		# Required for LibreSSL
+		-DQT_FEATURE_dtls=OFF
+		$(qt_feature ssl openssl_linked)
 	)
 	use sql && mycmakeargs+=(
 		$(qt_feature freetds sql_tds)
@@ -186,5 +191,5 @@ src_install() {
 	qt6-build_src_install
 
 	# https://bugs.gentoo.org/863395
-	dosym ../$(get_libdir)/qt6/bin/qmake /usr/bin/qmake6
+	qt6_symlink_binary_to_path qmake 6
 }
