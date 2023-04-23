@@ -1,25 +1,25 @@
-Upstream-PR: https://github.com/LibVNC/x11vnc/pull/202
+https://github.com/LibVNC/x11vnc/pull/224
 
-From d81e9d8e56ccc1b346b5aeb4b64fa0a32737c22d Mon Sep 17 00:00:00 2001
 From: orbea <orbea@riseup.net>
-Date: Tue, 5 Jul 2022 08:57:29 -0700
-Subject: [PATCH] Support LibreSSL
+Date: Tue, 11 Apr 2023 09:35:26 -0700
+Subject: [PATCH] sslhelper: Update for LibreSSL >= 3.6.0
 
-This builds with LibreSSL 3.5.x.
+Since LibreSSL 3.6.0 SSL_CTX_set_security_level() has been available.
 ---
- src/sslhelper.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ src/sslhelper.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/src/sslhelper.c b/src/sslhelper.c
-index ba680b35..bd5ef0fb 100644
+index 04c2e27..4608750 100644
 --- a/src/sslhelper.c
 +++ b/src/sslhelper.c
-@@ -1596,7 +1596,7 @@ static int switch_to_anon_dh(void) {
+@@ -1596,7 +1596,8 @@ static int switch_to_anon_dh(void) {
  	if (ssl_client_mode) {
  		return 1;
  	}
 -#if OPENSSL_VERSION_NUMBER >= 0x10100000L
-+#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
++#if (OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)) || \
++	(defined(LIBRESSL_VERSION_NUMBER) && (LIBRESSL_VERSION_NUMBER >= 0x3060000fL))
  	/* Security level must be set to 0 for unauthenticated suites. */
  	SSL_CTX_set_security_level(ctx, 0);
  #endif
