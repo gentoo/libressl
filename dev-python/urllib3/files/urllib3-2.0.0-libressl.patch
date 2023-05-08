@@ -1,0 +1,17 @@
+https://github.com/urllib3/urllib3/issues/2168
+https://github.com/urllib3/urllib3/pull/2705
+
+--- a/src/urllib3/__init__.py
++++ b/src/urllib3/__init__.py
+@@ -32,7 +32,10 @@ except ImportError:
+ else:
+     # fmt: off
+     if (
+-        not ssl.OPENSSL_VERSION.startswith("OpenSSL ")
++        not (
++            ssl.OPENSSL_VERSION.startswith("OpenSSL ")
++            or ssl.OPENSSL_VERSION.startswith("LibreSSL ")
++        )
+         or ssl.OPENSSL_VERSION_INFO < (1, 1, 1)
+     ):  # Defensive:
+         raise ImportError(
