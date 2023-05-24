@@ -31,8 +31,9 @@ RDEPEND="${DEPEND}
 "
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-5.15.7-libressl.patch # Bug 562050, not upstreamable
+	"${FILESDIR}/${PN}-5.15.7-libressl.patch" #562050
 	"${FILESDIR}/${P}-QDnsLookup-dont-overflow-the-buffer.patch"
+	"${FILESDIR}/${P}-CVE-2023-32762.patch"
 )
 
 QT5_TARGET_SUBDIRS=(
