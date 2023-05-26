@@ -1,28 +1,38 @@
-Upstream-PR: https://gitlab.freedesktop.org/spice/spice/-/merge_requests/208
-From 81664d809965927c951bcb58a6ce1e3ddd326100 Mon Sep 17 00:00:00 2001
+https://gitlab.freedesktop.org/spice/spice/-/merge_requests/217
+
+From 60ee531e7a3572f93143f810089f7f4f591c63b0 Mon Sep 17 00:00:00 2001
 From: orbea <orbea@riseup.net>
-Date: Sat, 11 Jun 2022 16:30:09 -0700
-Subject: [PATCH] server: Fix the build with libressl
+Date: Fri, 26 May 2023 13:38:34 -0700
+Subject: [PATCH] server: add SSL_OP_NO_RENEGOTIATION fallback path
 
+With LibreSSL SSL_OP_NO_CLIENT_RENEGOTIATION is opaque which is not
+compatible with the OpenSSL 1.0.2 and earlier code path in
+red-stream.cpp while SSL_OP_NO_RENEGOTIATION is not yet defined for the
+newer OpenSSL code path in reds.cpp.
+
+So with OpenSSL 1.1.0 and later if SSL_OP_NO_RENEGOTIATION is undefined
+and SSL_OP_NO_CLIENT_RENEGOTIATION is defined then define the former as
+the latter. This will allow the build to succeed with LibreSSL 3.7.2 and
+in the future when newer LibreSSL versions add SSL_OP_NO_RENEGOTIATION
+that code path will then be used automatically.
+
+Signed-off-by: orbea <orbea@riseup.net>
 ---
- server/red-stream.cpp | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ server/red-stream.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/server/red-stream.cpp b/server/red-stream.cpp
-index 2c45299c..196a8945 100644
---- a/server/red-stream.cpp
-+++ b/server/red-stream.cpp
-@@ -523,8 +523,8 @@ RedStreamSslStatus red_stream_ssl_accept(RedStream *stream)
-         return RED_STREAM_SSL_STATUS_OK;
-     }
+diff --git a/server/red-stream.h b/server/red-stream.h
+index 716e93317..8e57c5e5e 100644
+--- a/server/red-stream.h
++++ b/server/red-stream.h
+@@ -25,6 +25,10 @@
  
--#ifndef SSL_OP_NO_RENEGOTIATION
--    // With OpenSSL 1.0.2 and earlier: disable client-side renogotiation
-+#if !defined(SSL_OP_NO_RENEGOTIATION) && !defined(LIBRESSL_VERSION_NUMBER)
-+    // With LibreSSL or OpenSSL 1.0.2 and earlier: disable client-side renogotiation
-     stream->priv->ssl->s3->flags |= SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS;
- #endif
+ SPICE_BEGIN_DECLS
  
--- 
-GitLab
-
++#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(SSL_OP_NO_RENEGOTIATION) && defined(SSL_OP_NO_CLIENT_RENEGOTIATION)
++#define SSL_OP_NO_RENEGOTIATION SSL_OP_NO_CLIENT_RENEGOTIATION
++#endif
++
+ typedef void (*AsyncReadDone)(void *opaque);
+ typedef void (*AsyncReadError)(void *opaque, int err);
+ 
