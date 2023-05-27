@@ -1,4 +1,4 @@
-# Copyright 1999-2022 Gentoo Authors
+# Copyright 1999-2023 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -16,11 +16,10 @@ LICENSE="ISC openssl"
 # Reflects ABI of libcrypto.so and libssl.so. Since these can differ,
 # we'll try to use the max of either. However, if either change between
 # versions, we have to change the subslot to trigger rebuild of consumers.
-SLOT="0/52"
-KEYWORDS="~alpha amd64 ~arm arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sparc x86 ~amd64-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+SLOT="0/53"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 IUSE="+asm static-libs test"
 RESTRICT="!test? ( test )"
-REQUIRED_USE="test? ( static-libs )"
 
 PDEPEND="app-misc/ca-certificates"
 BDEPEND="verify-sig? ( sec-keys/openpgp-keys-libressl )"
@@ -29,10 +28,19 @@ VERIFY_SIG_OPENPGP_KEY_PATH="${BROOT}"/usr/share/openpgp-keys/libressl.asc
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.8.3-solaris10.patch
+	# Gentoo's ssl-cert.eclass uses 'openssl genrsa -rand'
+	# which LibreSSL doesn't support.
+	# https://github.com/libressl/portable/issues/839
+	"${FILESDIR}"/${PN}-3.6.2-genrsa-rand.patch
+	# https://github.com/libressl-portable/portable/pull/806
+	"${FILESDIR}"/${PN}-3.7.0-no-static-tests.patch
 )
 
 src_prepare() {
 	default
+
+	# Required for the no-static-tests.patch
+	touch tests/empty.c || die
 
 	eautoreconf
 }
@@ -45,10 +53,6 @@ multilib_src_configure() {
 		$(use_enable test tests)
 	)
 	econf "${args[@]}"
-}
-
-multilib_src_test() {
-	emake check
 }
 
 multilib_src_install_all() {
