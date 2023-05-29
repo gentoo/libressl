@@ -35,7 +35,8 @@ BDEPEND="${RDEPEND}
 
 PATCHES=(
 	"${FILESDIR}/${PN}-1.88-fix-network-tests.patch"
-	"${FILESDIR}/${PN}-1.92-libressl.patch"
+	"${FILESDIR}/${PN}-1.92-libressl.patch" #903001
+	"${FILESDIR}/${PN}-1.92-libressl-3.8.0.patch"
 )
 
 PERL_RM_FILES=(
