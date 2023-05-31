@@ -144,6 +144,7 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-2.6.1-fix-missing-mapping.patch
 	"${FILESDIR}"/${PN}-2.6.1-fix-bashism-configure.patch
 	"${FILESDIR}"/${PN}-2.6.3-clang16.patch
+	"${FILESDIR}"/${PN}-2.6.4-libressl.patch
 )
 
 openldap_filecount() {
@@ -497,11 +498,6 @@ multilib_src_configure() {
 	fi
 
 	tc-export AR CC CXX
-
-	# Fix for libressl from OpenBSD:
-	# bypass autoconf check for OpenSSL 1.1.1+ function which is not
-	# actually used in OpenLDAP code
-	export ac_cv_lib_ssl_SSL_export_keying_material_early=yes
 
 	ECONF_SOURCE="${S}" econf \
 		--libexecdir="${EPREFIX}"/usr/$(get_libdir)/openldap \
