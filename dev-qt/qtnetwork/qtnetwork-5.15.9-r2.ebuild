@@ -5,7 +5,7 @@ EAPI=8
 
 if [[ ${PV} != *9999* ]]; then
 	QT5_KDEPATCHSET_REV=1
-	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86"
+	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~sparc x86"
 fi
 
 QT5_MODULE="qtbase"
@@ -34,6 +34,7 @@ PATCHES=(
 	"${FILESDIR}/${PN}-5.15.7-libressl.patch" #562050
 	"${FILESDIR}/${P}-QDnsLookup-dont-overflow-the-buffer.patch"
 	"${FILESDIR}/${P}-CVE-2023-32762.patch"
+	"${FILESDIR}/${P}-libproxy-0.5-pkgconfig.patch"
 )
 
 QT5_TARGET_SUBDIRS=(
