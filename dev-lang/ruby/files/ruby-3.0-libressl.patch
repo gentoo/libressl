@@ -37,3 +37,21 @@ Index: ext/openssl/extconf.rb
  have_func("TS_VERIFY_CTX_set_store")
  have_func("TS_VERIFY_CTX_add_flags")
  have_func("TS_RESP_CTX_set_time_cb")
+From OpenBSD:
+
+https://github.com/openbsd/ports/commit/42d3003b55a9ace1f489aa93297aafaf7d03e8c4#diff-8c76a3fac72e780ffe364114da7bc68a1e78cb6b825d51795ca5e02bdde95cc8
+
+LibreSSL 3.8 dropped support for EC_GFp_nist_method()
+
+Index: ext/openssl/ossl_pkey_ec.c
+--- a/ext/openssl/ossl_pkey_ec.c.orig
++++ b/ext/openssl/ossl_pkey_ec.c
+@@ -743,7 +743,7 @@ static VALUE ossl_ec_group_initialize(int argc, VALUE 
+             } else if (id == s_GFp_mont) {
+                 method = EC_GFp_mont_method();
+             } else if (id == s_GFp_nist) {
+-                method = EC_GFp_nist_method();
++                method = NULL;
+ #if !defined(OPENSSL_NO_EC2M)
+             } else if (id == s_GF2m_simple) {
+                 method = EC_GF2m_simple_method();
