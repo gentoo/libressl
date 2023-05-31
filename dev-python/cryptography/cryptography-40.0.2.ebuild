@@ -4,6 +4,7 @@
 EAPI=8
 
 CARGO_OPTIONAL=yes
+DISTUTILS_EXT=1
 DISTUTILS_USE_PEP517=setuptools
 PYTHON_COMPAT=( python3_{9..11} pypy3 )
 PYTHON_REQ_USE="threads(+)"
@@ -42,9 +43,9 @@ CRATES="
 	num-integer-0.1.45
 	num-traits-0.2.15
 	once_cell-1.14.0
-	openssl-0.10.48
+	openssl-0.10.50
 	openssl-macros-0.1.0
-	openssl-sys-0.9.83
+	openssl-sys-0.9.85
 	ouroboros-0.15.6
 	ouroboros_macro-0.15.6
 	parking_lot-0.11.2
@@ -149,7 +150,7 @@ src_prepare() {
 	sed -i -e 's:--benchmark-disable::' pyproject.toml || die
 
 	pushd "${ECARGO_HOME}"/gentoo > /dev/null || die
-	eapply "${FILESDIR}/${PN}-40.0.0-libressl.patch"
+	eapply "${FILESDIR}/${PN}-40.0.2-libressl.patch"
 	popd > /dev/null || die
 
 	default
