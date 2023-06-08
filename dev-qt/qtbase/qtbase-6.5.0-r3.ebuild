@@ -107,6 +107,7 @@ PATCHES=(
 	"${FILESDIR}/${PN}-6.5.0-libressl.patch"
 	"${FILESDIR}/${PN}-6.5.0-setActiveWindow-deprecated-version.patch"
 	"${FILESDIR}/${PN}-6.5.0-CVE-2023-32762.patch"
+	"${FILESDIR}/${PN}-6.5.0-CVE-2023-33285.patch"
 )
 
 src_configure() {
