@@ -7,9 +7,6 @@ Date: Tue, 30 May 2023 07:36:12 -0700
 Subject: [PATCH] openssl_compat.h: Update LibreSSL UI_null() compat (#654)
 
 LibreSSL added UI_null() in 3.7.1.
----
- src/openssl/openssl_compat.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
 https://github.com/lsh123/xmlsec/issues/665
 https://github.com/lsh123/xmlsec/pull/666
@@ -21,20 +18,6 @@ Date: Sat, 3 Jun 2023 13:30:01 -0400
 Subject: [PATCH] Fix Libressl support and bump min version to 3.6 (issue #665)
   (#666)
 
----
- Makefile.am                                   |  5 +-
- configure.ac                                  |  7 ++-
- docs/download.html                            |  4 +-
- include/xmlsec/openssl/crypto.h               |  4 +-
- src/nss/README.md                             |  2 +-
- src/openssl/README.md                         |  5 +-
- src/openssl/app.c                             | 30 +++++++--
- src/openssl/openssl_compat.h                  | 30 +++++----
- src/openssl/x509.c                            | 62 +++++++++++++++++++
- .../enveloping-ripemd160-rsa-ripemd160.xml    | 60 +++++++++++-------
- tests/testrun.sh                              | 17 ++++-
- 11 files changed, 172 insertions(+), 54 deletions(-)
-
 https://github.com/lsh123/xmlsec/pull/667
 https://github.com/lsh123/xmlsec/commit/c9b0dcd01af1ecaed828269b734861cb93edeae3
 
@@ -43,18 +26,6 @@ From: lsh123 <aleksey@aleksey.com>
 Date: Sat, 3 Jun 2023 15:37:50 -0400
 Subject: [PATCH] Downgrade to LibreSSL 3.5 (#667)
 
----
- configure.ac                    | 4 ++--
- docs/download.html              | 2 +-
- include/xmlsec/openssl/crypto.h | 2 +-
- src/openssl/README.md           | 2 +-
- src/openssl/app.c               | 3 ++-
- src/openssl/openssl_compat.h    | 5 ++++-
- src/openssl/x509.c              | 8 ++++----
- 7 files changed, 15 insertions(+), 11 deletions(-)
-
-diff --git a/Makefile.am b/Makefile.am
-index 67f0d9ae..626efef1 100644
 --- a/Makefile.am
 +++ b/Makefile.am
 @@ -71,14 +71,18 @@ EXTRA_CLEAN = \
@@ -81,8 +52,6 @@ index 67f0d9ae..626efef1 100644
  
  rpm-release: clean cleantar rpm
 -
-diff --git a/configure.ac b/configure.ac
-index 825380eb..e81c13b2 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -812,11 +812,11 @@ if test "z$OPENSSL_FOUND" = "zyes" ; then
@@ -116,8 +85,6 @@ index 825380eb..e81c13b2 100644
  
  dnl See if we should build OpenSSL 3+ with engines support
  AC_ARG_ENABLE([openssl3_engines],[AS_HELP_STRING([--enable-openssl3-engines],[enable engines support for OpenSSL 3+ (no)])])
-diff --git a/src/openssl/app.c b/src/openssl/app.c
-index 58b6b6f5..4e62de7b 100644
 --- a/src/openssl/app.c
 +++ b/src/openssl/app.c
 @@ -44,11 +44,14 @@
@@ -217,8 +184,6 @@ index 58b6b6f5..4e62de7b 100644
  }
  
  #ifndef XMLSEC_NO_X509
-diff --git a/src/openssl/openssl_compat.h b/src/openssl/openssl_compat.h
-index 7d705398..958638fb 100644
 --- a/src/openssl/openssl_compat.h
 +++ b/src/openssl/openssl_compat.h
 @@ -70,6 +70,9 @@ static inline int xmlSecOpenSSLCompatRand(unsigned char *buf, xmlSecSize size) {
@@ -269,8 +234,6 @@ index 7d705398..958638fb 100644
  
  
  /******************************************************************************
-diff --git a/src/openssl/x509.c b/src/openssl/x509.c
-index 7173b13a..01c6f467 100644
 --- a/src/openssl/x509.c
 +++ b/src/openssl/x509.c
 @@ -552,6 +552,7 @@ xmlSecOpenSSLKeyDataX509Duplicate(xmlSecKeyDataPtr dst, xmlSecKeyDataPtr src) {
@@ -391,8 +354,6 @@ index 7173b13a..01c6f467 100644
  
  /* returns 1 if cert was found and verified and also data was adopted, 0 if not, or negative value if an error occurs */
  static int
-diff --git a/tests/aleksey-xmldsig-01/enveloping-ripemd160-rsa-ripemd160.xml b/tests/aleksey-xmldsig-01/enveloping-ripemd160-rsa-ripemd160.xml
-index cd87ded2..4f1ba7cf 100644
 --- a/tests/aleksey-xmldsig-01/enveloping-ripemd160-rsa-ripemd160.xml
 +++ b/tests/aleksey-xmldsig-01/enveloping-ripemd160-rsa-ripemd160.xml
 @@ -8,10 +8,40 @@
@@ -478,8 +439,6 @@ index cd87ded2..4f1ba7cf 100644
  </X509Data>
    </KeyInfo>
    <Object Id="object">some text</Object>
-diff --git a/tests/testrun.sh b/tests/testrun.sh
-index 0a5cbda0..6532e27e 100755
 --- a/tests/testrun.sh
 +++ b/tests/testrun.sh
 @@ -87,6 +87,19 @@ else
@@ -520,6 +479,3 @@ index 0a5cbda0..6532e27e 100755
              printf "    Reading public key from pem file using ossl-store     "
              rm -f $tmpfile
              params="--lax-key-search --pubkey-openssl-store $pubkey_file.pem $key_test_options $asym_key_test.xml"
--- 
-2.39.3
-
