@@ -169,7 +169,7 @@ src_prepare() {
 }
 
 src_configure() {
-	filter-flags '-flto*' # https://bugs.gentoo.org/858332
+	filter-lto # https://bugs.gentoo.org/858332
 	export LIBGIT2_SYS_USE_PKG_CONFIG=1 LIBSSH2_SYS_USE_PKG_CONFIG=1 PKG_CONFIG_ALLOW_CROSS=1
 	cargo_src_configure
 }
