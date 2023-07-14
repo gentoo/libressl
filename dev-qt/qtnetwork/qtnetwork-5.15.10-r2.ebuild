@@ -5,7 +5,7 @@ EAPI=8
 
 if [[ ${PV} != *9999* ]]; then
 	QT5_KDEPATCHSET_REV=1
-	KEYWORDS="amd64 arm arm64 ~hppa ~loong ~ppc ppc64 ~riscv ~sparc x86"
+	KEYWORDS="amd64 arm arm64 ~hppa ~loong ppc ppc64 ~riscv ~sparc x86"
 fi
 
 QT5_MODULE="qtbase"
@@ -25,11 +25,6 @@ DEPEND="
 "
 RDEPEND="${DEPEND}"
 
-PATCHES=(
-	"${FILESDIR}/${PN}-5.15.7-libressl.patch" #562050
-	"${FILESDIR}/${P}-ssl-upgr-default-DH-params.patch"
-)
-
 QT5_TARGET_SUBDIRS=(
 	src/network
 	src/plugins/bearer/generic
@@ -44,6 +39,11 @@ QT5_GENTOO_CONFIG=(
 
 QT5_GENTOO_PRIVATE_CONFIG=(
 	:network
+)
+
+PATCHES=(
+	"${FILESDIR}/${PN}-5.15.7-libressl.patch" #562050
+	"${FILESDIR}/${P}-ssl-upgr-default-DH-params.patch"
 )
 
 src_configure() {
