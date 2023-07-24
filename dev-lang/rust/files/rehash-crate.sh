@@ -5,7 +5,7 @@ set -euf
 
 cargo='.cargo-checksum.json'
 
-grep -- '+++' "${1:?}" | while read -r _ f; do
+grep -- '^[+][+][+] ' "${1:?}" | while read -r _ f; do
 	file="${f#*/}"
 	orig_sum="$(grep -Eo "\"${file}\":\"[0-9a-fA-F]+\"" "${cargo}" |
 		cut -d':' -f2 | tr -d '"')"
