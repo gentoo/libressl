@@ -1,0 +1,52 @@
+https://github.com/pyca/cryptography/pull/9456
+https://github.com/pyca/cryptography/commit/d7eca424e1a0e4d2af3ecc83223902e47519f98b
+
+From 3230622b01627702c4ecbab15a4a82f4c323ab26 Mon Sep 17 00:00:00 2001
+From: Theo Buehler <tb@openbsd.org>
+Date: Fri, 18 Aug 2023 08:29:49 +0200
+Subject: [PATCH] LibreSSL 3.8.1 and later is OPENSSL_NO_ENGINE
+
+Unfortunately, some projects are not prepared to build without
+ENGINE symbols, so just like BoringSSL we needed to keep some stubs.
+---
+ src/_cffi_src/openssl/engine.py | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff --git a/src/_cffi_src/openssl/engine.py b/src/_cffi_src/openssl/engine.py
+index 609313ec57a..9629a2c8f92 100644
+--- a/src/_cffi_src/openssl/engine.py
++++ b/src/_cffi_src/openssl/engine.py
+@@ -42,18 +42,20 @@
+ typedef void UI_METHOD;
+ #endif
+ 
+-/* Despite being OPENSSL_NO_ENGINE, BoringSSL defines these symbols. */
+-#if !CRYPTOGRAPHY_IS_BORINGSSL
++/* Despite being OPENSSL_NO_ENGINE, BoringSSL/LibreSSL define these symbols. */
++#if !CRYPTOGRAPHY_IS_BORINGSSL && !CRYPTOGRAPHY_IS_LIBRESSL
+ int (*ENGINE_free)(ENGINE *) = NULL;
+ void (*ENGINE_load_builtin_engines)(void) = NULL;
+ #endif
+ 
+-ENGINE *(*ENGINE_by_id)(const char *) = NULL;
+-int (*ENGINE_init)(ENGINE *) = NULL;
+-int (*ENGINE_finish)(ENGINE *) = NULL;
+ ENGINE *(*ENGINE_get_default_RAND)(void) = NULL;
+ int (*ENGINE_set_default_RAND)(ENGINE *) = NULL;
+ void (*ENGINE_unregister_RAND)(ENGINE *) = NULL;
++
++#if !CRYPTOGRAPHY_IS_LIBRESSL
++ENGINE *(*ENGINE_by_id)(const char *) = NULL;
++int (*ENGINE_init)(ENGINE *) = NULL;
++int (*ENGINE_finish)(ENGINE *) = NULL;
+ int (*ENGINE_ctrl_cmd)(ENGINE *, const char *, long, void *,
+                        void (*)(void), int) = NULL;
+ 
+@@ -66,6 +68,7 @@
+                                      void *) = NULL;
+ EVP_PKEY *(*ENGINE_load_public_key)(ENGINE *, const char *,
+                                     UI_METHOD *, void *) = NULL;
++#endif
+ 
+ #else
+ static const long Cryptography_HAS_ENGINE = 1;
