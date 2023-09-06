@@ -386,7 +386,7 @@ LICENSE+="
 	Unicode-DFS-2016
 " # crates
 SLOT="0"
-KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86"
+KEYWORDS="amd64 arm arm64 ~loong ~ppc ppc64 ~riscv ~s390 sparc x86"
 IUSE="doc +ssl test"
 RESTRICT="!test? ( test )"
 
@@ -415,8 +415,12 @@ src_prepare() {
 	popd > /dev/null || die
 
 	if use test; then
-		# used to prevent use of network during tests
+		# used to prevent use of network during tests, and silence pip
+		# if it finds unrelated issues with system packages (bug #913613)
 		cat > "${T}"/pip.conf <<-EOF || die
+			[global]
+			quiet = 2
+
 			[install]
 			no-index = yes
 			no-dependencies = yes
