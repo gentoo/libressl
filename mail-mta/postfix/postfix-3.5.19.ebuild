@@ -1,7 +1,7 @@
 # Copyright 1999-2021 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=7
+EAPI=8
 
 inherit flag-o-matic pam systemd toolchain-funcs
 
@@ -16,7 +16,7 @@ SRC_URI="${MY_URI}/${MY_SRC}.tar.gz"
 
 LICENSE="|| ( IBM EPL-2.0 )"
 SLOT="0"
-KEYWORDS="~alpha amd64 arm ~arm64 ~hppa ~ia64 ~mips ppc ppc64 ~s390 ~sparc x86"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86"
 IUSE="+berkdb cdb dovecot-sasl +eai hardened ldap ldap-bind lmdb memcached mbox mysql nis pam postgres sasl selinux sqlite ssl"
 
 DEPEND="
@@ -45,15 +45,12 @@ RDEPEND="${DEPEND}
 	!mail-mta/courier
 	!mail-mta/esmtp
 	!mail-mta/exim
-	!mail-mta/mini-qmail
 	!mail-mta/msmtp[mta]
 	!mail-mta/netqmail
 	!mail-mta/nullmailer
-	!mail-mta/qmail-ldap
 	!mail-mta/sendmail
 	!mail-mta/opensmtpd
 	!mail-mta/ssmtp[mta]
-	!net-mail/fastforward
 	selinux? ( sec-policy/selinux-postfix )"
 
 REQUIRED_USE="ldap-bind? ( ldap sasl )"
@@ -61,8 +58,7 @@ REQUIRED_USE="ldap-bind? ( ldap sasl )"
 S="${WORKDIR}/${MY_SRC}"
 
 PATCHES=(
-	"${FILESDIR}/${PN}-libressl-certkey.patch"
-	"${FILESDIR}/${PN}-libressl-server.patch"
+	"${FILESDIR}/${PN}-3.5.8-libressl.patch"
 )
 
 src_prepare() {
