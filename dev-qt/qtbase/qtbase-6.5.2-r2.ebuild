@@ -8,12 +8,12 @@ inherit flag-o-matic qt6-build toolchain-funcs
 DESCRIPTION="Cross-platform application development framework"
 
 if [[ ${QT6_BUILD_TYPE} == release ]]; then
-	KEYWORDS="~amd64"
+	KEYWORDS="amd64 ~arm ~arm64 ~x86"
 fi
 
 declare -A QT6_IUSE=(
 	[global]="+ssl +udev zstd"
-	[core]="icu systemd"
+	[core]="icu"
 	[modules]="+concurrent +dbus +gui +network +sql +xml"
 
 	[gui]="
@@ -24,7 +24,7 @@ declare -A QT6_IUSE=(
 	[sql]="mysql oci8 odbc postgres +sqlite"
 	[widgets]="cups gtk"
 
-	[optfeature]="wayland" #864509
+	[optfeature]="nls wayland" #810802,864509
 )
 IUSE="${QT6_IUSE[*]}"
 REQUIRED_USE="
@@ -36,6 +36,7 @@ REQUIRED_USE="
 	)
 	accessibility? ( X dbus )
 	eglfs? ( opengl )
+	gles2-only? ( opengl )
 	gui? ( || ( X eglfs wayland ) )
 	libinput? ( udev )
 	sql? ( || ( ${QT6_IUSE[sql]//+/} ) )
@@ -60,7 +61,6 @@ RDEPEND="
 	dev-libs/glib:2
 	dev-libs/libpcre2:=[pcre16,unicode(+)]
 	icu? ( dev-libs/icu:= )
-	systemd? ( sys-apps/systemd:= )
 
 	dbus? ( sys-apps/dbus )
 	gui? (
@@ -124,10 +124,14 @@ DEPEND="
 	)
 "
 BDEPEND="zstd? ( app-arch/libarchive[zstd] )" #910392
-PDEPEND="wayland? ( ~dev-qt/qtwayland-${PV}:6 )"
+PDEPEND="
+	nls? ( ~dev-qt/qttranslations-${PV}:6 )
+	wayland? ( ~dev-qt/qtwayland-${PV}:6 )
+"
 
 PATCHES=(
 	"${FILESDIR}/${PN}-6.5.0-libressl.patch"
+	"${FILESDIR}"/${PN}-6.5.2-no-symlink-check.patch
 	"${FILESDIR}"/${P}-CVE-2023-38197.patch
 	"${FILESDIR}"/${P}-tests-gcc13.patch
 )
@@ -144,6 +148,8 @@ src_prepare() {
 
 src_configure() {
 	local mycmakeargs=(
+		-DBUILD_WITH_PCH=OFF
+
 		-DINSTALL_ARCHDATADIR="${QT6_ARCHDATADIR}"
 		-DINSTALL_BINDIR="${QT6_BINDIR}"
 		-DINSTALL_DATADIR="${QT6_DATADIR}"
@@ -158,7 +164,6 @@ src_configure() {
 		-DINSTALL_SYSCONFDIR="${QT6_SYSCONFDIR}"
 		-DINSTALL_TRANSLATIONSDIR="${QT6_TRANSLATIONDIR}"
 
-		-DQT_FEATURE_precompile_header=OFF
 		$(qt_feature ssl openssl)
 		$(qt_feature ssl openssl_linked)
 		$(qt_feature udev libudev)
@@ -166,7 +171,6 @@ src_configure() {
 
 		# qtcore
 		$(qt_feature icu)
-		$(qt_feature systemd journald)
 
 		# tools
 		-DQT_FEATURE_androiddeployqt=OFF
@@ -190,13 +194,11 @@ src_configure() {
 		$(qt_feature eglfs)
 		$(qt_feature evdev)
 		$(qt_feature evdev mtdev)
-		$(qt_feature gles2-only opengles2)
 		$(qt_feature libinput)
-		$(qt_feature opengl)
-		$(usev !opengl -DINPUT_opengl=no) #913691
 		$(qt_feature tslib)
 		$(qt_feature vulkan)
 		$(qt_feature widgets)
+		-DINPUT_opengl=$(usex opengl $(usex gles2-only es2 desktop) no)
 		-DQT_FEATURE_system_textmarkdownreader=OFF # TODO?: package md4c
 	) && use widgets && mycmakeargs+=(
 		$(qt_feature cups) # qtprintsupport is enabled w/ gui+widgets
@@ -298,13 +300,15 @@ src_test() {
 		tst_qglyphrun
 		tst_qvectornd
 		tst_rcc
+		# similarly, but on armv7 (bug #914028)
+		tst_qlineedit
+		tst_qpainter
 		# partially broken on llvm-musl, needs looking into but skip to have
 		# a baseline for regressions (like above, rest of dev-qt is fine)
 		$(usev elibc_musl '
 			tst_qfiledialog2
 			tst_qicoimageformat
 			tst_qimagereader
-			tst_qpainter
 			tst_qimage
 		')
 		# note: for linux, upstream only really runs+maintains tests for amd64
