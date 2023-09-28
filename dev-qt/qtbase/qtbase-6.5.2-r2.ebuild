@@ -8,7 +8,7 @@ inherit flag-o-matic qt6-build toolchain-funcs
 DESCRIPTION="Cross-platform application development framework"
 
 if [[ ${QT6_BUILD_TYPE} == release ]]; then
-	KEYWORDS="amd64 ~arm ~arm64 ~x86"
+	KEYWORDS="amd64 ~arm ~arm64 ~hppa ~loong ~x86"
 fi
 
 declare -A QT6_IUSE=(
@@ -86,7 +86,10 @@ RDEPEND="
 		eglfs? ( media-libs/mesa[gbm(+)] )
 		evdev? ( sys-libs/mtdev )
 		libinput? ( dev-libs/libinput:= )
-		opengl? ( media-libs/libglvnd[X?] )
+		opengl? (
+			gles2-only? ( media-libs/libglvnd )
+			!gles2-only? ( media-libs/libglvnd[X?] )
+		)
 		tslib? ( x11-libs/tslib )
 		widgets? (
 			cups? ( net-print/cups )
@@ -130,7 +133,9 @@ PDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}/${PN}-6.5.0-libressl.patch"
+	"${FILESDIR}"/${PN}-6.5.0-libressl.patch
+	"${FILESDIR}"/${PN}-6.5.2-hppa-forkfd-grow-stack.patch
+	"${FILESDIR}"/${PN}-6.5.2-no-glx.patch
 	"${FILESDIR}"/${PN}-6.5.2-no-symlink-check.patch
 	"${FILESDIR}"/${P}-CVE-2023-38197.patch
 	"${FILESDIR}"/${P}-tests-gcc13.patch
@@ -285,7 +290,7 @@ src_test() {
 		tst_qsctpsocket
 		# these can be flaky depending on the environment/toolchain
 		tst_qlogging # backtrace log test can easily vary
-		tst_qrawfont # can be affected by available fonts
+		tst_q{,raw}font # affected by available fonts / settings (bug #914737)
 		tst_qstorageinfo # checks mounted filesystems
 		# flaky due to using different test framework and fails with USE=-gui
 		tst_selftests
@@ -300,16 +305,25 @@ src_test() {
 		tst_qglyphrun
 		tst_qvectornd
 		tst_rcc
-		# similarly, but on armv7 (bug #914028)
+		# similarly, but on armv7 and potentially others (bug #914028)
 		tst_qlineedit
 		tst_qpainter
+		# likewise, known failing at least on BE arches (bug #914033,914371)
+		tst_qimagereader
+		tst_qimagewriter
+		tst_qpluginloader
 		# partially broken on llvm-musl, needs looking into but skip to have
-		# a baseline for regressions (like above, rest of dev-qt is fine)
+		# a baseline for regressions (rest of dev-qt still passes with musl)
 		$(usev elibc_musl '
 			tst_qfiledialog2
 			tst_qicoimageformat
 			tst_qimagereader
 			tst_qimage
+		')
+		# fails due to hppa's NaN handling, needs looking into (bug #914371)
+		$(usev hppa '
+			tst_qcborvalue
+			tst_qnumeric
 		')
 		# note: for linux, upstream only really runs+maintains tests for amd64
 		# https://doc.qt.io/qt-6/supported-platforms.html
