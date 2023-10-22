@@ -133,10 +133,12 @@ PDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-6.5.0-libressl.patch
+	"${FILESDIR}"/${PN}-6.6.0-libressl.patch
 	"${FILESDIR}"/${PN}-6.5.2-hppa-forkfd-grow-stack.patch
 	"${FILESDIR}"/${PN}-6.5.2-no-glx.patch
 	"${FILESDIR}"/${PN}-6.5.2-no-symlink-check.patch
+	"${FILESDIR}"/${PN}-6.5.3-xkbcommon160.patch
+	"${FILESDIR}"/${PN}-6.5.3-forkfd-childstack-size.patch
 )
 
 src_prepare() {
@@ -204,7 +206,8 @@ src_configure() {
 		-DINPUT_opengl=$(usex opengl $(usex gles2-only es2 desktop) no)
 		-DQT_FEATURE_system_textmarkdownreader=OFF # TODO?: package md4c
 	) && use widgets && mycmakeargs+=(
-		$(qt_feature cups) # qtprintsupport is enabled w/ gui+widgets
+		# note: qtprintsupport is enabled w/ gui+widgets regardless of USE=cups
+		$(qt_feature cups)
 		$(qt_feature gtk gtk3)
 	)
 
@@ -214,14 +217,13 @@ src_configure() {
 		$(qt_feature libproxy)
 		$(qt_feature sctp)
 		$(usev test -DQT_SKIP_DOCKER_COMPOSE=ON)
-
-		# Required for LibreSSL
-		-DQT_FEATURE_dtls=OFF
+		-DQT_FEATURE_dtls=OFF # Required for LibreSSL
 	)
 
 	use sql && mycmakeargs+=(
 		-DQT_FEATURE_sql_db2=OFF # unpackaged
 		-DQT_FEATURE_sql_ibase=OFF # unpackaged
+		-DQT_FEATURE_sql_mimer=OFF # unpackaged
 		$(qt_feature mysql sql_mysql)
 		$(qt_feature oci8 sql_oci)
 		$(usev oci8 -DOracle_ROOT="${ESYSROOT}"/usr/$(get_libdir)/oracle/client)
@@ -229,7 +231,6 @@ src_configure() {
 		$(qt_feature postgres sql_psql)
 		$(qt_feature sqlite sql_sqlite)
 		$(qt_feature sqlite system_sqlite)
-		-DQT_FEATURE_sql_tds=OFF # currently a no-op in CMakeLists.txt
 	)
 
 	if use amd64 || use x86; then
@@ -284,6 +285,8 @@ src_test() {
 		tst_qx11info
 		# fails with network sandbox
 		tst_qdnslookup
+		# fails with sandbox
+		tst_qsharedmemory
 		# typical to lack SCTP support on non-generic kernels
 		tst_qsctpsocket
 		# these can be flaky depending on the environment/toolchain
