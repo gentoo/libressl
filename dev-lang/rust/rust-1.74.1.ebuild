@@ -175,6 +175,14 @@ clear_vendor_checksums() {
 	sed -i 's/\("files":{\)[^}]*/\1/' "vendor/${1}/.cargo-checksum.json" || die
 }
 
+eapply_crate() {
+	pushd "${1:?}" > /dev/null || die
+	local patch="${2:?}"
+	eapply "${patch}"
+	"${EPREFIX}"/bin/sh "${FILESDIR}"/rehash-crate.sh "${patch}" || die
+	popd > /dev/null || die
+}
+
 toml_usex() {
 	usex "${1}" true false
 }
@@ -288,6 +296,7 @@ esetup_unwind_hack() {
 }
 
 src_prepare() {
+	eapply_crate vendor/openssl-sys "${FILESDIR}"/1.72.0-libressl-openssl-sys.patch
 	# Clear vendor checksums for crates that we patched to bump libc.
 	# NOTE: refresh this on each bump.
 	#for i in addr2line-0.20.0 bstr cranelift-jit crossbeam-channel elasticlunr-rs handlebars icu_locid libffi \
