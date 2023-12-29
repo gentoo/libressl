@@ -8,7 +8,7 @@ inherit flag-o-matic qt6-build toolchain-funcs
 DESCRIPTION="Cross-platform application development framework"
 
 if [[ ${QT6_BUILD_TYPE} == release ]]; then
-	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86"
+	KEYWORDS="amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86"
 fi
 
 declare -A QT6_IUSE=(
@@ -185,7 +185,8 @@ src_configure() {
 		$(qt_feature gui)
 		$(qt_feature network)
 		$(qt_feature sql)
-		-DQT_FEATURE_testlib=ON # trivial and often needed to build revdeps
+		# trivial, and is often needed (sometimes even when not building tests)
+		-DQT_FEATURE_testlib=ON
 		$(qt_feature xml)
 	)
 
