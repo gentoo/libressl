@@ -1,4 +1,4 @@
-# Copyright 2021-2023 Gentoo Authors
+# Copyright 2021-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -6,6 +6,7 @@ EAPI=8
 inherit flag-o-matic qt6-build toolchain-funcs
 
 DESCRIPTION="Cross-platform application development framework"
+SRC_URI+=" https://dev.gentoo.org/~ionen/distfiles/${P}-QTBUG-116905.patch.xz"
 
 if [[ ${QT6_BUILD_TYPE} == release ]]; then
 	KEYWORDS="amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86"
@@ -138,6 +139,8 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-6.5.2-no-glx.patch
 	"${FILESDIR}"/${PN}-6.5.2-no-symlink-check.patch
 	"${FILESDIR}"/${PN}-6.6.1-forkfd-childstack-size.patch
+	"${FILESDIR}"/${P}-CVE-2023-51714.patch
+	"${WORKDIR}"/${P}-QTBUG-116905.patch
 )
 
 src_prepare() {
@@ -248,9 +251,6 @@ src_configure() {
 		IFS=' ' read -ra intrins < <(
 			: "$(test-flags-CXX "${cpuflags[@]/#/-m}")"
 			$(tc-getCXX) -E -P ${_} ${CXXFLAGS} ${CPPFLAGS} - <<-EOF | tail -n 1
-				#if defined(__GNUC__) && (defined(__x86_64__) || defined(__i386__))
-				#include <x86intrin.h>
-				#endif
 				$(printf '__%s__ ' "${cpuflags[@]^^}")
 			EOF
 			assert
@@ -291,6 +291,8 @@ src_test() {
 		tst_qsctpsocket
 		# randomly fails without -j1, and not worth it over this (bug #916181)
 		tst_qfiledialog{,2}
+		# may randomly hang+timeout, perhaps related to -j as well
+		tst_qtimer
 		# these can be flaky depending on the environment/toolchain
 		tst_qlogging # backtrace log test can easily vary
 		tst_q{,raw}font # affected by available fonts / settings (bug #914737)
