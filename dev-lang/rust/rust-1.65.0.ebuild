@@ -1,9 +1,9 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-PYTHON_COMPAT=( python3_{9..11} )
+PYTHON_COMPAT=( python3_{10..11} )
 
 inherit bash-completion-r1 check-reqs estack flag-o-matic llvm multiprocessing \
 	multilib multilib-build python-any-r1 rust-toolchain toolchain-funcs verify-sig
@@ -94,9 +94,9 @@ BDEPEND="${PYTHON_DEPS}
 	system-bootstrap? ( ${BOOTSTRAP_DEPEND} )
 	!system-llvm? (
 		>=dev-util/cmake-3.13.4
-		dev-util/ninja
+		app-alternatives/ninja
 	)
-	test? ( sys-devel/gdb )
+	test? ( dev-debug/gdb )
 	verify-sig? ( sec-keys/openpgp-keys-rust )
 "
 
@@ -743,7 +743,7 @@ src_install() {
 pkg_postinst() {
 	eselect rust update
 
-	if has_version sys-devel/gdb || has_version dev-util/lldb; then
+	if has_version dev-debug/gdb || has_version dev-debug/lldb; then
 		elog "Rust installs a helper script for calling GDB and LLDB,"
 		elog "for your convenience it is installed under /usr/bin/rust-{gdb,lldb}-${PV}."
 	fi
