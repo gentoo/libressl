@@ -3,6 +3,7 @@
 
 EAPI=8
 
+VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/libressl.asc
 inherit autotools multilib-minimal verify-sig
 
 DESCRIPTION="Free version of the SSL/TLS protocol forked from OpenSSL"
@@ -28,8 +29,6 @@ RDEPEND="netcat? (
 	!net-analyzer/nmap[symlink]
 	!net-analyzer/openbsd-netcat
 )"
-
-VERIFY_SIG_OPENPGP_KEY_PATH="${BROOT}"/usr/share/openpgp-keys/libressl.asc
 
 MULTILIB_WRAPPED_HEADERS=( /usr/include/openssl/opensslconf.h )
 

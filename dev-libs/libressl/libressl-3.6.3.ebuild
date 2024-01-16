@@ -3,6 +3,7 @@
 
 EAPI=8
 
+VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/libressl.asc
 inherit autotools multilib-minimal verify-sig
 
 DESCRIPTION="Free version of the SSL/TLS protocol forked from OpenSSL"
@@ -23,8 +24,6 @@ RESTRICT="!test? ( test )"
 
 PDEPEND="app-misc/ca-certificates"
 BDEPEND="verify-sig? ( sec-keys/openpgp-keys-libressl )"
-
-VERIFY_SIG_OPENPGP_KEY_PATH="${BROOT}"/usr/share/openpgp-keys/libressl.asc
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.8.3-solaris10.patch
