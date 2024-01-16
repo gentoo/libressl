@@ -11,6 +11,7 @@
 	</longdescription>
 	<use>
 		<flag name="asm">Enables assembly</flag>
+		<flag name="netcat">Enable installing TLS-enabled nc(1)</flag>
 	</use>
 	<upstream>
 		<changelog>http://www.libressl.org/releases.html</changelog>

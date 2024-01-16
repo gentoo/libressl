@@ -18,11 +18,16 @@ LICENSE="ISC openssl"
 # versions, we have to change the subslot to trigger rebuild of consumers.
 SLOT="0/55"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos ~x64-solaris"
-IUSE="+asm static-libs test"
+IUSE="+asm netcat static-libs test"
 RESTRICT="!test? ( test )"
 
 PDEPEND="app-misc/ca-certificates"
 BDEPEND="verify-sig? ( sec-keys/openpgp-keys-libressl )"
+RDEPEND="netcat? (
+	!net-analyzer/netcat
+	!net-analyzer/nmap[symlink]
+	!net-analyzer/openbsd-netcat
+)"
 
 VERIFY_SIG_OPENPGP_KEY_PATH="${BROOT}"/usr/share/openpgp-keys/libressl.asc
 
@@ -53,6 +58,7 @@ multilib_src_configure() {
 	local args=(
 		$(use_enable asm)
 		$(use_enable static-libs static)
+		$(use_enable netcat nc)
 		$(use_enable test tests)
 	)
 	econf "${args[@]}"
