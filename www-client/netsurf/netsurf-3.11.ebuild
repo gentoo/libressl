@@ -1,4 +1,4 @@
-# Copyright 1999-2023 Gentoo Authors
+# Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -7,7 +7,7 @@ inherit desktop netsurf toolchain-funcs
 
 DESCRIPTION="A free, open source web browser"
 HOMEPAGE="https://www.netsurf-browser.org/"
-SRC_URI="http://download.netsurf-browser.org/netsurf/releases/source/${P}-src.tar.gz"
+SRC_URI="https://download.netsurf-browser.org/netsurf/releases/source/${P}-src.tar.gz"
 
 LICENSE="GPL-2 MIT"
 SLOT="0"
@@ -25,7 +25,7 @@ RDEPEND="
 	dev-libs/libxml2:2
 	net-misc/curl
 	net-libs/libdom
-	net-libs/libhubbub
+	>=net-libs/libhubbub-0.3.8
 	bmp? ( media-libs/libnsbmp )
 	fbcon? (
 		dev-libs/libnsfb
@@ -34,7 +34,7 @@ RDEPEND="
 			media-libs/freetype
 		)
 	)
-	gif? ( media-libs/libnsgif )
+	gif? ( >=media-libs/libnsgif-1.0.0 )
 	gtk? (
 		dev-libs/glib:2
 		x11-libs/gtk+:3
@@ -56,17 +56,14 @@ DEPEND="${RDEPEND}"
 BDEPEND="
 	dev-libs/check
 	dev-perl/HTML-Parser
-	dev-util/netsurf-buildsystem
+	dev-build/netsurf-buildsystem
 	virtual/pkgconfig
-	javascript? ( app-editors/vim-core )
 "
 
 PATCHES=(
-	"${FILESDIR}/${PN}-3.9-conditionally-include-image-headers.patch"
 	"${FILESDIR}/${PN}-3.10-julia-libutf8proc-header-location.patch"
 	"${FILESDIR}/${PN}-3.10-disable-failing-tests.patch"
-	"${FILESDIR}/${PN}-3.10-gcc10-fno-common.patch"
-	"${FILESDIR}/${PN}-3.10-libressl-3.5.patch"
+	"${FILESDIR}/${PN}-3.11-libressl-3.5.patch"
 )
 
 DOCS=(
@@ -123,9 +120,6 @@ src_test() {
 }
 
 src_install() {
-	sed -e '1iexit;' \
-		-i "${WORKDIR}"/*/utils/git-testament.pl || die
-
 	if use fbcon ; then
 		# See earlier comments about rsvg.h.
 		_emake NETSURF_USE_RSVG=NO TARGET=framebuffer DESTDIR="${D}" install

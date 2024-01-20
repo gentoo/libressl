@@ -2,10 +2,9 @@ X509_get_signature_nid(), ASN1_STRING_get0_data(), RSA_bits() and DH_bits()
 have been available since LibreSSL 2.7.
 DSA_bits(), RSA_get0_n(), RSA_get0_e() will be available in LibreSSL 3.5.
 
-Index: content/fetchers/about.c
---- a/content/fetchers/about.c
-+++ b/content/fetchers/about.c
-@@ -538,7 +538,8 @@ static nserror free_ns_cert_info(struct ns_cert_info *
+--- a/content/fetchers/about/certificate.c
++++ b/content/fetchers/about/certificate.c
+@@ -137,7 +137,8 @@ static nserror free_ns_cert_info(struct ns_cert_info *cinfo)
  /* OpenSSL 1.0.x, 1.0.2, 1.1.0 and 1.1.1 API all changed
   * LibreSSL declares its OpenSSL version as 2.1 but only supports 1.0.x API
   */
@@ -13,25 +12,11 @@ Index: content/fetchers/about.c
 +#if (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3050000fL) || \
 +	(OPENSSL_VERSION_NUMBER < 0x1010000fL)
  /* 1.0.x */
-
+ 
  #if (defined(LIBRESSL_VERSION_NUMBER) || (OPENSSL_VERSION_NUMBER < 0x1000200fL))
-@@ -609,7 +610,7 @@ static const BIGNUM *ns_RSA_get0_e(const RSA *r)
- #define ns_DH_bits DH_bits
-
- #else
--/* 1.1.1 and later */
-+/* 1.1.1 and later, LibreSSL 3.5.0 and later */
- #define ns_X509_get_signature_nid X509_get_signature_nid
- #define ns_ASN1_STRING_get0_data ASN1_STRING_get0_data
- #define ns_RSA_get0_n RSA_get0_n
-
-X509_up_ref has been available since LibreSSL 2.5.
-X509_free has always been available.
-
-Index: content/fetchers/curl.c
 --- a/content/fetchers/curl.c
 +++ b/content/fetchers/curl.c
-@@ -92,7 +92,7 @@
+@@ -98,7 +98,7 @@
  /* OpenSSL 1.0.x to 1.1.0 certificate reference counting changed
   * LibreSSL declares its OpenSSL version as 2.1 but only supports the old way
   */
