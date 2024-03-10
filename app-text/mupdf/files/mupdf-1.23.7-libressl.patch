@@ -1,0 +1,15 @@
+EVP_add_digest is no longer needed with LibreSSL >= 3.9.0
+
+--- a/source/helpers/pkcs7/pkcs7-openssl.c
++++ b/source/helpers/pkcs7/pkcs7-openssl.c
+@@ -793,8 +793,10 @@ pdf_pkcs7_signer *pkcs7_openssl_read_pfx(fz_context *ctx, const char *pfile, con
+ 
+ 		OpenSSL_add_all_algorithms();
+ 
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER < 0x3090000fL)
+ 		EVP_add_digest(EVP_md5());
+ 		EVP_add_digest(EVP_sha1());
++#endif
+ 
+ 		ERR_load_crypto_strings();
+ 
