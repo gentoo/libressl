@@ -5,7 +5,7 @@ EAPI=8
 
 DESCRIPTION="OpenPGP keys used by the libressl project"
 HOMEPAGE="https://www.libressl.org/"
-SRC_URI="https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl.asc"
+SRC_URI="https://ftp.openbsd.org/pub/OpenBSD/LibreSSL/libressl.asc -> ${P}.asc"
 S=${WORKDIR}
 
 LICENSE="public-domain"
