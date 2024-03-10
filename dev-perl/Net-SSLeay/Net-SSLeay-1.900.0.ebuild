@@ -36,6 +36,7 @@ PATCHES=(
 	"${FILESDIR}/${PN}-1.88-fix-libdir.patch"
 	"${FILESDIR}/${PN}-1.90-libressl.patch"
 	"${FILESDIR}/${PN}-1.92-libressl-3.8.0.patch"
+	"${FILESDIR}/${PN}-1.92-libressl-3.9.0.patch"
 )
 
 PERL_RM_FILES=(
