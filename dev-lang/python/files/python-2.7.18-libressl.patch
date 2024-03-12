@@ -1,7 +1,6 @@
 https://cvsweb.openbsd.org/cgi-bin/cvsweb/ports/lang/python/2.7/patches/patch-Modules__hashopenssl_c
 
-Index: Modules/_hashopenssl.c
---- a/Modules/_hashopenssl.c.orig
+--- a/Modules/_hashopenssl.c
 +++ b/Modules/_hashopenssl.c
 @@ -56,7 +56,8 @@
  #define _OPENSSL_SUPPORTS_SHA2
@@ -13,3 +12,15 @@ Index: Modules/_hashopenssl.c
  /* OpenSSL < 1.1.0 */
  #define EVP_MD_CTX_new EVP_MD_CTX_create
  #define EVP_MD_CTX_free EVP_MD_CTX_destroy
+--- a/Modules/_ssl.c
++++ b/Modules/_ssl.c
+@@ -596,7 +596,9 @@
+     Py_INCREF(sslctx);
+ 
+     /* Make sure the SSL error state is initialized */
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER < 0x3090000fL)
+     (void) ERR_get_state();
++#endif
+     ERR_clear_error();
+ 
+     PySSL_BEGIN_ALLOW_THREADS
