@@ -15,7 +15,7 @@ index d1794d4d..1f1aa5ed 100644
          int size = q_ASN1_STRING_to_UTF8(&data, q_X509_NAME_ENTRY_get_data(e));
          info.insert(name, QString::fromUtf8((char*)data, size));
 -#if QT_CONFIG(opensslv11)
-+#if QT_CONFIG(opensslv11) && !defined(LIBRESSL_VERSION_NUMBER)
++#if QT_CONFIG(opensslv11) && (!defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER >= 0x3090000fL))
          q_CRYPTO_free(data, nullptr, 0);
  #else
          q_CRYPTO_free(data);
@@ -137,7 +137,7 @@ index d9742fd6..fac28b5c 100644
  DEFINEFUNC3(int, X509_STORE_set_ex_data, X509_STORE *a, a, int idx, idx, void *data, data, return 0, return)
  DEFINEFUNC2(void *, X509_STORE_get_ex_data, X509_STORE *r, r, int idx, idx, return nullptr, return)
  DEFINEFUNC(STACK_OF(X509) *, X509_STORE_CTX_get0_chain, X509_STORE_CTX *a, a, return nullptr, return)
-+#ifndef LIBRESSL_VERSION_NUMBER
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER >= 0x3090000fL)
  DEFINEFUNC3(void, CRYPTO_free, void *str, str, const char *file, file, int line, line, return, DUMMYARG)
 +#else
 +DEFINEFUNC(void, CRYPTO_free, void *a, a, return, DUMMYARG)
@@ -241,7 +241,7 @@ index 27aeffa1..32a21221 100644
  
  void *q_CRYPTO_malloc(size_t num, const char *file, int line);
  #define q_OPENSSL_malloc(num) q_CRYPTO_malloc(num, "", 0)
-+#ifndef LIBRESSL_VERSION_NUMBER
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER >= 0x3090000fL)
  void q_CRYPTO_free(void *str, const char *file, int line);
  #define q_OPENSSL_free(addr) q_CRYPTO_free(addr, "", 0)
 +#else // LIBRESSL_VERSION_NUMBER
