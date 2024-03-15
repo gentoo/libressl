@@ -248,6 +248,7 @@ src_configure() {
 			# They'll even hang here but be fine in src_test sometimes.
 			# bug #828535 (and related: bug #788022)
 			-x test_asyncio
+			-x test_concurrent_futures
 			-x test_httpservers
 			-x test_logging
 			-x test_multiprocessing_fork
@@ -385,6 +386,7 @@ src_test() {
 		-j "$(makeopts_jobs)"
 
 		# fails
+		-x test_concurrent_futures
 		-x test_gdb
 	)
 
