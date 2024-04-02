@@ -20,6 +20,18 @@ Use [`eselect-repository`](https://wiki.gentoo.org/wiki/Eselect/Repository):
 Now you can use `emerge --sync` or `emaint sync -r libressl` to sync this
 repository.
 
+```
+To prevent a dependency loop:
+Since dev-libs/libressl causes file collisions with dev-libs/openssl::gentoo,
+until the openssl::libressl fake package is installed.
+Fetch Libressl Packages First, and remove openssl after, using following commands.
+# emerge -f libressl
+# emerge -C openssl 
+# emerge -1q libressl
+# emerge @preserved-rebuild
+
+```
+
 ## links
 
 [Gentoo bug report](https://bugs.gentoo.org/show_bug.cgi?id=508750)
