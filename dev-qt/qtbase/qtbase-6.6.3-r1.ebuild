@@ -8,7 +8,7 @@ inherit flag-o-matic qt6-build toolchain-funcs
 DESCRIPTION="Cross-platform application development framework"
 
 if [[ ${QT6_BUILD_TYPE} == release ]]; then
-	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86"
+	KEYWORDS="amd64 ~arm arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86"
 fi
 
 declare -A QT6_IUSE=(
@@ -18,13 +18,13 @@ declare -A QT6_IUSE=(
 
 	[gui]="
 		+X accessibility eglfs evdev gles2-only +libinput
-		opengl renderdoc tslib vulkan wayland +widgets
+		opengl tslib vulkan +widgets
 	"
 	[network]="brotli gssapi libproxy sctp"
 	[sql]="mysql oci8 odbc postgres +sqlite"
 	[widgets]="cups gtk"
 
-	[optfeature]="nls" #810802
+	[optfeature]="nls wayland" #810802,864509
 )
 IUSE="${QT6_IUSE[*]}"
 REQUIRED_USE="
@@ -50,7 +50,6 @@ REQUIRED_USE="
 # - qtnetwork (src/network/configure.cmake)
 # - qtprintsupport (src/printsupport/configure.cmake) [gui+widgets]
 # - qtsql (src/plugins/sqldrivers/configure.cmake)
-# dlopen: renderdoc
 RDEPEND="
 	sys-libs/zlib:=
 	ssl? ( dev-libs/openssl:= )
@@ -91,7 +90,6 @@ RDEPEND="
 			gles2-only? ( media-libs/libglvnd )
 			!gles2-only? ( media-libs/libglvnd[X?] )
 		)
-		renderdoc? ( media-gfx/renderdoc )
 		tslib? ( x11-libs/tslib )
 		widgets? (
 			cups? ( net-print/cups )
@@ -137,9 +135,11 @@ PDEPEND="
 PATCHES=(
 	"${FILESDIR}"/${PN}-6.6.0-libressl.patch
 	"${FILESDIR}"/${PN}-6.5.2-hppa-forkfd-grow-stack.patch
+	"${FILESDIR}"/${PN}-6.5.2-no-glx.patch
 	"${FILESDIR}"/${PN}-6.5.2-no-symlink-check.patch
 	"${FILESDIR}"/${PN}-6.6.1-forkfd-childstack-size.patch
 	"${FILESDIR}"/${PN}-6.6.3-gcc14-avx512fp16.patch
+	"${FILESDIR}"/${PN}-6.6.3-pkgconf-deps.patch
 )
 
 src_prepare() {
@@ -149,13 +149,6 @@ src_prepare() {
 		# test itself has -Werror=strict-aliasing issues, drop for simplicity
 		sed -e '/add_subdirectory(qsharedpointer)/d' \
 			-i tests/auto/corelib/tools/CMakeLists.txt || die
-
-		# workaround for __extendhfxf2 being used for tst_qfloat16.cpp
-		# which is unavailable with compiler-rt (assume used if clang)
-		if tc-is-clang; then
-			sed -e '/add_subdirectory(qfloat16)/d' \
-				-i tests/auto/corelib/global/CMakeLists.txt || die
-		fi
 	fi
 }
 
@@ -212,10 +205,8 @@ src_configure() {
 		$(qt_feature evdev)
 		$(qt_feature evdev mtdev)
 		$(qt_feature libinput)
-		$(qt_feature renderdoc graphicsframecapture)
 		$(qt_feature tslib)
 		$(qt_feature vulkan)
-		$(qt_feature wayland)
 		$(qt_feature widgets)
 		-DINPUT_opengl=$(usex opengl $(usex gles2-only es2 desktop) no)
 		-DQT_FEATURE_system_textmarkdownreader=OFF # TODO?: package md4c
@@ -340,7 +331,6 @@ src_test() {
 			tst_qicoimageformat
 			tst_qimagereader
 			tst_qimage
-			tst_qprocess
 		')
 		# fails due to hppa's NaN handling, needs looking into (bug #914371)
 		$(usev hppa '
