@@ -10,7 +10,7 @@ HOMEPAGE="https://wiki.gentoo.org/wiki/Project:LibreSSL"
 LICENSE="metapackage"
 
 SLOT="0/56" # .so version of libssl/libcrypto
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos ~x64-solaris"
+KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~s390 ~sparc x86 ~amd64-linux ~ppc-macos ~x64-macos ~x64-solaris"
 IUSE="+asm sslv3 static-libs test"
 REQUIRED_USE="!sslv3"
 RESTRICT="!test? ( test )"
