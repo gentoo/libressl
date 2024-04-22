@@ -441,6 +441,9 @@ KEYWORDS="amd64 arm arm64 ~loong ~ppc ~ppc64 ~riscv ~s390 ~sparc x86"
 IUSE="doc +ssl test"
 RESTRICT="!test? ( test )"
 
+# TODO: cleanup after CRATES_TEST's pyo3 is >=0.20.3 (bug #922236)
+RESTRICT+=" ppc? ( test )"
+
 RDEPEND="$(python_gen_cond_dep 'dev-python/tomli[${PYTHON_USEDEP}]' 3.10)"
 DEPEND="ssl? ( dev-libs/openssl:= )"
 BDEPEND="
@@ -464,6 +467,8 @@ src_prepare() {
 	popd > /dev/null || die
 
 	distutils-r1_src_prepare
+
+	[[ ${CRATES_TEST} == *pyo3@0.20.[0-2]* ]] || die "drop ppc test restrict"
 
 	# we build the Rust executable (just once) via cargo_src_compile
 	sed -i -e '/setuptools_rust/d' -e '/rust_extensions/d' setup.py || die
