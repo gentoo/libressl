@@ -1,7 +1,7 @@
 # Copyright 1999-2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=7
+EAPI=8
 
 PYTHON_COMPAT=( python3_{9..11} )
 
@@ -37,20 +37,20 @@ RDEPEND="
 DEPEND="
 	${RDEPEND}
 "
-# <cython-3 for bug #898666
 BDEPEND="
 	virtual/pkgconfig
 	doc? ( app-text/doxygen )
-	python? ( <dev-python/cython-3[${PYTHON_USEDEP}] )
+	python? ( dev-python/cython[${PYTHON_USEDEP}] )
 "
 
 BUILD_DIR="${S}_build"
 
 PATCHES=(
+	"${FILESDIR}/${P}-libressl.patch"
 	"${FILESDIR}/${P}-slibtool.patch"
 	"${FILESDIR}/${P}-missing_libflags.patch" #787962
-	"${FILESDIR}/${P}-libressl.patch"
 	"${FILESDIR}/${P}-python.patch"
+	"${FILESDIR}"/${P}-cython3.patch # Bug #898666
 )
 
 src_prepare() {
