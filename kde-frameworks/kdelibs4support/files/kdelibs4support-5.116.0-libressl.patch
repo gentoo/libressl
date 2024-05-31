@@ -1,0 +1,51 @@
+From: orbea <orbea@riseup.net>
+Date: Thu, 30 May 2024 19:49:51 -0700
+Subject: [PATCH] kssl: Update LibreSSL defines for 3.9.0
+
+With LibreSSL 3.9.0 CRYPTO_free was updated to accept file and line
+arguments.
+---
+ src/kssl/kopenssl.cpp | 6 +++---
+ src/kssl/kopenssl.h   | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+--- a/src/kssl/kopenssl.cpp
++++ b/src/kssl/kopenssl.cpp
+@@ -80,7 +80,7 @@ extern "C" {
+     static void (*K_X509_LOOKUP_free)(X509_LOOKUP *) = nullptr;
+     static int (*K_X509_LOOKUP_ctrl)(X509_LOOKUP *, int, const char *, long, char **) = nullptr;
+     static void (*K_X509_STORE_CTX_init)(X509_STORE_CTX *, X509_STORE *, X509 *, STACK_OF(X509) *) = nullptr;
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3090000fL)
+     static void (*K_CRYPTO_free)(void *) = nullptr;
+ #else
+     static void (*K_CRYPTO_free)(void *, const char *, int) = nullptr;
+@@ -429,7 +429,7 @@ KOpenSSLProxy::KOpenSSLProxy()
+         K_RAND_load_file = (int (*)(const char *, long)) d->cryptoLib->resolve("RAND_load_file");
+         K_RAND_file_name = (const char *(*)(char *, size_t)) d->cryptoLib->resolve("RAND_file_name");
+         K_RAND_write_file = (int (*)(const char *)) d->cryptoLib->resolve("RAND_write_file");
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3090000fL)
+         K_CRYPTO_free = (void (*)(void *)) d->cryptoLib->resolve("CRYPTO_free");
+ #else
+         K_CRYPTO_free = (void (*)(void *, const char *, int)) d->cryptoLib->resolve("CRYPTO_free");
+@@ -1095,7 +1095,7 @@ void KOpenSSLProxy::X509_STORE_CTX_init(X509_STORE_CTX *ctx, X509_STORE *store,
+     }
+ }
+ 
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3090000fL)
+ void KOpenSSLProxy::CRYPTO_free(void *x)
+ {
+     if (K_CRYPTO_free) {
+--- a/src/kssl/kopenssl.h
++++ b/src/kssl/kopenssl.h
+@@ -395,7 +395,7 @@ public:
+     /*
+      *   CRYPTO_free - free up an internally allocated object
+      */
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3090000fL)
+     void CRYPTO_free(void *x);
+ #else
+     void CRYPTO_free(void *x, const char *file, int line);
