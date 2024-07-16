@@ -127,7 +127,6 @@ src_prepare() {
 
 	local PATCHES=(
 		"${WORKDIR}/${PATCHSET}"
-		"${FILESDIR}"/${PN}-3.10.3-libressl.patch
 		"${FILESDIR}"/${PN}-3.10.14-libressl.patch
 	)
 

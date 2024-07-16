@@ -45,6 +45,7 @@ RDEPEND="
 	app-arch/xz-utils:=
 	>=dev-libs/expat-2.1:=
 	dev-libs/libffi:=
+	dev-libs/mpdecimal:=
 	dev-python/gentoo-common
 	>=sys-libs/zlib-1.1.3:=
 	virtual/libcrypt:=
@@ -116,7 +117,6 @@ src_prepare() {
 	local PATCHES=(
 		"${WORKDIR}/${PATCHSET}"
 		"${FILESDIR}"/${PN}-3.9.9-r1-libressl.patch
-		"${FILESDIR}"/${PN}-3.10.14-libressl.patch
 	)
 
 	default
@@ -215,6 +215,7 @@ src_configure() {
 		--without-lto
 		--with-system-expat
 		--with-system-ffi
+		--with-system-libmpdec
 		--with-wheel-pkg-dir="${EPREFIX}"/usr/lib/python/ensurepip
 
 		$(use_with debug assertions)
