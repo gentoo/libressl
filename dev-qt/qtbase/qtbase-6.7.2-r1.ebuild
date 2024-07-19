@@ -8,7 +8,7 @@ inherit qt6-build toolchain-funcs
 DESCRIPTION="Cross-platform application development framework"
 
 if [[ ${QT6_BUILD_TYPE} == release ]]; then
-	KEYWORDS="amd64 arm arm64 ~hppa ~loong ~ppc ppc64 ~riscv ~sparc x86"
+	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86"
 fi
 
 declare -A QT6_IUSE=(
@@ -140,8 +140,7 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-6.5.2-no-symlink-check.patch
 	"${FILESDIR}"/${PN}-6.6.1-forkfd-childstack-size.patch
 	"${FILESDIR}"/${PN}-6.6.3-gcc14-avx512fp16.patch
-	"${FILESDIR}"/${PN}-6.6.3-pkgconf-deps.patch
-	"${FILESDIR}"/${PN}-6.7.1-qeventlooplocker.patch
+	"${FILESDIR}"/${PN}-6.7.2-CVE-2024-39936.patch
 )
 
 src_prepare() {
