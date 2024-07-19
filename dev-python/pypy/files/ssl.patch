@@ -1,0 +1,21 @@
+diff -ru a/lib_pypy/_cffi_ssl/_cffi_src/openssl/ssl.py b/lib_pypy/_cffi_ssl/_cffi_src/openssl/ssl.py
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/ssl.py	2024-07-19 10:38:37.482873478 +0000
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/ssl.py	2024-07-19 10:41:18.411921508 +0000
+@@ -577,7 +577,7 @@
+ """
+ 
+ CUSTOMIZATIONS = """
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_102
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_102 && !CRYPTOGRAPHY_IS_LIBRESSL
+ #error Python 3.7 requires OpenSSL >= 1.0.2
+ #endif
+ 
+@@ -739,7 +739,7 @@
+ int (*SSL_get_min_proto_version)(SSL *ssl) = NULL;
+ int (*SSL_get_max_proto_version)(SSL *ssl) = NULL;
+ #endif
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110 && !CRYPTOGRAPHY_IS_LIBRESSL
+ int (*SSL_CTX_set_min_proto_version)(SSL_CTX *ctx, int version) = NULL;
+ int (*SSL_CTX_set_max_proto_version)(SSL_CTX *ctx, int version) = NULL;
+ int (*SSL_set_min_proto_version)(SSL *ssl, int version) = NULL;

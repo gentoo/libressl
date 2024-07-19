@@ -1,0 +1,34 @@
+LibreSSL defines OPENSSL_NO_ENGINE yet provides some ENGINE symbols.
+I am not sure about the value of Cryptography_HAS_ENGINE in this case but at least this prevents symbol collisions.
+
+diff -u a/lib_pypy/_cffi_ssl/_cffi_src/openssl/engine.py b/lib_pypy/_cffi_ssl/_cffi_src/openssl/engine.py
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/engine.py	2024-04-21 01:03:52.000000000 +0000
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/engine.py	2024-07-17 07:40:07.395339433 +0000
+@@ -30,6 +30,7 @@
+ CUSTOMIZATIONS = """
+ #ifdef OPENSSL_NO_ENGINE
+ static const long Cryptography_HAS_ENGINE = 0;
++#ifndef CRYPTOGRAPHY_IS_LIBRESSL
+ 
+ ENGINE *(*ENGINE_by_id)(const char *) = NULL;
+ int ENGINE_init(ENGINE *);
+@@ -34,9 +34,11 @@
+ ENGINE *(*ENGINE_by_id)(const char *) = NULL;
+ int (*ENGINE_init)(ENGINE *) = NULL;
+ int (*ENGINE_finish)(ENGINE *) = NULL;
++#endif
+ ENGINE *(*ENGINE_get_default_RAND)(void) = NULL;
+ int (*ENGINE_set_default_RAND)(ENGINE *) = NULL;
+ void (*ENGINE_unregister_RAND)(ENGINE *) = NULL;
++#ifndef CRYPTOGRAPHY_IS_LIBRESSL
+ int (*ENGINE_ctrl_cmd)(ENGINE *, const char *, long, void *,
+                        void (*)(void), int) = NULL;
+ 
+@@ -47,6 +47,7 @@
+ const char *(*ENGINE_get_id)(const ENGINE *) = NULL;
+ const char *(*ENGINE_get_name)(const ENGINE *) = NULL;
+ 
++#endif
+ #else
+ static const long Cryptography_HAS_ENGINE = 1;
+ #endif
