@@ -1,0 +1,12 @@
+diff -ru pypy3.10-v7.3.16-src/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509_vfy.py b/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509_vfy.py
+--- pypy3.10-v7.3.16-src/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509_vfy.py	2024-04-21 01:08:49.000000000 +0000
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509_vfy.py	2024-07-25 07:06:06.259878466 +0000
+@@ -347,7 +347,7 @@
+ static const long Cryptography_HAS_X509_STORE_CTX_GET_ISSUER = 1;
+ #endif
+ 
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_330
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_330 && !CRYPTOGRAPHY_IS_LIBRESSL
+ static X509_OBJECT *x509_object_dup(const X509_OBJECT *obj)
+ {
+     int ok;

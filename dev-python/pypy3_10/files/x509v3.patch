@@ -1,0 +1,11 @@
+diff -ru a/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509v3.py b/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509v3.py
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509v3.py	2024-04-21 01:03:52.000000000 +0000
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509v3.py	2024-07-19 13:16:55.369740670 +0000
+@@ -320,4 +320,7 @@
+ """
+ 
+ CUSTOMIZATIONS = """
++#ifdef CRYPTOGRAPHY_IS_LIBRESSL
++int (*X509V3_EXT_add_alias)(int, int) = NULL;
++#endif
+ """

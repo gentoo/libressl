@@ -1,0 +1,14 @@
+diff -ru pypy2.7-v7.3.16-src/lib_pypy/_cffi_ssl/_cffi_src/openssl/err.py b/lib_pypy/_cffi_ssl/_cffi_src/openssl/err.py
+--- pypy2.7-v7.3.16-src/lib_pypy/_cffi_ssl/_cffi_src/openssl/err.py	2024-04-21 01:03:52.000000000 +0000
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/err.py	2024-07-19 12:51:27.645284720 +0000
+@@ -232,5 +232,10 @@
+ static const int ERR_LIB_OSSL_ENCODER = -42;
+ static const int ERR_LIB_PROP = -42;
+ static const int ERR_LIB_PROV = -42;
++#ifdef CRYPTOGRAPHY_IS_LIBRESSL
++static const int ERR_LIB_ASYNC = -42;
++static const int ERR_LIB_OSSL_STORE = -42;
++static const int ERR_LIB_SM2 = -42;
++#endif
+ #endif
+ """
