@@ -13,7 +13,7 @@ fi
 
 declare -A QT6_IUSE=(
 	[global]="+ssl +udev zstd"
-	[core]="icu"
+	[core]="icu journald syslog"
 	[modules]="+concurrent +dbus +gui +network +sql +xml"
 
 	[gui]="
@@ -28,6 +28,7 @@ declare -A QT6_IUSE=(
 )
 IUSE="${QT6_IUSE[*]}"
 REQUIRED_USE="
+	?? ( journald syslog )
 	$(
 		printf '%s? ( gui ) ' ${QT6_IUSE[gui]//+/}
 		printf '%s? ( network ) ' ${QT6_IUSE[network]//+/}
@@ -50,8 +51,8 @@ REQUIRED_USE="
 # - qtnetwork (src/network/configure.cmake)
 # - qtprintsupport (src/printsupport/configure.cmake) [gui+widgets]
 # - qtsql (src/plugins/sqldrivers/configure.cmake)
-# dlopen: renderdoc
-RDEPEND="
+# nolink: renderdoc, systemd
+COMMON_DEPEND="
 	sys-libs/zlib:=
 	ssl? ( dev-libs/openssl:= )
 	udev? ( virtual/libudev:= )
@@ -62,6 +63,7 @@ RDEPEND="
 	dev-libs/glib:2
 	dev-libs/libpcre2:=[pcre16,unicode(+)]
 	icu? ( dev-libs/icu:= )
+	journald? ( sys-apps/systemd )
 
 	dbus? ( sys-apps/dbus )
 	gui? (
@@ -115,8 +117,12 @@ RDEPEND="
 		sqlite? ( dev-db/sqlite:3 )
 	)
 "
+RDEPEND="
+	${COMMON_DEPEND}
+	syslog? ( virtual/logger )
+"
 DEPEND="
-	${RDEPEND}
+	${COMMON_DEPEND}
 	X? ( x11-base/xorg-proto )
 	gui? (
 		vulkan? ( dev-util/vulkan-headers )
@@ -188,6 +194,8 @@ src_configure() {
 
 		# qtcore
 		$(qt_feature icu)
+		$(qt_feature journald)
+		$(qt_feature syslog)
 
 		# tools
 		-DQT_FEATURE_androiddeployqt=OFF
@@ -277,6 +285,7 @@ src_test() {
 		# randomly fails without -j1, and not worth it over this (bug #916181)
 		tst_qfiledialog{,2}
 		# may randomly hang+timeout, perhaps related to -j as well
+		tst_qprocess #936484
 		tst_qtimer
 		# these can be flaky depending on the environment/toolchain
 		tst_qlogging # backtrace log test can easily vary
@@ -311,7 +320,6 @@ src_test() {
 			tst_qicoimageformat
 			tst_qimagereader
 			tst_qimage
-			tst_qprocess
 		')
 		# fails due to hppa's NaN handling, needs looking into (bug #914371)
 		$(usev hppa '
@@ -321,7 +329,6 @@ src_test() {
 		# bug #914033
 		$(usev sparc '
 			tst_qbuffer
-			tst_qprocess
 			tst_qtconcurrentiteratekernel
 		')
 		# note: for linux, upstream only really runs+maintains tests for amd64
