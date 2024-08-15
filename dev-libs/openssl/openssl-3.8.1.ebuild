@@ -7,6 +7,9 @@ inherit multilib-minimal
 
 DESCRIPTION="dummy package for dev-libs/libressl"
 HOMEPAGE="https://wiki.gentoo.org/wiki/Project:LibreSSL"
+
+S="${WORKDIR}"
+
 LICENSE="metapackage"
 
 SLOT="0/55" # .so version of libssl/libcrypto
@@ -16,5 +19,3 @@ REQUIRED_USE="!quic !sslv3"
 RESTRICT="!test? ( test )"
 
 DEPEND="dev-libs/libressl:${SLOT}[asm=,static-libs=,test=,${MULTILIB_USEDEP}]"
-
-S="${WORKDIR}"
