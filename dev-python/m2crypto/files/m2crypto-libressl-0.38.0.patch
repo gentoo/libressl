@@ -81,22 +81,6 @@ Index: src/SWIG/_lib11_compat.i
  #include <openssl/bn.h>
  
  #ifndef BN_F_BN_GENCB_NEW
-$OpenBSD: patch-src_SWIG__lib_i,v 1.2 2021/10/07 22:32:54 tb Exp $
-
-Fix build with LibreSSL
-
-Index: src/SWIG/_lib.i
---- a/src/SWIG/_lib.i.orig
-+++ b/src/SWIG/_lib.i
-@@ -21,7 +21,7 @@
- 
- %{
- /* OpenSSL 1.0.2 copmatbility shim */
--#if OPENSSL_VERSION_NUMBER < 0x10002000L
-+#if OPENSSL_VERSION_NUMBER < 0x10002000L || defined(LIBRESSL_VERSION_NUMBER)
- typedef void (*OPENSSL_sk_freefunc)(void *);
- typedef void *(*OPENSSL_sk_copyfunc)(const void *);
- typedef struct stack_st OPENSSL_STACK;
 $OpenBSD: patch-src_SWIG__threads_i,v 1.1 2021/07/24 20:02:04 sthen Exp $
 
 Fix build with LibreSSL
