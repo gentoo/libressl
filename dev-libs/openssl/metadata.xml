@@ -11,6 +11,7 @@
 	</slots>
 	<use>
 		<flag name="asm">Enables assembly</flag>
+		<flag name="quic">Enable support for QUIC (RFC 9000); a UDP-based protocol intended to replace TCP</flag>
 		<flag name="sslv3">Support for the SSLv3 protocol</flag>
 	</use>
 </pkgmetadata>
