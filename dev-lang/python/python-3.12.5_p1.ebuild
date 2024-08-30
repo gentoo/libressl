@@ -127,6 +127,7 @@ src_prepare() {
 
 	local PATCHES=(
 		"${WORKDIR}/${PATCHSET}"
+		"${FILESDIR}"/${PN}-3.12.4-libressl.patch
 	)
 
 	default
@@ -283,6 +284,10 @@ src_configure() {
 		# Python on glibc upgrade, remove it proactively to give
 		# a chance for users rebuilding python before glibc
 		ac_cv_header_stropts_h=no
+
+		# libressl doesn't find hashlib (From OpenBSD)
+		ac_cv_working_openssl_hashlib=yes
+
 
 		--enable-shared
 		--without-static-libpython
