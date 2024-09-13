@@ -18,7 +18,7 @@ LICENSE="ISC openssl"
 # we'll try to use the max of either. However, if either change between
 # versions, we have to change the subslot to trigger rebuild of consumers.
 SLOT="0/56"
-KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc x86 ~amd64-linux ~ppc-macos ~x64-macos ~x64-solaris"
+KEYWORDS="~alpha amd64 arm arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc x86 ~amd64-linux ~ppc-macos ~x64-macos ~x64-solaris"
 IUSE="+asm netcat static-libs test"
 RESTRICT="!test? ( test )"
 
