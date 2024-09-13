@@ -13,7 +13,7 @@ S="${WORKDIR}"
 LICENSE="metapackage"
 
 SLOT="0/55" # .so version of libssl/libcrypto
-KEYWORDS="~alpha amd64 arm arm64 ~hppa ~ia64 ~loong ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc x86 ~arm64-macos ~ppc-macos ~x64-macos ~x64-solaris"
+KEYWORDS="~alpha amd64 arm arm64 ~hppa ~loong ~m68k ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc x86 ~arm64-macos ~ppc-macos ~x64-macos ~x64-solaris"
 IUSE="+asm quic sslv3 static-libs test"
 REQUIRED_USE="!quic !sslv3"
 RESTRICT="!test? ( test )"
