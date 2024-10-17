@@ -11,10 +11,10 @@ diff --git a/plugins/qca-ossl/qca-ossl.cpp b/plugins/qca-ossl/qca-ossl.cpp
 index b2c5d3d..79775cd 100644
 --- a/plugins/qca-ossl/qca-ossl.cpp
 +++ b/plugins/qca-ossl/qca-ossl.cpp
-@@ -44,7 +44,13 @@
+@@ -45,7 +45,13 @@
  #include <openssl/provider.h>
  #endif
- 
+
 +#ifndef RSA_F_RSA_OSSL_PRIVATE_DECRYPT
 +#define RSA_F_RSA_OSSL_PRIVATE_DECRYPT RSA_F_RSA_EAY_PRIVATE_DECRYPT
 +#endif
@@ -22,26 +22,26 @@ index b2c5d3d..79775cd 100644
 +#ifndef LIBRESSL_VERSION_NUMBER
  #include <openssl/kdf.h>
 +#endif
- 
+
  using namespace QCA;
- 
-@@ -1254,6 +1260,7 @@ public:
+
+@@ -1262,6 +1268,7 @@ public:
  protected:
  };
- 
+
 +#ifndef LIBRESSL_VERSION_NUMBER
  class opensslHkdfContext : public HKDFContext
  {
      Q_OBJECT
-@@ -1286,6 +1293,7 @@ public:
+@@ -1294,6 +1301,7 @@ public:
          return out;
      }
  };
 +#endif // LIBRESSL_VERSION_NUMBER
- 
+
  class opensslHMACContext : public MACContext
  {
-@@ -4993,7 +5001,11 @@ public:
+@@ -5004,7 +5012,11 @@ public:
          case TLS::TLS_v1:
              ctx = SSL_CTX_new(TLS_client_method());
              SSL_CTX_set_min_proto_version(ctx, TLS1_VERSION);
@@ -53,7 +53,7 @@ index b2c5d3d..79775cd 100644
              break;
          case TLS::DTLS_v1:
          default:
-@@ -5014,7 +5026,11 @@ public:
+@@ -5025,7 +5037,11 @@ public:
          QStringList cipherList;
          for (int i = 0; i < sk_SSL_CIPHER_num(sk); ++i) {
              const SSL_CIPHER *thisCipher = sk_SSL_CIPHER_value(sk, i);
@@ -64,8 +64,8 @@ index b2c5d3d..79775cd 100644
 +#endif
          }
          sk_SSL_CIPHER_free(sk);
- 
-@@ -5386,8 +5402,11 @@ public:
+
+@@ -5397,8 +5413,11 @@ public:
              qDebug("unexpected version response");
              sessInfo.version = TLS::TLS_v1;
          }
@@ -75,12 +75,21 @@ index b2c5d3d..79775cd 100644
 +#else
 +        sessInfo.cipherSuite = QString::fromLatin1(SSL_CIPHER_get_name(SSL_get_current_cipher(ssl)));
 +#endif
- 
+
          sessInfo.cipherMaxBits = SSL_get_cipher_bits(ssl, &(sessInfo.cipherBits));
- 
-@@ -6687,7 +6706,9 @@ public:
+
+@@ -6460,7 +6479,7 @@ static QStringList all_hash_types()
+         list += QStringLiteral("md2");
  #endif
-         list += QStringLiteral("pbkdf1(sha1)");
+         list += QStringLiteral("md4");
+-#ifdef OBJ_whirlpool
++#if defined(OBJ_whirlpool) && !defined(OPENSSL_NO_WHIRLPOOL)
+         list += QStringLiteral("whirlpool");
+ #endif
+     }
+@@ -6705,7 +6724,9 @@ public:
+         }
+         list += QStringLiteral("pkcs12");
          list += QStringLiteral("pbkdf2(sha1)");
 +#ifndef LIBRESSL_VERSION_NUMBER
          list += QStringLiteral("hkdf(sha256)");
@@ -88,7 +97,7 @@ index b2c5d3d..79775cd 100644
          list += QStringLiteral("pkey");
          list += QStringLiteral("dlgroup");
          list += QStringLiteral("rsa");
-@@ -6756,8 +6777,10 @@ public:
+@@ -6755,8 +6776,10 @@ public:
  #endif
          else if (type == QLatin1String("pbkdf2(sha1)"))
              return new opensslPbkdf2Context(this, type);
@@ -99,5 +108,14 @@ index b2c5d3d..79775cd 100644
          else if (type == QLatin1String("hmac(md5)"))
              return new opensslHMACContext(EVP_md5(), this, type);
          else if (type == QLatin1String("hmac(sha1)"))
+@@ -6921,7 +6944,7 @@ public:
+ #endif
+             else if (type == QLatin1String("md4"))
+                 return new opensslHashContext(EVP_md4(), this, type);
+-#ifdef OBJ_whirlpool
++#if defined(OBJ_whirlpool) && !defined(OPENSSL_NO_WHIRLPOOL)
+             else if (type == QLatin1String("whirlpool"))
+                 return new opensslHashContext(EVP_whirlpool(), this, type);
+ #endif
 -- 
 2.35.1
