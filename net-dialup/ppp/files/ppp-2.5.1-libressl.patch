@@ -1,0 +1,28 @@
+https://github.com/ppp-project/ppp/pull/526
+
+From 5c6c77dc314980a1dd8d2ec7b27cea4b77716f86 Mon Sep 17 00:00:00 2001
+From: orbea <orbea@riseup.net>
+Date: Thu, 17 Oct 2024 11:38:12 -0700
+Subject: [PATCH] pppd: fix build with LibreSSL 4.0.0
+
+Starting with LibreSSL 4.0.0 the OPENSSL_load_builtin_modules() function
+was removed. It is obsolete after automatic library initialization and
+now an internal API.
+---
+ pppd/eap-tls.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/pppd/eap-tls.c b/pppd/eap-tls.c
+index d70557ee7..4c0b99b33 100644
+--- a/pppd/eap-tls.c
++++ b/pppd/eap-tls.c
+@@ -171,7 +171,9 @@ CONF *eaptls_ssl_load_config( void )
+ #ifndef OPENSSL_NO_ENGINE
+     ENGINE_load_builtin_engines();
+ #endif
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER < 0x4000000fL)
+     OPENSSL_load_builtin_modules();
++#endif
+    
+     dbglog( "Loading OpenSSL configured modules" );
+     if (CONF_modules_load( config, NULL, 0 ) <= 0 )
