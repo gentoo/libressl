@@ -12,7 +12,7 @@ PATCHSET="pypy${PYVER}-gentoo-patches-${PV/_rc/rc}"
 
 DESCRIPTION="A fast, compliant alternative implementation of the Python (${PYVER}) language"
 HOMEPAGE="
-	https://www.pypy.org/
+	https://pypy.org/
 	https://github.com/pypy/pypy/
 "
 SRC_URI="
@@ -27,7 +27,7 @@ LICENSE="MIT"
 # also check pypy/interpreter/pycode.py -> pypy_incremental_magic
 SLOT="0/pypy310-pp73-384"
 KEYWORDS="amd64 ~arm64 ~ppc64 x86 ~amd64-linux ~x86-linux"
-IUSE="+ensurepip gdbm +jit ncurses sqlite tk"
+IUSE="+ensurepip gdbm +jit ncurses sqlite +test-install tk"
 # many tests are failing upstream
 # see https://buildbot.pypy.org/summary?branch=py${PYVER}
 RESTRICT="test"
@@ -55,7 +55,7 @@ DEPEND="
 src_prepare() {
 	local PATCHES=(
 		"${WORKDIR}/${PATCHSET}"
-		"${FILESDIR}"/${PN}-7.3.16-libressl.patch
+		"${FILESDIR}"/${PN}-7.3.17-libressl.patch
 	)
 
 	default
@@ -186,6 +186,11 @@ src_install() {
 	if ! use gdbm; then
 		rm -r "${ED}${dest}"/_gdbm* || die
 	fi
+	if ! use test-install; then
+		rm -r "${ED}${dest}"/{ctypes,sqlite3,tkinter,unittest}/test \
+			"${ED}${dest}"/{distutils,lib2to3}/tests \
+			"${ED}${dest}"/idlelib/idle_test || die
+	fi
 	if ! use sqlite; then
 		rm -r "${ED}${dest}"/sqlite3 \
 			"${ED}${dest}"/_sqlite3* \
@@ -195,6 +200,10 @@ src_install() {
 		rm -r "${ED}${dest}"/{idlelib,tkinter} \
 			"${ED}${dest}"/_tkinter \
 			"${ED}${dest}"/test/test_{tcl,tk,ttk*}.py || die
+	fi
+	# remove test last since we have some file removals above
+	if ! use test-install; then
+		rm -r "${ED}${dest}"/test || die
 	fi
 	dosym ../python/EXTERNALLY-MANAGED "${dest}/EXTERNALLY-MANAGED"
 
