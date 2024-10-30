@@ -11,7 +11,7 @@ PATCHSET="pypy2.7-gentoo-patches-${PV/_rc/rc}"
 
 DESCRIPTION="A fast, compliant alternative implementation of the Python language"
 HOMEPAGE="
-	https://www.pypy.org/
+	https://pypy.org/
 	https://github.com/pypy/pypy/
 "
 SRC_URI="
