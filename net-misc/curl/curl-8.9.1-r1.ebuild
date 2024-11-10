@@ -38,10 +38,8 @@ RESTRICT="!test? ( test )"
 # https://github.com/curl/curl/commit/65ece771f4602107d9cdd339dff4b420280a2c2e
 REQUIRED_USE="
 	quic? (
-		^^ (
-			curl_quic_openssl
-			curl_quic_ngtcp2
-		)
+		!curl_quic_openssl
+		curl_quic_ngtcp2
 		http3
 		ssl
 	)
