@@ -19,8 +19,7 @@ IOError: [Errno 9] Bad file descriptor
 
 https://gitlab.com/m2crypto/m2crypto/issues/211
 
-Index: src/M2Crypto/BIO.py
---- a/src/M2Crypto/BIO.py.orig
+--- a/src/M2Crypto/BIO.py
 +++ b/src/M2Crypto/BIO.py
 @@ -235,8 +235,9 @@ class File(BIO):
          #
@@ -56,12 +55,36 @@ Index: src/M2Crypto/BIO.py
          if self.close_pyfile:
              self.pyfile.close()
  
-$OpenBSD: patch-src_SWIG__lib11_compat_i,v 1.2 2021/10/07 22:32:54 tb Exp $
-
-Provide CRYPTO_zalloc to fix build with LibreSSL
-
-Index: src/SWIG/_lib11_compat.i
---- a/src/SWIG/_lib11_compat.i.orig
+--- a/src/SWIG/_bio.i
++++ b/src/SWIG/_bio.i
+@@ -307,8 +307,12 @@ int bio_should_write(BIO* a) {
+ }
+ 
+ /* Macros for things not defined before 1.1.0 */
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L
+-static BIO_METHOD *
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3050000fL)
++
++#if !defined(LIBRESSL_VERSION_NUMBER)
++static
++#endif
++BIO_METHOD *
+ BIO_meth_new( int type, const char *name )
+ {
+     BIO_METHOD *method = malloc( sizeof(BIO_METHOD) );
+@@ -320,7 +324,10 @@ BIO_meth_new( int type, const char *name )
+     return method;
+ }
+ 
+-static void
++#if !defined(LIBRESSL_VERSION_NUMBER)
++static
++#endif
++void
+ BIO_meth_free( BIO_METHOD *meth )
+ {
+     if ( meth == NULL ) {
+--- a/src/SWIG/_lib11_compat.i
 +++ b/src/SWIG/_lib11_compat.i
 @@ -8,7 +8,7 @@
   */
@@ -72,7 +95,7 @@ Index: src/SWIG/_lib11_compat.i
  
  #include <string.h>
  #include <openssl/engine.h>
-@@ -24,6 +24,8 @@ static void *CRYPTO_zalloc(size_t num, const char *fil
+@@ -24,6 +24,8 @@ static void *CRYPTO_zalloc(size_t num, const char *file, int line)
        return ret;
  }
  
@@ -81,12 +104,7 @@ Index: src/SWIG/_lib11_compat.i
  #include <openssl/bn.h>
  
  #ifndef BN_F_BN_GENCB_NEW
-$OpenBSD: patch-src_SWIG__threads_i,v 1.1 2021/07/24 20:02:04 sthen Exp $
-
-Fix build with LibreSSL
-
-Index: src/SWIG/_threads.i
---- a/src/SWIG/_threads.i.orig
+--- a/src/SWIG/_threads.i
 +++ b/src/SWIG/_threads.i
 @@ -5,7 +5,7 @@
  #include <pythread.h>
@@ -106,7 +124,7 @@ Index: src/SWIG/_threads.i
          if (mode & CRYPTO_LOCK) {
                  PyThread_acquire_lock(lock_cs[type], WAIT_LOCK);
                  lock_count[type]++;
-@@ -25,7 +25,7 @@ void threading_locking_callback(int mode, int type, co
+@@ -25,7 +25,7 @@ void threading_locking_callback(int mode, int type, const char *file, int line)
  }
  
  unsigned long threading_id_callback(void) {
@@ -133,37 +151,16 @@ Index: src/SWIG/_threads.i
      int i;
      if (thread_mode) {
          CRYPTO_set_locking_callback(NULL);
-$OpenBSD: patch-SWIG__bio_i,v 1.4 2018/04/25 16:51:05 jasper Exp $
-
-BIO_meth_new() and BIO_meth_free() are non-static in LibreSSL
-
-Index: SWIG/_bio.i
---- a/src/SWIG/_bio.i.orig
-+++ a/src/SWIG/_bio.i
-@@ -293,8 +293,12 @@ int bio_should_write(BIO* a) {
- }
+--- a/src/SWIG/_x509.i
++++ b/src/SWIG/_x509.i
+@@ -108,8 +108,10 @@ extern int X509_cmp_current_time(ASN1_TIME *);
  
- /* Macros for things not defined before 1.1.0 */
--#if OPENSSL_VERSION_NUMBER < 0x10100000L
--static BIO_METHOD *
-+#if OPENSSL_VERSION_NUMBER < 0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3050000fL)
-+
-+#if !defined(LIBRESSL_VERSION_NUMBER)
-+static
+ %rename(x509_check_purpose) X509_check_purpose;
+ extern int X509_check_purpose(X509 *, int, int);
++#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x4000000fL
+ %rename(x509_check_trust) X509_check_trust;
+ extern int X509_check_trust(X509 *, int, int);
 +#endif
-+BIO_METHOD *
- BIO_meth_new( int type, const char *name )
- {
-     BIO_METHOD *method = malloc( sizeof(BIO_METHOD) );
-@@ -306,7 +310,10 @@ BIO_meth_new( int type, const char *name )
-     return method;
- }
  
--static void
-+#if !defined(LIBRESSL_VERSION_NUMBER)
-+static
-+#endif
-+void
- BIO_meth_free( BIO_METHOD *meth )
- {
-     if ( meth == NULL ) {
+ %rename(x509_write_pem) PEM_write_bio_X509;
+ %threadallow PEM_write_bio_X509;

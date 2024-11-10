@@ -34,7 +34,7 @@ BDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-libressl-0.38.0.patch
+	"${FILESDIR}"/${PN}-libressl-0.42.0.patch
 )
 
 swig_define() {
