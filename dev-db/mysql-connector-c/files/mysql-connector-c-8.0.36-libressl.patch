@@ -1,0 +1,60 @@
+https://github.com/gentoo/libressl/issues/566
+
+--- a/include/dh_ecdh_config.h
++++ b/include/dh_ecdh_config.h
+@@ -38,7 +38,7 @@
+ #endif /* OPENSSL_VERSION_NUMBER < 0x10002000L */
+ 
+ namespace {
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L
++#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+ /* Following primes are from https://www.rfc-editor.org/rfc/rfc7919#appendix-A
+  */
+ 
+@@ -256,7 +256,7 @@ bool set_dh(SSL_CTX *ctx) {
+ #else /* OPENSSL_VERSION_NUMBER >= 0x30000000L */
+ 
+   DH *dh = nullptr;
+-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
++#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+   switch (security_level) {
+     case 1:
+       [[fallthrough]];
+@@ -276,6 +276,7 @@ bool set_dh(SSL_CTX *ctx) {
+       break;
+   };
+ #else  /* OPENSSL_VERSION_NUMBER >= 0x10100000L */
++  BIGNUM *p, *g;
+   dh = DH_new();
+   if (!dh) return true;
+ 
+@@ -283,15 +284,15 @@ bool set_dh(SSL_CTX *ctx) {
+     case 1:
+       [[fallthrough]];
+     case 2:
+-      dh->p =
++      p =
+           BN_bin2bn(rfc7919_ffdhe2048_p, sizeof(rfc7919_ffdhe2048_p), nullptr);
+       break;
+     case 3:
+-      dh->p =
++      p =
+           BN_bin2bn(rfc7919_ffdhe3072_p, sizeof(rfc7919_ffdhe3072_p), nullptr);
+       break;
+     case 4:
+-      dh->p =
++      p =
+           BN_bin2bn(rfc7919_ffdhe8192_p, sizeof(rfc7919_ffdhe8192_p), nullptr);
+       break;
+     case 5:
+@@ -302,8 +303,8 @@ bool set_dh(SSL_CTX *ctx) {
+       return true;
+   };
+ 
+-  dh->g = BN_bin2bn(rfc7919_g, sizeof(rfc7919_g), nullptr);
+-  if (!dh->p || !dh->g) {
++  g = BN_bin2bn(rfc7919_g, sizeof(rfc7919_g), nullptr);
++  if (!p || !g) {
+     DH_free(dh);
+     return true;
+   }
