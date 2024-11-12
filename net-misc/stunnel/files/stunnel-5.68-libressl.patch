@@ -124,6 +124,19 @@ index 6a42a6b..90d6273 100644
      OSSL_HANDSHAKE_STATE state=SSL_get_state(ssl);
  #else
      int state=SSL_get_state((SSL *)ssl);
+@@ -1622,8 +1622,11 @@ NOEXPORT void info_callback(const SSL *ssl, int where, int ret) {
+         if(state==TLS_ST_SR_CLNT_HELLO) {
+ #else
+         if(state==SSL3_ST_SR_CLNT_HELLO_A
+-                || state==SSL23_ST_SR_CLNT_HELLO_A) {
++#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x4000000fL
++                || state==SSL23_ST_SR_CLNT_HELLO_A
+ #endif
++#endif
++        ) {
+             /* client hello received after initial handshake,
+              * this means renegotiation -> mark it */
+             c->reneg_state=RENEG_DETECTED;
 diff --git a/src/prototypes.h b/src/prototypes.h
 index 0ecd719..1084ce2 100644
 --- a/src/prototypes.h

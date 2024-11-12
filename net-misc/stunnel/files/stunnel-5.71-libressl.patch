@@ -114,6 +114,19 @@ Rebased from an OpenBSD patch.
      OSSL_HANDSHAKE_STATE state=SSL_get_state(ssl);
  #else
      int state=SSL_get_state((SSL *)ssl);
+@@ -1622,8 +1622,11 @@ NOEXPORT void info_callback(const SSL *ssl, int where, int ret) {
+         if(state==TLS_ST_SR_CLNT_HELLO) {
+ #else
+         if(state==SSL3_ST_SR_CLNT_HELLO_A
+-                || state==SSL23_ST_SR_CLNT_HELLO_A) {
++#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x4000000fL
++                || state==SSL23_ST_SR_CLNT_HELLO_A
+ #endif
++#endif
++        ) {
+             /* client hello received after initial handshake,
+              * this means renegotiation -> mark it */
+             c->reneg_state=RENEG_DETECTED;
 --- a/src/ocsp.c
 +++ b/src/ocsp.c
 @@ -108,7 +108,7 @@ int ocsp_init(SERVICE_OPTIONS *section) {

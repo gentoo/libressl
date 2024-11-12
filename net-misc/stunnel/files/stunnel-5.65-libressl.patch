@@ -102,6 +102,18 @@ index a2202b7..a39ee4c 100644
          OSSL_HANDSHAKE_STATE state=SSL_get_state(ssl);
  #else
          int state=SSL_get_state((SSL *)ssl);
+@@ -1575,7 +1575,10 @@ NOEXPORT void info_callback(const SSL *ssl, int where, int ret) {
+             if(state==TLS_ST_SR_CLNT_HELLO) {
+ #else
+             if(state==SSL3_ST_SR_CLNT_HELLO_A
+-                    || state==SSL23_ST_SR_CLNT_HELLO_A) {
++#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x4000000fL
++                    || state==SSL23_ST_SR_CLNT_HELLO_A
++#endif
++            ) {
+ #endif
+                 /* client hello received after initial handshake,
+                  * this means renegotiation -> mark it */
 diff --git a/src/options.c b/src/options.c
 index 9ac9c7e..dfcf8b2 100644
 --- a/src/options.c
