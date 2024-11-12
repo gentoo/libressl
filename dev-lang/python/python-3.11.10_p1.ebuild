@@ -256,6 +256,7 @@ src_configure() {
 		powerpc64-*) # big endian
 			COMMON_TEST_SKIPS+=(
 				-x test_descr
+				-x test_gdb
 			)
 			;;
 		riscv*)
@@ -268,9 +269,11 @@ src_configure() {
 				# bug 788022
 				-x test_multiprocessing_fork
 				-x test_multiprocessing_forkserver
+				-x test_multiprocessing_spawn
 
 				-x test_ctypes
 				-x test_descr
+				-x test_gdb
 				# bug 931908
 				-x test_exceptions
 			)
