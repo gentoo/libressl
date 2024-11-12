@@ -1,0 +1,47 @@
+--- a/common/userpref.c
++++ b/common/userpref.c
+@@ -627,7 +627,9 @@ userpref_error_t pair_record_generate_keys_and_certs(plist_t pair_record, key_da
+ 		}
+ 	}
+ 
++#ifndef LIBRESSL_VERSION_NUMBER
+ 	X509V3_EXT_cleanup();
++#endif
+ 	X509_free(dev_cert);
+ 
+ 	EVP_PKEY_free(pubkey);
+From 9d74aed599b4bb5f6c2fce042ab9630acaebb159 Mon Sep 17 00:00:00 2001
+From: orbea <orbea@riseup.net>
+Date: Tue, 23 Apr 2024 09:24:56 -0700
+Subject: [PATCH] libsrp6a-sha512: disable BN_mod_exp_mont_word() with LibreSSL
+
+When building libimobiledevice with LibreSSL 3.9 it fails with an
+implicit declaration for BN_mod_exp_mont_word().
+
+This function was removed from the public symbols in LibreSSL because it
+is rarely used where "BN_mod_exp() and BN_mod_exp_mont() will use the
+word optimization when appropriate."
+
+Reference: https://github.com/libressl/portable/issues/1049
+Signed-off-by: orbea <orbea@riseup.net>
+---
+ 3rd_party/libsrp6a-sha512/t_math.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/3rd_party/libsrp6a-sha512/t_math.c b/3rd_party/libsrp6a-sha512/t_math.c
+index 037650ee1..dac19ecd9 100644
+--- a/3rd_party/libsrp6a-sha512/t_math.c
++++ b/3rd_party/libsrp6a-sha512/t_math.c
+@@ -720,7 +720,11 @@ BigIntegerModExp(BigInteger r, BigInteger b, BigInteger e, BigInteger m, BigInte
+   else if(a == NULL) {
+     BN_mod_exp(r, b, e, m, c);
+   }
+-#if OPENSSL_VERSION_NUMBER >= 0x00906000
++/*
++ * In LibreSSL BN_mod_exp_mont_word() is not a public symbol where BN_mod_exp()
++ * and BN_mod_exp_mont() will use the word optimization when appropriate.
++ */
++#if OPENSSL_VERSION_NUMBER >= 0x00906000 && !defined(LIBRESSL_VERSION_NUMBER)
+   else if(B > 0 && B < ULONG_MAX) {  /* 0.9.6 and above has mont_word optimization */
+     BN_mod_exp_mont_word(r, B, e, m, c, a);
+   }

@@ -39,7 +39,7 @@ BDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-1.3.0_p20240201-libressl.patch
+	"${FILESDIR}"/${PN}-1.3.0_p20240201_libressl.patch
 	"${FILESDIR}"/${PN}-1.3.0_p20240201_time_h.patch
 )
 
