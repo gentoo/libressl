@@ -1,0 +1,264 @@
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/crypto.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/crypto.py
+@@ -94,9 +94,7 @@ static const long Cryptography_HAS_LOCKING_CALLBACKS = 0;
+ #endif
+ 
+ #if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110
+-static const long Cryptography_HAS_OPENSSL_CLEANUP = 0;
+-
+-void (*OPENSSL_cleanup)(void) = NULL;
++static const long Cryptography_HAS_OPENSSL_CLEANUP = 1;
+ 
+ /* This function has a significantly different signature pre-1.1.0. since it is
+  * for testing only, we don't bother to expose it on older OpenSSLs.
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/ct.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/ct.py
+@@ -5,7 +5,7 @@
+ from __future__ import absolute_import, division, print_function
+ 
+ INCLUDES = """
+-#if CRYPTOGRAPHY_OPENSSL_110_OR_GREATER
++#if CRYPTOGRAPHY_OPENSSL_110_OR_GREATER || CRYPTOGRAPHY_IS_LIBRESSL
+ #include <openssl/ct.h>
+ 
+ typedef STACK_OF(SCT) Cryptography_STACK_OF_SCT;
+@@ -65,7 +65,7 @@ int SCT_set_log_entry_type(SCT *, ct_log_entry_type_t);
+ """
+ 
+ CUSTOMIZATIONS = """
+-#if CRYPTOGRAPHY_OPENSSL_110_OR_GREATER
++#if CRYPTOGRAPHY_OPENSSL_110_OR_GREATER || CRYPTOGRAPHY_IS_LIBRESSL
+ static const long Cryptography_HAS_SCT = 1;
+ #else
+ static const long Cryptography_HAS_SCT = 0;
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/dh.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/dh.py
+@@ -110,7 +110,7 @@ int DH_set0_key(DH *dh, BIGNUM *pub_key, BIGNUM *priv_key)
+ }
+ #endif
+ 
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110 && !CRYPTOGRAPHY_LIBRESSL_27_OR_GREATER
+ #ifndef DH_CHECK_Q_NOT_PRIME
+ #define DH_CHECK_Q_NOT_PRIME            0x10
+ #endif
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/engine.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/engine.py
+@@ -31,18 +31,22 @@ CUSTOMIZATIONS = """
+ #ifdef OPENSSL_NO_ENGINE
+ static const long Cryptography_HAS_ENGINE = 0;
+ 
++#ifndef CRYPTOGRAPHY_IS_LIBRESSL
+ ENGINE *(*ENGINE_by_id)(const char *) = NULL;
+ int (*ENGINE_init)(ENGINE *) = NULL;
+ int (*ENGINE_finish)(ENGINE *) = NULL;
++#endif
+ ENGINE *(*ENGINE_get_default_RAND)(void) = NULL;
+ int (*ENGINE_set_default_RAND)(ENGINE *) = NULL;
+ void (*ENGINE_unregister_RAND)(ENGINE *) = NULL;
++#ifndef CRYPTOGRAPHY_IS_LIBRESSL
+ int (*ENGINE_ctrl_cmd)(ENGINE *, const char *, long, void *,
+                        void (*)(void), int) = NULL;
+ 
+ int (*ENGINE_free)(ENGINE *) = NULL;
+ const char *(*ENGINE_get_id)(const ENGINE *) = NULL;
+ const char *(*ENGINE_get_name)(const ENGINE *) = NULL;
++#endif
+ 
+ #else
+ static const long Cryptography_HAS_ENGINE = 1;
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/err.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/err.py
+@@ -231,6 +231,11 @@ static const int ERR_LIB_OSSL_DECODER = -42;
+ static const int ERR_LIB_OSSL_ENCODER = -42;
+ static const int ERR_LIB_PROP = -42;
+ static const int ERR_LIB_PROV = -42;
++#ifdef CRYPTOGRAPHY_IS_LIBRESSL
++static const int ERR_LIB_ASYNC = -42;
++static const int ERR_LIB_OSSL_STORE = -42;
++static const int ERR_LIB_SM2 = -42;
++#endif
+ #endif
+ 
+ /* SSL_R_UNEXPECTED_EOF_WHILE_READING is needed for pyOpenSSL
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/evp.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/evp.py
+@@ -209,10 +209,11 @@ int (*EVP_PKEY_set1_tls_encodedpoint)(EVP_PKEY *, const unsigned char *,
+ #endif
+ 
+ #if CRYPTOGRAPHY_OPENSSL_LESS_THAN_111
+-static const long Cryptography_HAS_ONESHOT_EVP_DIGEST_SIGN_VERIFY = 0;
+-static const long Cryptography_HAS_RAW_KEY = 0;
+ static const long Cryptography_HAS_EVP_DIGESTFINAL_XOF = 0;
+ int (*EVP_DigestFinalXOF)(EVP_MD_CTX *, unsigned char *, size_t) = NULL;
++#if defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x3070000fL
++static const long Cryptography_HAS_RAW_KEY = 0;
++static const long Cryptography_HAS_ONESHOT_EVP_DIGEST_SIGN_VERIFY = 0;
+ int (*EVP_DigestSign)(EVP_MD_CTX *, unsigned char *, size_t *,
+                       const unsigned char *tbs, size_t) = NULL;
+ int (*EVP_DigestVerify)(EVP_MD_CTX *, const unsigned char *, size_t,
+@@ -228,6 +229,10 @@ int (*EVP_PKEY_get_raw_public_key)(const EVP_PKEY *, unsigned char *,
+ #else
+ static const long Cryptography_HAS_ONESHOT_EVP_DIGEST_SIGN_VERIFY = 1;
+ static const long Cryptography_HAS_RAW_KEY = 1;
++#endif
++#else
++static const long Cryptography_HAS_ONESHOT_EVP_DIGEST_SIGN_VERIFY = 1;
++static const long Cryptography_HAS_RAW_KEY = 1;
+ static const long Cryptography_HAS_EVP_DIGESTFINAL_XOF = 1;
+ #endif
+ 
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/ocsp.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/ocsp.py
+@@ -109,7 +109,7 @@ struct ocsp_basic_response_st {
+ };
+ #endif
+ 
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110 && LIBRESSL_VERSION_NUMBER < 0x3050000fL
+ /* These functions are all taken from ocsp_cl.c in OpenSSL 1.1.0 */
+ const OCSP_CERTID *OCSP_SINGLERESP_get0_id(const OCSP_SINGLERESP *single)
+ {
+@@ -148,7 +148,7 @@ const ASN1_OCTET_STRING *OCSP_resp_get0_signature(const OCSP_BASICRESP *bs)
+ }
+ #endif
+ 
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110J
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110J && LIBRESSL_VERSION_NUMBER < 0x3050000fL
+ const X509_ALGOR *OCSP_resp_get0_tbs_sigalg(const OCSP_BASICRESP *bs)
+ {
+ #if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/ssl.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/ssl.py
+@@ -152,11 +152,6 @@ static const long SSL3_RT_ALERT;
+ static const long SSL3_RT_HANDSHAKE;
+ static const long SSL3_RT_APPLICATION_DATA;
+ 
+-static const long SSL3_RT_HEADER;
+-static const long SSL3_RT_INNER_CONTENT_TYPE;
+-
+-static const long SSL3_MT_CHANGE_CIPHER_SPEC;
+-
+ typedef ... SSL_METHOD;
+ typedef ... SSL_CTX;
+ 
+@@ -593,13 +588,13 @@ void SSL_set_msg_callback(SSL *ssl,
+ """
+ 
+ CUSTOMIZATIONS = """
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_102
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_102 && !CRYPTOGRAPHY_IS_LIBRESSL
+ #error Python 3.7 requires OpenSSL >= 1.0.2
+ #endif
+ 
+ /* Added in 1.0.2 but we need it in all versions now due to the great
+    opaquing. */
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_102
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_102 && !CRYPTOGRAPHY_IS_LIBRESSL
+ /* from ssl/ssl_lib.c */
+ const SSL_METHOD *SSL_CTX_get_ssl_method(SSL_CTX *ctx) {
+     return ctx->method;
+@@ -726,7 +721,12 @@ static const long Cryptography_HAS_SET_CERT_CB = 0;
+ static const long Cryptography_HAS_SET_CERT_CB = 1;
+ #endif
+ 
++#if CRYPTOGRAPHY_IS_LIBRESSL && (LIBRESSL_VERSION_NUMBER >= 0x4000000fL)
++static const long Cryptography_HAS_COMPRESSION = 0;
++typedef void COMP_METHOD;
++#else
+ static const long Cryptography_HAS_COMPRESSION = 1;
++#endif
+ 
+ /* The setter functions were added in OpenSSL 1.1.0. The getter functions were
+    added in OpenSSL 1.1.1. */
+@@ -739,7 +739,7 @@ int (*SSL_CTX_get_max_proto_version)(SSL_CTX *ctx) = NULL;
+ int (*SSL_get_min_proto_version)(SSL *ssl) = NULL;
+ int (*SSL_get_max_proto_version)(SSL *ssl) = NULL;
+ #endif
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110 && !CRYPTOGRAPHY_IS_LIBRESSL
+ int (*SSL_CTX_set_min_proto_version)(SSL_CTX *ctx, int version) = NULL;
+ int (*SSL_CTX_set_max_proto_version)(SSL_CTX *ctx, int version) = NULL;
+ int (*SSL_set_min_proto_version)(SSL *ssl, int version) = NULL;
+@@ -788,8 +788,6 @@ const SSL_METHOD *(*DTLS_client_method)(void) = NULL;
+ static const long Cryptography_HAS_GENERIC_DTLS_METHOD = 1;
+ #endif
+ #if CRYPTOGRAPHY_OPENSSL_LESS_THAN_102
+-static const long SSL_OP_NO_DTLSv1 = 0;
+-static const long SSL_OP_NO_DTLSv1_2 = 0;
+ long (*DTLS_set_link_mtu)(SSL *, long) = NULL;
+ long (*DTLS_get_link_min_mtu)(SSL *) = NULL;
+ #endif
+@@ -895,7 +893,7 @@ static const long Cryptography_HAS_CIPHER_DETAILS = 0;
+ static const long Cryptography_HAS_CIPHER_DETAILS = 1;
+ #endif
+ 
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_111
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_111 && !CRYPTOGRAPHY_IS_LIBRESSL
+ static const long Cryptography_HAS_TLSv1_3 = 0;
+ static const long SSL_OP_NO_TLSv1_3 = 0;
+ static const long SSL_VERIFY_POST_HANDSHAKE = 0;
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509.py
+@@ -281,7 +281,7 @@ int X509_get_signature_nid(const X509 *x)
+ 
+ /* Added in 1.0.2 but we need it in all versions now due to the great
+    opaquing. */
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_102
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_102 && !defined(LIBRESSL_VERSION_NUMBER)
+ /* from x509/x_x509.c */
+ int i2d_re_X509_tbs(X509 *x, unsigned char **pp)
+ {
+@@ -307,7 +307,7 @@ X509_REVOKED *Cryptography_X509_REVOKED_dup(X509_REVOKED *rev) {
+ 
+ /* Added in 1.1.0 but we need it in all versions now due to the great
+    opaquing. */
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_110 && !defined(LIBRESSL_VERSION_NUMBER)
+ int i2d_re_X509_REQ_tbs(X509_REQ *req, unsigned char **pp)
+ {
+     req->req_info->enc.modified = 1;
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509_vfy.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509_vfy.py
+@@ -347,7 +347,7 @@ void (*X509_STORE_set_get_issuer)(X509_STORE *,
+ static const long Cryptography_HAS_X509_STORE_CTX_GET_ISSUER = 1;
+ #endif
+ 
+-#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_330
++#if CRYPTOGRAPHY_OPENSSL_LESS_THAN_330 && !CRYPTOGRAPHY_IS_LIBRESSL
+ static X509_OBJECT *x509_object_dup(const X509_OBJECT *obj)
+ {
+     int ok;
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509name.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509name.py
+@@ -75,7 +75,7 @@ Cryptography_STACK_OF_X509_NAME_ENTRY *sk_X509_NAME_ENTRY_dup(
+ """
+ 
+ CUSTOMIZATIONS = """
+-#if CRYPTOGRAPHY_OPENSSL_110_OR_GREATER
++#if CRYPTOGRAPHY_OPENSSL_110_OR_GREATER || defined(LIBRESSL_VERSION_NUMBER)
+ int Cryptography_X509_NAME_ENTRY_set(X509_NAME_ENTRY *ne) {
+     return X509_NAME_ENTRY_set(ne);
+ }
+--- a/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509v3.py
++++ b/lib_pypy/_cffi_ssl/_cffi_src/openssl/x509v3.py
+@@ -320,4 +320,7 @@ void AUTHORITY_INFO_ACCESS_free(AUTHORITY_INFO_ACCESS *);
+ """
+ 
+ CUSTOMIZATIONS = """
++#ifdef CRYPTOGRAPHY_IS_LIBRESSL
++int (*X509V3_EXT_add_alias)(int, int) = NULL;
++#endif
+ """
+--- a/lib_pypy/cffi/recompiler.py
++++ b/lib_pypy/cffi/recompiler.py
+@@ -890,9 +890,6 @@ class Recompiler:
+                        and (ftype.length is None or ftype.length == '...')):
+                     ftype = ftype.item
+                     fname = fname + '[0]'
+-                prnt('  { %s = &p->%s; (void)tmp; }' % (
+-                    ftype.get_c_name('*tmp', 'field %r'%fname, quals=fqual),
+-                    fname))
+             except VerificationError as e:
+                 prnt('  /* %s */' % str(e))   # cannot verify it, ignore
+         prnt('}')
