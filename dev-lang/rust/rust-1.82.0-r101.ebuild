@@ -20,7 +20,7 @@ if [[ ${PV} = *beta* ]]; then
 else
 	MY_P="rustc-${PV}"
 	SRC="${MY_P}-src.tar.xz"
-	KEYWORDS="~amd64 ~arm ~arm64 ~loong ~mips ~ppc ~ppc64 ~riscv ~sparc ~x86"
+	KEYWORDS="amd64 arm arm64 ~loong ~mips ppc ppc64 ~riscv sparc x86"
 fi
 
 DESCRIPTION="Systems programming language from Mozilla"
@@ -132,9 +132,10 @@ VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/rust.asc
 
 PATCHES=(
 	"${FILESDIR}"/1.78.0-musl-dynamic-linking.patch
-	"${FILESDIR}"/1.83.0-cross-compile-libz.patch
+	"${FILESDIR}"/1.74.1-cross-compile-libz.patch
 	#"${FILESDIR}"/1.72.0-bump-libc-deps-to-0.2.146.patch  # pending refresh
 	"${FILESDIR}"/1.67.0-doc-wasm.patch
+	"${FILESDIR}"/1.82.0-dwarf-llvm-assertion.patch
 )
 
 clear_vendor_checksums() {
@@ -223,10 +224,8 @@ pkg_setup() {
 }
 
 src_prepare() {
-	eapply_crate openssl-sys-0.9.72 "${FILESDIR}"/1.83.0-libressl-openssl-sys-0.9.72.patch
 	eapply_crate openssl-sys-0.9.92 "${FILESDIR}"/1.72.0-libressl-openssl-sys.patch
 	eapply_crate openssl-sys-0.9.102 "${FILESDIR}"/1.79.0-libressl-openssl-sys.patch
-	eapply_crate openssl-sys-0.9.103 "${FILESDIR}"/1.79.0-libressl-openssl-sys.patch
 
 	# Rust baselines to Pentium4 on x86, this patch lowers the baseline to i586 when sse2 is not set.
 	if use x86; then
@@ -703,20 +702,43 @@ pkg_preinst() {
 
 pkg_postinst() {
 
-	if has_version -b "dev-lang/rust:stable/$(ver_cut 1-2)"; then
+	local old_rust="dev-lang/rust:stable/$(ver_cut 1-2)"
+	if has_version -b ${old_rust}; then
 		# Be _extra_ careful here as we're removing files from the live filesystem
 		local f
+		local only_one_file=()
+		einfo "Tidying up libraries files from non-slotted \`${old_rust}\`."
 		for f in "${old_rust_libs[@]}"; do
 			[[ -f ${f} ]] || die "old_rust_libs array contains non-existent file"
 			local base_name="${f%-*}"
 			local ext="${f##*.}"
 			local matching_files=("${base_name}"-*.${ext})
-			if [[ ${#matching_files[@]} -ne 2 ]]; then
-				die "Expected exactly two files matching ${base_name}-\*.rlib, but found ${#matching_files[@]}"
-			fi
-			einfo "Removing old .rlib file ${f}"
-			rm "${f}" || die
+			case ${#matching_files[@]} in
+				2)
+					einfo "Removing old .${ext}: ${f}"
+					rm "${f}" || die
+					;;
+				1)
+					# Turns out fingerprints are not as unique as we'd thought, _sometimes_ they collide,
+					# so we may have already installed over the old file.
+					# We'll warn about this just in case, but it's probably fine.
+					only_one_file+=( "${matching_files[0]}" )
+					;;
+				*)
+					die "Expected one or two files matching ${base_name}-\*.rlib, but found ${#matching_files[@]}"
+					;;
+			esac
 		done
+		if [[ ${#only_one_file} -gt 0 ]]; then
+			einfo "While tidying up non-slotted rust libraries for \`${old_rust}\`,"
+			einfo "the following file(s) did not have a duplicate where one was expected:"
+			for f in "${only_one_file[@]}"; do
+				einfo "	* ${f}"
+			done
+			einfo ""
+			einfo "This is unlikely to cause problems; the fingerprint for the library ended up being the same."
+			einfo "However, if you encounter any issues please report them to the Gentoo Rust Team."
+		fi
 	fi
 
 	eselect rust update
@@ -726,13 +748,8 @@ pkg_postinst() {
 		elog "for convenience they are installed under /usr/bin/rust-{gdb,lldb}-${PV}."
 	fi
 
-	if has_version app-editors/emacs; then
-		optfeature "emacs support for rust" app-emacs/rust-mode
-	fi
-
-	if has_version app-editors/gvim || has_version app-editors/vim; then
-		optfeature "vim support for rust" app-vim/rust-vim
-	fi
+	optfeature "Emacs support" "app-emacs/rust-mode"
+	optfeature "Vim support" "app-vim/rust-vim"
 }
 
 pkg_postrm() {
