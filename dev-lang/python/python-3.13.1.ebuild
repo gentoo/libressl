@@ -379,6 +379,11 @@ src_configure() {
 
 			# Fails in profiling run, passes in src_test().
 			-x test_capi
+
+			# Fails with LibreSSL
+			# https://github.com/libressl/portable/issues/1133
+			-x test_hashlib
+			-x test_ssl
 		)
 
 		# Arch-specific skips.  See #931888 for a collection of these.

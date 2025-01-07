@@ -325,6 +325,11 @@ src_configure() {
 			# Hangs (actually runs indefinitely executing itself w/ many cpython builds)
 			# bug #900429
 			-x test_tools
+
+			# Fails with LibreSSL
+			# https://github.com/libressl/portable/issues/1133
+			-x test_hashlib
+			-x test_ssl
 		)
 
 		# Arch-specific skips.  See #931888 for a collection of these.
