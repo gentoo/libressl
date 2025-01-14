@@ -1,0 +1,19 @@
+https://github.com/openbsd/ports/blob/def9b91f126f8a28562549593c6b5c17d41692ca/www/py-aioquic/patches/patch-src_aioquic__crypto_c
+
+Index: src/aioquic/_crypto.c
+--- a/src/aioquic/_crypto.c.orig
++++ b/src/aioquic/_crypto.c
+@@ -407,10 +407,13 @@ PyInit__crypto(void)
+     PyModule_AddObject(m, "HeaderProtection", HeaderProtectionType);
+ 
+     // ensure required ciphers are initialised
++    // LibreSSL loads all cipher by default, and doesn't support add_cipher
++#ifndef LIBRESSL_VERSION_NUMBER
+     EVP_add_cipher(EVP_aes_128_ecb());
+     EVP_add_cipher(EVP_aes_128_gcm());
+     EVP_add_cipher(EVP_aes_256_ecb());
+     EVP_add_cipher(EVP_aes_256_gcm());
++#endif
+ 
+     return m;
+ }
