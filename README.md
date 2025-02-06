@@ -39,7 +39,7 @@ following contents:
 ```
 net-libs/ngtcp2 -openssl
 ```
-See LibreSSL issue [#1114](https://github.com/libressl/portable/issues/1114) for rationale.
+See LibreSSL issue https://github.com/libressl/portable/issues/1114 for rationale.
 
 ## links
 
