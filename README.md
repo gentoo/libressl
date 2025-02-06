@@ -31,6 +31,16 @@ the LibreSSL package and then remove the OpenSSL package before installing
 # emerge @preserved-rebuild
 ```
 
+The `net-misc/curl` package when built with the `quic` USE flag requires
+`net-libs/ngtcp2` to be built with the `openssl` USE flag, but this is
+masked in the Gentoo repo so it must be unmasked by editing or creating
+the `/etc/portage/profile/package.use.mask/net-libs` file with the
+following contents:
+```
+net-libs/ngtcp2 -openssl
+```
+See LibreSSL issue [#1114](https://github.com/libressl/portable/issues/1114) for rationale.
+
 ## links
 
 [Gentoo bug report](https://bugs.gentoo.org/show_bug.cgi?id=508750)
