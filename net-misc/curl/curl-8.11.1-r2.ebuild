@@ -29,7 +29,7 @@ SLOT="0"
 IUSE="+adns +alt-svc brotli debug +ftp gnutls gopher +hsts +http2 +http3 idn +imap kerberos ldap mbedtls +openssl +pop3"
 IUSE+=" +psl +progress-meter +quic rtmp rustls samba +smtp ssh ssl sslv3 static-libs test telnet +tftp +websockets zstd"
 # These select the default tls implementation / which quic impl to use
-IUSE+=" +curl_quic_openssl curl_quic_ngtcp2 curl_ssl_gnutls curl_ssl_mbedtls +curl_ssl_openssl curl_ssl_rustls"
+IUSE+=" curl_quic_openssl +curl_quic_ngtcp2 curl_ssl_gnutls curl_ssl_mbedtls +curl_ssl_openssl curl_ssl_rustls"
 RESTRICT="!test? ( test )"
 
 # Only one default ssl / quic provider can be enabled
@@ -90,7 +90,7 @@ RDEPEND="
 	psl? ( net-libs/libpsl[${MULTILIB_USEDEP}] )
 	quic? (
 		curl_quic_openssl? ( >=dev-libs/openssl-3.3.0:=[quic,${MULTILIB_USEDEP}] )
-		curl_quic_ngtcp2? ( >=net-libs/ngtcp2-1.2.0[ssl,${MULTILIB_USEDEP}] )
+		curl_quic_ngtcp2? ( >=net-libs/ngtcp2-1.2.0[-gnutls,ssl,openssl,${MULTILIB_USEDEP}] )
 	)
 	rtmp? ( media-video/rtmpdump[${MULTILIB_USEDEP}] )
 	ssh? ( >=net-libs/libssh2-1.0.0[${MULTILIB_USEDEP}] )
