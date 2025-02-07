@@ -90,7 +90,7 @@ RDEPEND="
 	psl? ( net-libs/libpsl[${MULTILIB_USEDEP}] )
 	quic? (
 		curl_quic_openssl? ( >=dev-libs/openssl-3.3.0:=[quic,${MULTILIB_USEDEP}] )
-		curl_quic_ngtcp2? ( >=net-libs/ngtcp2-1.2.0[-gnutls,ssl,openssl,${MULTILIB_USEDEP}] )
+		curl_quic_ngtcp2? ( >=net-libs/ngtcp2-1.2.0[ssl,openssl,${MULTILIB_USEDEP}] )
 	)
 	rtmp? ( media-video/rtmpdump[${MULTILIB_USEDEP}] )
 	ssh? ( >=net-libs/libssh2-1.0.0[${MULTILIB_USEDEP}] )
