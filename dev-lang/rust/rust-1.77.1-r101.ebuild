@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -23,7 +23,7 @@ else
 	KEYWORDS="amd64 arm arm64 ~loong ppc ppc64 ~riscv sparc x86"
 fi
 
-DESCRIPTION="Language empowering everyone to build reliable and efficient software"
+DESCRIPTION="Systems programming language from Mozilla"
 HOMEPAGE="https://www.rust-lang.org/"
 
 SRC_URI="
@@ -44,7 +44,7 @@ ALL_LLVM_EXPERIMENTAL_TARGETS=( ARC CSKY DirectX M68k SPIRV Xtensa )
 LICENSE="|| ( MIT Apache-2.0 ) BSD BSD-1 BSD-2 BSD-4"
 SLOT="${PV}"
 
-IUSE="big-endian clippy cpu_flags_x86_sse2 debug dist doc llvm-libunwind +lto miri nightly parallel-compiler rustfmt rust-analyzer rust-src system-llvm test wasm ${ALL_LLVM_TARGETS[*]}"
+IUSE="big-endian clippy cpu_flags_x86_sse2 debug dist doc llvm-libunwind lto miri nightly parallel-compiler rustfmt rust-analyzer rust-src system-llvm test wasm ${ALL_LLVM_TARGETS[*]}"
 
 LLVM_DEPEND=()
 # splitting usedeps needed to avoid CI/pkgcheck's UncheckableDep limitation
@@ -138,9 +138,7 @@ PATCHES=(
 	#"${FILESDIR}"/1.72.0-bump-libc-deps-to-0.2.146.patch  # pending refresh
 	"${FILESDIR}"/1.70.0-ignore-broken-and-non-applicable-tests.patch
 	"${FILESDIR}"/1.67.0-doc-wasm.patch
-	# This patch shouldn't be necessary for later versions of Rust because its
-	# code was backported from master.
-	"${FILESDIR}"/1.75.0-handle-vendored-sources.patch
+	"${FILESDIR}"/1.76.0-loong-code-model.patch  # remove for >=1.78.0
 )
 
 clear_vendor_checksums() {
@@ -229,7 +227,8 @@ pkg_setup() {
 }
 
 src_prepare() {
-	eapply_crate openssl-sys "${FILESDIR}"/1.72.0-libressl-openssl-sys.patch
+	eapply_crate openssl-sys-0.9.92 "${FILESDIR}"/1.72.0-libressl-openssl-sys.patch
+	eapply_crate openssl-sys "${FILESDIR}"/1.77.1-libressl-openssl-sys.patch
 	default
 }
 
@@ -264,7 +263,7 @@ src_configure() {
 	use clippy && tools+=',"clippy"'
 	use miri && tools+=',"miri"'
 	use rustfmt && tools+=',"rustfmt"'
-	use rust-analyzer && tools+=',"rust-analyzer"'
+	use rust-analyzer && tools+=',"rust-analyzer","rust-analyzer-proc-macro-srv"'
 	use rust-src && tools+=',"src"'
 
 	local rust_stage0_root="$(${RUSTC} --print sysroot || die "Can't determine rust's sysroot")"
@@ -374,7 +373,7 @@ src_configure() {
 		parallel-compiler = $(toml_usex parallel-compiler)
 		channel = "$(usex nightly nightly stable)"
 		description = "gentoo"
-		rpath = false
+		rpath = true
 		verbose-tests = true
 		optimize-tests = $(toml_usex !debug)
 		codegen-tests = true
@@ -387,7 +386,8 @@ src_configure() {
 		deny-warnings = $(usex wasm $(usex doc false true) true)
 		backtrace-on-ice = true
 		jemalloc = false
-		lto = "$(usex lto fat off)"
+		# See https://github.com/rust-lang/rust/issues/121124
+		lto = "$(usex lto thin off)"
 		[dist]
 		src-tarball = false
 		compression-formats = ["xz"]
@@ -631,7 +631,6 @@ src_install() {
 	dosym "../../lib/${PN}/${PV}/share/doc/rust" "/usr/share/doc/${P}"
 
 	newenvd - "50${P}" <<-_EOF_
-		LDPATH="${EPREFIX}/usr/lib/rust/lib-${PV}"
 		MANPATH="${EPREFIX}/usr/lib/rust/man-${PV}"
 	_EOF_
 

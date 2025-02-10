@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -228,7 +228,7 @@ pkg_setup() {
 
 src_prepare() {
 	eapply_crate openssl-sys-0.9.92 "${FILESDIR}"/1.72.0-libressl-openssl-sys.patch
-	eapply_crate openssl-sys "${FILESDIR}"/1.77.1-libressl-openssl-sys.patch
+	eapply_crate openssl-sys-0.9.102 "${FILESDIR}"/1.79.0-libressl-openssl-sys.patch
 	default
 }
 
@@ -372,7 +372,7 @@ src_configure() {
 		parallel-compiler = $(toml_usex parallel-compiler)
 		channel = "$(usex nightly nightly stable)"
 		description = "gentoo"
-		rpath = false
+		rpath = true
 		verbose-tests = true
 		optimize-tests = $(toml_usex !debug)
 		codegen-tests = true
@@ -633,7 +633,6 @@ src_install() {
 	dosym "../../lib/${PN}/${PV}/share/doc/rust" "/usr/share/doc/${P}"
 
 	newenvd - "50${P}" <<-_EOF_
-		LDPATH="${EPREFIX}/usr/lib/rust/lib-${PV}"
 		MANPATH="${EPREFIX}/usr/lib/rust/man-${PV}"
 	_EOF_
 
