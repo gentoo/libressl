@@ -110,7 +110,6 @@ src_prepare() {
 	popd > /dev/null || die
 
 	default
-	default
 
 	sed -i -e 's:--benchmark-disable::' pyproject.toml || die
 
