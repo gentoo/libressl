@@ -146,11 +146,10 @@ PATCHES=(
 )
 
 eapply_crate() {
-	pushd "${1:?}" > /dev/null || die
-	local patch="${2:?}"
-	eapply "${patch}"
-	"${EPREFIX}"/bin/sh "${FILESDIR}"/rehash-crate.sh "${patch}" || die
+	pushd "vendor/${1:?}" > /dev/null || die
+	eapply "${2:?}"
 	popd > /dev/null || die
+	sed -i 's/\("files":{\)[^}]*/\1/' "vendor/${1}/.cargo-checksum.json" || die
 }
 
 toml_usex() {
@@ -222,8 +221,8 @@ pkg_setup() {
 }
 
 src_prepare() {
-	eapply_crate vendor/openssl-sys-0.9.85 "${FILESDIR}"/1.71.0-libressl-openssl-sys.patch
-	eapply_crate vendor/openssl-sys "${FILESDIR}"/1.71.0-libressl-openssl-sys.patch
+	eapply_crate openssl-sys-0.9.85 "${FILESDIR}"/1.71.0-libressl-openssl-sys.patch
+	eapply_crate openssl-sys "${FILESDIR}"/1.71.0-libressl-openssl-sys.patch
 	default
 }
 
