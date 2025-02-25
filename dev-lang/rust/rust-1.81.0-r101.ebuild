@@ -40,8 +40,7 @@ ALL_LLVM_TARGETS=( AArch64 AMDGPU ARC ARM AVR BPF CSKY DirectX Hexagon Lanai
 ALL_LLVM_TARGETS=( "${ALL_LLVM_TARGETS[@]/#/llvm_targets_}" )
 LLVM_TARGET_USEDEPS=${ALL_LLVM_TARGETS[@]/%/(-)?}
 
-_ALL_LLVM_EXPERIMENTAL_TARGETS=( ARC CSKY DirectX M68k SPIRV Xtensa )
-ALL_LLVM_EXPERIMENTAL_TARGETS=( )
+ALL_LLVM_EXPERIMENTAL_TARGETS=( ARC CSKY DirectX M68k SPIRV Xtensa )
 
 LICENSE="|| ( MIT Apache-2.0 ) BSD BSD-1 BSD-2 BSD-4"
 SLOT="${PV}"
@@ -52,12 +51,6 @@ LLVM_DEPEND=()
 # splitting usedeps needed to avoid CI/pkgcheck's UncheckableDep limitation
 for _x in "${ALL_LLVM_TARGETS[@]}"; do
 	LLVM_DEPEND+=( "	${_x}? ( $(llvm_gen_dep "llvm-core/llvm:\${LLVM_SLOT}[${_x}]") )" )
-	for _xx in "${_ALL_LLVM_EXPERIMENTAL_TARGETS[@]}"; do
-		if [[ "${_xx}" == "${_x}" ]] ; then
-			ALL_LLVM_EXPERIMENTAL_TARGETS+=( ${_x} )
-			break
-		fi
-	done
 done
 LLVM_DEPEND+=( "	wasm? ( $(llvm_gen_dep 'llvm-core/lld:${LLVM_SLOT}') )" )
 LLVM_DEPEND+=( "	$(llvm_gen_dep 'llvm-core/llvm:${LLVM_SLOT}')" )
@@ -65,7 +58,7 @@ LLVM_DEPEND+=( "	$(llvm_gen_dep 'llvm-core/llvm:${LLVM_SLOT}')" )
 BDEPEND="${PYTHON_DEPS}
 	app-eselect/eselect-rust
 	|| (
-		>=sys-devel/gcc-4.7[cxx]
+		>=sys-devel/gcc-4.7
 		>=llvm-core/clang-3.5
 	)
 	!system-llvm? (
