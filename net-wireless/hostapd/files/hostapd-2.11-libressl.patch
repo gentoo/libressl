@@ -1,0 +1,24 @@
+--- a/src/crypto/tls_openssl.c
++++ b/src/crypto/tls_openssl.c
+@@ -3203,6 +3203,7 @@ static int tls_set_conn_flags(struct tls_connection *conn, unsigned int flags,
+ 	/* Start with defaults from BoringSSL */
+ 	SSL_CTX_set_verify_algorithm_prefs(conn->ssl_ctx, NULL, 0);
+ #endif /* OPENSSL_IS_BORINGSSL */
++#ifndef LIBRESSL_VERSION_NUMBER
+ 	if (flags & TLS_CONN_SUITEB_NO_ECDH) {
+ 		const char *ciphers = "DHE-RSA-AES256-GCM-SHA384";
+ 
+@@ -3298,6 +3299,13 @@ static int tls_set_conn_flags(struct tls_connection *conn, unsigned int flags,
+ 		SSL_set_options(ssl, SSL_OP_NO_TLSv1_1);
+ 		SSL_set_cert_cb(ssl, suiteb_cert_cb, conn);
+ 	}
++#else /* LIBRESSL_VERSION_NUMBER */
++	if (flags & (TLS_CONN_SUITEB | TLS_CONN_SUITEB_NO_ECDH)) {
++		wpa_printf(MSG_ERROR,
++			"OpenSSL: Suite B RSA case not supported with this OpenSSL version");
++		return -1;
++	}
++#endif /* LIBRESSL_VERSION_NUMBER */
+ 
+ #ifdef OPENSSL_IS_BORINGSSL
+ 	if (openssl_ciphers && os_strcmp(openssl_ciphers, "SUITEB192") == 0) {
