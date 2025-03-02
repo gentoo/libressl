@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -17,31 +17,30 @@ IUSE="minimal examples"
 
 RDEPEND="
 	dev-libs/openssl:=
-	virtual/perl-MIME-Base64
 "
 DEPEND="${RDEPEND}"
 BDEPEND="
 	${RDEPEND}
-	virtual/perl-ExtUtils-MakeMaker
-	virtual/perl-File-Spec
 	test? (
 		!minimal? (
 			dev-perl/Test-Exception
 			dev-perl/Test-Warn
 			dev-perl/Test-NoWarnings
 		)
-		virtual/perl-Test-Simple
 	)
 "
 
 PATCHES=(
 	"${FILESDIR}/${PN}-1.88-fix-network-tests.patch"
 	"${FILESDIR}/${PN}-1.940.0-avoid-runtime-check.patch"
+	"${FILESDIR}/${PN}-1.940.0-openssl-3.4-tests.patch"
+	"${FILESDIR}/${PN}-1.940.0-openssl-3.4-tests-more.patch"
 	"${FILESDIR}/${PN}-1.94-libressl.patch" #903001
 )
 
 PERL_RM_FILES=(
 	# Author tests
+	# https://github.com/radiator-software/p5-net-ssleay/pull/393
 	't/local/01_pod.t'
 	't/local/02_pod_coverage.t'
 	't/local/kwalitee.t'
