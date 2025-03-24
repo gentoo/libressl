@@ -1,0 +1,128 @@
+https://github.com/gentoo/libressl/issues/581
+https://github.com/openbsd/ports/commit/d34065ee251e858e620b2d5c6d4e4af926b13804#diff-9a7f97ecb58b66a9b0e20f0b427a653844409c229d66940e154a3845a90f7943
+https://github.com/openbsd/ports/commit/d34065ee251e858e620b2d5c6d4e4af926b13804#diff-39e1b332d3557a0d3dfeed7fd3bb6cbd7ceea1eaf41959a0bd746ebd52dbc39e
+
+LibreSSL doesn't provide OSSL_PARAM*
+
+Index: util-src/crypto.c
+--- a/util-src/crypto.c.orig
++++ b/util-src/crypto.c
+@@ -27,9 +27,18 @@ typedef unsigned __int32 uint32_t;
+ #include <openssl/err.h>
+ #include <openssl/evp.h>
+ #include <openssl/obj_mac.h>
+-#include <openssl/param_build.h>
+ #include <openssl/pem.h>
+ 
++#include <openssl/opensslv.h>
++#if OPENSSL_VERSION_NUMBER >= 0x30000000
++#define HAVE_OSSL_PARAM
++#endif
++
++#ifdef HAVE_OSSL_PARAM
++#include <openssl/param_build.h>
++#endif
++
++
+ #if (LUA_VERSION_NUM == 501)
+ #define luaL_setfuncs(L, R, N) luaL_register(L, NULL, R)
+ #endif
+@@ -199,6 +208,7 @@ cleanup:
+ }
+ 
+ static int Lpkey_meth_public_raw(lua_State *L) {
++#ifdef HAVE_OSSL_PARAM
+ 	OSSL_PARAM *params;
+ 	EVP_PKEY *pkey = pkey_from_arg(L, 1, 0, 0);
+ 
+@@ -218,6 +228,12 @@ static int Lpkey_meth_public_raw(lua_State *L) {
+ 	}
+ 
+ 	return 1;
++#else
++	EVP_PKEY *pkey = pkey_from_arg(L, 1, 0, 0);
++	lua_pushnil(L);
++
++	return 1;
++#endif
+ }
+ 
+ static int Lpkey_meth_public_pem(lua_State *L) {
+@@ -334,6 +350,7 @@ static int Limport_private_pem(lua_State *L) {
+ }
+ 
+ static int Limport_public_ec_raw(lua_State *L) {
++#ifdef HAVE_OSSL_PARAM
+ 	OSSL_PARAM_BLD *param_bld = NULL;
+ 	OSSL_PARAM *params = NULL;
+ 	EVP_PKEY_CTX *ctx = NULL;
+@@ -367,6 +384,15 @@ err:
+ 	if (param_bld) OSSL_PARAM_BLD_free(param_bld);
+ 	lua_pushnil(L);
+ 	return 1;
++#else
++	size_t pubkey_bytes;
++	const char* pubkey_data = luaL_checklstring(L, 1, &pubkey_bytes);
++	const char* curve = luaL_checkstring(L, 2);
++
++	lua_pushnil(L);
++
++	return 1;
++#endif
+ }
+ 
+ static int Limport_public_pem(lua_State *L) {
+LibreSSL doesn't implement blake2.
+
+Index: util-src/hashes.c
+--- a/util-src/hashes.c.orig
++++ b/util-src/hashes.c
+@@ -115,14 +115,6 @@ static int Lmd5(lua_State *L) {
+ 	return Levp_hash(L, EVP_md5());
+ }
+ 
+-static int Lblake2s256(lua_State *L) {
+-	return Levp_hash(L, EVP_blake2s256());
+-}
+-
+-static int Lblake2b512(lua_State *L) {
+-	return Levp_hash(L, EVP_blake2b512());
+-}
+-
+ static int Lsha3_256(lua_State *L) {
+ 	return Levp_hash(L, EVP_sha3_256());
+ }
+@@ -188,15 +180,7 @@ static int Lhmac_sha3_512(lua_State *L) {
+ 	return Levp_hmac(L, EVP_sha3_512());
+ }
+ 
+-static int Lhmac_blake2s256(lua_State *L) {
+-	return Levp_hmac(L, EVP_blake2s256());
+-}
+ 
+-static int Lhmac_blake2b512(lua_State *L) {
+-	return Levp_hmac(L, EVP_blake2b512());
+-}
+-
+-
+ static int Levp_pbkdf2(lua_State *L, const EVP_MD *evp, size_t out_len) {
+ 	unsigned char out[EVP_MAX_MD_SIZE];
+ 
+@@ -292,8 +276,6 @@ static const luaL_Reg Reg[] = {
+ 	{ "md5",		Lmd5		},
+ 	{ "sha3_256",		Lsha3_256	},
+ 	{ "sha3_512",		Lsha3_512	},
+-	{ "blake2s256",		Lblake2s256	},
+-	{ "blake2b512",		Lblake2b512	},
+ 	{ "hmac_sha1",		Lhmac_sha1	},
+ 	{ "hmac_sha224",	Lhmac_sha224	},
+ 	{ "hmac_sha256",	Lhmac_sha256	},
+@@ -302,8 +284,6 @@ static const luaL_Reg Reg[] = {
+ 	{ "hmac_md5",		Lhmac_md5	},
+ 	{ "hmac_sha3_256",	Lhmac_sha3_256	},
+ 	{ "hmac_sha3_512",	Lhmac_sha3_512	},
+-	{ "hmac_blake2s256",	Lhmac_blake2s256	},
+-	{ "hmac_blake2b512",	Lhmac_blake2b512	},
+ 	{ "scram_Hi_sha1",	Lpbkdf2_sha1	}, /* COMPAT */
+ 	{ "pbkdf2_hmac_sha1",	Lpbkdf2_sha1	},
+ 	{ "pbkdf2_hmac_sha256",	Lpbkdf2_sha256	},
