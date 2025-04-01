@@ -1,4 +1,4 @@
-# Copyright 1999-2024 Gentoo Authors
+# Copyright 1999-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -11,7 +11,7 @@ SRC_URI="mirror://kde/stable/${PN}/${PV}/${P}.tar.xz"
 
 LICENSE="LGPL-2.1"
 SLOT="2"
-KEYWORDS="amd64 ~arm arm64 ~hppa ~loong ~ppc ppc64 ~riscv ~sparc x86 ~amd64-linux ~x86-linux ~ppc-macos"
+KEYWORDS="amd64 ~arm arm64 ~loong ppc64 ~riscv ~x86 ~amd64-linux ~x86-linux"
 IUSE="botan debug doc examples gcrypt gpg logger nss pkcs11 qt5 +qt6 sasl softstore +ssl test"
 REQUIRED_USE="|| ( qt5 qt6 )"
 
@@ -26,7 +26,7 @@ RDEPEND="
 		>=dev-libs/openssl-1.1
 		dev-libs/pkcs11-helper
 	)
-	qt5? ( >=dev-qt/qtcore-5.14:5 )
+	qt5? ( dev-qt/qtcore:5 )
 	qt6? (
 		dev-qt/qtbase:6
 		dev-qt/qt5compat:6
@@ -81,9 +81,9 @@ src_configure() {
 			-DBUILD_TESTS=$(usex test)
 		)
 		if [[ ${MULTIBUILD_VARIANT} == qt6 ]]; then
-				mycmakeargs+=( -DBUILD_WITH_QT6=ON )
+			mycmakeargs+=( -DBUILD_WITH_QT6=ON )
 		else
-				mycmakeargs+=( -DBUILD_WITH_QT6=OFF )
+			mycmakeargs+=( -DBUILD_WITH_QT6=OFF )
 		fi
 		cmake_src_configure
 	}
