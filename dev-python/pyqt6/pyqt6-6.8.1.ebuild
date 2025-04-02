@@ -1,14 +1,11 @@
-# Copyright 2022-2024 Gentoo Authors
+# Copyright 2022-2025 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
 DISTUTILS_EXT=1
 DISTUTILS_USE_PEP517=sip
-PYPI_NO_NORMALIZE=1
-PYPI_PN=PyQt6
 PYTHON_COMPAT=( python3_{10..13} )
-
 inherit distutils-r1 flag-o-matic multiprocessing pypi qmake-utils
 
 # 'can' work with older Qt depending on features, but keeping it simple
@@ -25,8 +22,9 @@ KEYWORDS="amd64 arm arm64 ~loong ~ppc ppc64 ~riscv x86"
 IUSE="
 	bluetooth +dbus debug designer examples gles2-only +gui help
 	multimedia +network nfc opengl pdfium positioning +printsupport
-	qml quick quick3d remoteobjects serialport sensors spatialaudio
-	speech +sql +ssl svg testlib webchannel websockets +widgets +xml
+	qml quick quick3d remoteobjects scxml serialport sensors
+	spatialaudio speech +sql +ssl svg testlib webchannel websockets
+	vulkan +widgets +xml
 "
 # see `grep -r "%Import " sip` and `grep qmake_QT project.py`
 REQUIRED_USE="
@@ -40,10 +38,12 @@ REQUIRED_USE="
 	quick3d? ( gui qml )
 	quick? ( gui qml )
 	remoteobjects? ( network )
+	scxml? ( gui )
 	spatialaudio? ( multimedia )
 	sql? ( widgets )
 	svg? ( gui )
 	testlib? ( gui widgets )
+	vulkan? ( gui )
 	webchannel? ( network )
 	websockets? ( network )
 	widgets? ( gui )
@@ -51,9 +51,8 @@ REQUIRED_USE="
 
 # may use qt private symbols wrt qtbase's :=
 # non-trivially broken with Qt6.8 wrt upper bound, waiting for PyQt6-6.8.0
-DEPEND="
-	>=dev-qt/qtbase-${QT_PV}=[dbus?,gles2-only=,gui?,network?,opengl?,sql?,ssl=,widgets?,xml?]
-	<dev-qt/qtbase-6.8
+COMMON_DEPEND="
+	>=dev-qt/qtbase-${QT_PV}=[dbus?,gles2-only=,gui?,network?,opengl?,sql?,ssl=,vulkan?,widgets?,xml?]
 	bluetooth? ( >=dev-qt/qtconnectivity-${QT_PV}[bluetooth] )
 	dbus? (
 		dev-python/dbus-python[${PYTHON_USEDEP}]
@@ -72,6 +71,7 @@ DEPEND="
 	quick3d? ( >=dev-qt/qtquick3d-${QT_PV} )
 	quick? ( >=dev-qt/qtdeclarative-${QT_PV}[opengl] )
 	remoteobjects? ( >=dev-qt/qtremoteobjects-${QT_PV} )
+	scxml? ( >=dev-qt/qtscxml-${QT_PV} )
 	sensors? ( >=dev-qt/qtsensors-${QT_PV} )
 	serialport? ( >=dev-qt/qtserialport-${QT_PV} )
 	speech? (
@@ -83,15 +83,23 @@ DEPEND="
 	websockets? ( >=dev-qt/qtwebsockets-${QT_PV} )
 "
 RDEPEND="
-	${DEPEND}
+	${COMMON_DEPEND}
 	>=dev-python/pyqt6-sip-13.8[${PYTHON_USEDEP}]
 "
+DEPEND="
+	${COMMON_DEPEND}
+	vulkan? ( dev-util/vulkan-headers )
+"
 BDEPEND="
-	>=dev-python/pyqt-builder-1.15[${PYTHON_USEDEP}]
-	>=dev-python/sip-6.8.6[${PYTHON_USEDEP}]
+	>=dev-python/pyqt-builder-1.17[${PYTHON_USEDEP}]
+	>=dev-python/sip-6.9[${PYTHON_USEDEP}]
 	>=dev-qt/qtbase-${QT_PV}
 	dbus? ( virtual/pkgconfig )
 "
+
+PATCHES=(
+	"${FILESDIR}"/${PN}-6.8.1-qt690.patch
+)
 
 src_prepare() {
 	default
@@ -146,6 +154,7 @@ python_configure_all() {
 			$(usev widgets QtQuickWidgets))
 		$(pyqt_use_enable quick3d QtQuick3D)
 		$(pyqt_use_enable remoteobjects QtRemoteObjects)
+		$(pyqt_use_enable scxml QtStateMachine)
 		$(pyqt_use_enable sensors QtSensors)
 		$(pyqt_use_enable serialport QtSerialPort)
 		$(pyqt_use_enable spatialaudio QtSpatialAudio)
@@ -171,6 +180,7 @@ python_configure_all() {
 		$(usev !gles2-only --disabled-feature=PyQt_OpenGL_ES2)
 		$(usev !opengl --disabled-feature=PyQt_OpenGL)
 		$(usev !ssl --disabled-feature=PyQt_SSL)
+		$(usev !vulkan --disabled-feature=PyQt_Vulkan)
 
 		# intended for Windows / Android or others
 		--disable=QAxContainer
