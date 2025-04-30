@@ -4,7 +4,7 @@
 EAPI=8
 
 DISTUTILS_USE_PEP517=setuptools
-PYTHON_COMPAT=( pypy3 python3_{10..13} )
+PYTHON_COMPAT=( pypy3 pypy3_11 python3_{10..13} )
 RUST_MIN_VER=1.75.0
 inherit cargo distutils-r1 flag-o-matic shell-completion toolchain-funcs
 
@@ -20,11 +20,11 @@ SRC_URI="
 # rustls+ring is unused, so openssl license can be skipped
 LICENSE="|| ( Apache-2.0 MIT ) doc? ( CC-BY-4.0 OFL-1.1 )"
 LICENSE+="
-	0BSD Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD Boost-1.0 ISC
-	MIT MPL-2.0 Unicode-3.0 Unicode-DFS-2016
+	0BSD Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD Boost-1.0 MIT
+	MPL-2.0 Unicode-3.0 Unicode-DFS-2016
 " # crates
 SLOT="0"
-KEYWORDS="amd64 ~arm ~arm64 ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc x86"
+KEYWORDS="amd64 arm arm64 ~loong ~mips ppc ppc64 ~riscv ~s390 sparc x86"
 IUSE="doc +ssl test"
 RESTRICT="!test? ( test )"
 
@@ -60,7 +60,7 @@ eapply_crate() {
 }
 
 src_prepare() {
-	eapply_crate openssl-sys-0.9.103 "${FILESDIR}/${PN}-1.7.0-libressl-openssl-sys.patch"
+	eapply_crate openssl-sys-0.9.105 "${FILESDIR}/${PN}-1.8.2-libressl-openssl-sys-0.9.105.patch"
 
 	distutils-r1_src_prepare
 
@@ -82,6 +82,9 @@ src_prepare() {
 		# uv does not work easily w/ network-sandbox, force virtualenv
 		sed -i 's/"uv"/"uv-not-found"/' tests/common/mod.rs || die
 
+		# increase timeouts for tests (bug #950332)
+		sed -i '/^#\[timeout/s/secs(60)/secs(300)/' tests/run.rs || die
+
 		# used by *git_sdist_generator tests
 		git init -q || die
 		git config --global user.email "larry@gentoo.org" || die
@@ -93,9 +96,6 @@ src_prepare() {
 
 src_configure() {
 	export OPENSSL_NO_VENDOR=1
-
-	# bug #938847 (TODO?: should probably be an eclass default for musl)
-	use elibc_musl && RUSTFLAGS+=" -C target-feature=-crt-static"
 
 	# https://github.com/rust-lang/stacker/issues/79
 	use s390 && ! is-flagq '-march=*' &&
