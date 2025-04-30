@@ -1,3 +1,28 @@
+https://gitlab.torproject.org/tpo/core/tor/-/merge_requests/887
+
+From e811c52508d1424bd8b28cf4c6bd26ff0a62ca2b Mon Sep 17 00:00:00 2001
+From: orbea <orbea@riseup.net>
+Date: Wed, 30 Apr 2025 11:47:13 -0700
+Subject: [PATCH] compat_openssl: fix for LibreSSL 4.1.0
+
+Starting with LibreSSL 4.1.0 this now causes a build failure:
+
+src/lib/tls/tortls_openssl.c: In function 'tor_tls_setup_session_secret_cb':
+src/lib/tls/tortls_openssl.c:1059:39: error: passing argument 2 of 'SSL_set_session_secret_cb' from incompatible pointer type [-Wincompatible-pointer-types]
+ 1059 |   SSL_set_session_secret_cb(tls->ssl, tor_tls_session_secret_cb, NULL);
+      |                                       ^~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                       |
+      |                                       int (*)(SSL *, void *, int *, struct stack_st_SSL_CIPHER *, SSL_CIPHER **, void *) {aka int (*)(struct ssl_st *, void *, int *, struct stack_st_SSL_CIPHER *, struct ssl_cipher_st **, void *)}
+In file included from src/lib/tls/tortls_openssl.c:48:
+/usr/include/openssl/ssl.h:1489:30: note: expected 'tls_session_secret_cb_fn' {aka 'int (*)(struct ssl_st *, void *, int *, struct stack_st_SSL_CIPHER *, const struct ssl_cipher_st **, void *)'} but argument is of type 'int (*)(SSL *, void *, int *, struct stack_st_SSL_CIPHER *, SSL_CIPHER **, void *)' {aka 'int (*)(struct ssl_st *, void *, int *, struct stack_st_SSL_CIPHER *, struct ssl_cipher_st **, void *)'}
+ 1489 |     tls_session_secret_cb_fn tls_session_secret_cb, void *arg);
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~
+
+Signed-off-by: orbea <orbea@riseup.net>
+---
+ src/lib/crypt_ops/compat_openssl.h | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
 https://gitlab.torproject.org/tpo/core/tor/-/merge_requests/754
 
 From 48f8d6918977673125d53a85d19d709136106739 Mon Sep 17 00:00:00 2001
@@ -21,6 +46,26 @@ Signed-off-by: orbea <orbea@riseup.net>
  src/lib/crypt_ops/crypto_openssl_mgt.h | 5 -----
  2 files changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/src/lib/crypt_ops/compat_openssl.h b/src/lib/crypt_ops/compat_openssl.h
+index c5eccdb015..e61549be9b 100644
+--- a/src/lib/crypt_ops/compat_openssl.h
++++ b/src/lib/crypt_ops/compat_openssl.h
+@@ -37,10 +37,14 @@
+   (((st) == SSL3_ST_SW_SRVR_HELLO_A) ||    \
+    ((st) == SSL3_ST_SW_SRVR_HELLO_B))
+ #define OSSL_HANDSHAKE_STATE int
+-#define CONST_IF_OPENSSL_1_1_API
+ #else
+ #define STATE_IS_SW_SERVER_HELLO(st) \
+   ((st) == TLS_ST_SW_SRVR_HELLO)
++#endif
++
++#if !defined(OPENSSL_1_1_API) || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x4010000fL)
++#define CONST_IF_OPENSSL_1_1_API
++#else
+ #define CONST_IF_OPENSSL_1_1_API const
+ #endif
+ 
 diff --git a/src/lib/crypt_ops/crypto_openssl_mgt.c b/src/lib/crypt_ops/crypto_openssl_mgt.c
 index 6c01cb6aa8..ca12a82518 100644
 --- a/src/lib/crypt_ops/crypto_openssl_mgt.c
