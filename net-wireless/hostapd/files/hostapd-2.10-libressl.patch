@@ -1,15 +1,3 @@
-From 87deed487d8f27feb7c6f8180535e67d9e1847ca Mon Sep 17 00:00:00 2001
-From: orbea <orbea@riseup.net>
-Date: Wed, 6 Jul 2022 17:24:11 -0700
-Subject: [PATCH] Fix build with libressl-3.5.x
-
-Fails with a undefined reference to SSL_set_cert_cb.
----
- src/crypto/tls_openssl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/src/crypto/tls_openssl.c b/src/crypto/tls_openssl.c
-index c9e00b3..5f44a73 100644
 --- a/src/crypto/tls_openssl.c
 +++ b/src/crypto/tls_openssl.c
 @@ -3048,7 +3048,7 @@ static int tls_set_conn_flags(struct tls_connection *conn, unsigned int flags,
@@ -21,3 +9,12 @@ index c9e00b3..5f44a73 100644
  	if (flags & TLS_CONN_SUITEB_NO_ECDH) {
  		const char *ciphers = "DHE-RSA-AES256-GCM-SHA384";
  
+@@ -5538,7 +5538,7 @@ int tls_global_set_params(void *tls_ctx,
+  * commented out unless explicitly needed for EAP-FAST in order to be able to
+  * build this file with unmodified openssl. */
+ 
+-#if (defined(OPENSSL_IS_BORINGSSL) || OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined(LIBRESSL_VERSION_NUMBER)
++#if (defined(OPENSSL_IS_BORINGSSL) || OPENSSL_VERSION_NUMBER >= 0x10100000L) && (!defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER >= 0x4010000fL)
+ static int tls_sess_sec_cb(SSL *s, void *secret, int *secret_len,
+ 			   STACK_OF(SSL_CIPHER) *peer_ciphers,
+ 			   const SSL_CIPHER **cipher, void *arg)
