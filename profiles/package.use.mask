@@ -1,0 +1,8 @@
+# Copyright 1999-2025 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+# New entries go on top.
+
+# Anna Vyalkova <cyber+gentoo@sysrq.in> (2025-05-23)
+# NodeJS cannot be built with LibreSSL.
+net-libs/nodejs system-ssl
