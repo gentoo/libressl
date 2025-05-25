@@ -1,0 +1,28 @@
+https://github.com/stefanberger/libtpms/pull/502
+
+From b8af81fb31dbabfc1ac069b56e8a8a9501b90ac0 Mon Sep 17 00:00:00 2001
+From: orbea <orbea@riseup.net>
+Date: Sat, 24 May 2025 20:19:35 -0700
+Subject: [PATCH] tpm2: fix build for LibreSSL 4.1.0
+
+With LibreSSL 4.1.0 the EC_POINTs_mul function was removed, but the
+newer OpenSSL 3 code path works instead.
+
+Signed-off-by: orbea <orbea@riseup.net>
+---
+ src/tpm2/crypto/openssl/BnToOsslMath.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/tpm2/crypto/openssl/BnToOsslMath.c b/src/tpm2/crypto/openssl/BnToOsslMath.c
+index 7ba48bed3..2b6cc1722 100644
+--- a/src/tpm2/crypto/openssl/BnToOsslMath.c
++++ b/src/tpm2/crypto/openssl/BnToOsslMath.c
+@@ -621,7 +621,7 @@ LIB_EXPORT BOOL BnEccModMult2(bigPoint            R,  // OUT: computed point
+ 	EC_POINT_mul(E->G, pR, bnD, pQ, bnU, E->CTX);
+     else
+ 	{
+-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
++#if OPENSSL_VERSION_NUMBER >= 0x30000000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER >= 0x4010000fL)
+ 	    EC_POINT *pR1 = EC_POINT_new(E->G);
+ 	    EC_POINT *pR2 = EC_POINT_new(E->G);
+ 	    int OK;
