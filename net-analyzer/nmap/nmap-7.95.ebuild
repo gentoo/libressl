@@ -84,7 +84,7 @@ if [[ ${PV} != *9999* ]] ; then
 fi
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-7.92-libressl.patch
+	"${FILESDIR}"/${PN}-7.95-libressl.patch
 	"${WORKDIR}"/${PN}-7.95-patches-2
 )
 

@@ -5,11 +5,13 @@ From: Kyryl Melekhin <k.melekhin@gmail.com>
 Date: Thu, 9 Jun 2022 18:52:43 +0000
 Subject: [PATCH] Fix libressl >= 3.5.0 build
 
+* Fix the build for libressl >= 4.1.0
+
 diff --git a/ncat/ncat_ssl.c b/ncat/ncat_ssl.c
-index 7749b2964c..76209bc2d6 100644
+index d513a00..78a5d71 100644
 --- a/ncat/ncat_ssl.c
 +++ b/ncat/ncat_ssl.c
-@@ -74,7 +74,9 @@
+@@ -72,7 +72,9 @@
  #include <openssl/x509.h>
  #include <openssl/x509v3.h>
  
@@ -21,10 +23,10 @@ index 7749b2964c..76209bc2d6 100644
  #define FUNC_ASN1_STRING_data ASN1_STRING_get0_data
  #else
 diff --git a/nping/Crypto.cc b/nping/Crypto.cc
-index 850438352b..d5e537eef2 100644
+index 6f05db6..6c4cfaf 100755
 --- a/nping/Crypto.cc
 +++ b/nping/Crypto.cc
-@@ -70,7 +70,9 @@
+@@ -69,7 +69,9 @@
  #include <openssl/evp.h>
  #include <openssl/err.h>
  
@@ -33,28 +35,28 @@ index 850438352b..d5e537eef2 100644
 +    ((!defined LIBRESSL_VERSION_NUMBER) || \
 +    (defined LIBRESSL_VERSION_NUMBER && LIBRESSL_VERSION_NUMBER >= 0x30500000L))
  #define HAVE_OPAQUE_EVP_PKEY 1
- #define FUNC_EVP_MD_CTX_init EVP_MD_CTX_reset
- #define FUNC_EVP_MD_CTX_cleanup EVP_MD_CTX_reset
+ #else
+ #define EVP_MD_CTX_new EVP_MD_CTX_create
 diff --git a/nse_openssl.cc b/nse_openssl.cc
-index 92dea3ac8e..97987ca1a0 100644
+index cc94472..3351a88 100644
 --- a/nse_openssl.cc
 +++ b/nse_openssl.cc
-@@ -21,7 +21,9 @@
- #include <openssl/ripemd.h>
- #include <openssl/sha.h>
+@@ -13,7 +13,9 @@
+ #include <openssl/hmac.h>
+ #include <openssl/rand.h>
  
 -#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && !defined LIBRESSL_VERSION_NUMBER
 +#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && \
 +    ((!defined LIBRESSL_VERSION_NUMBER) || \
 +    (defined LIBRESSL_VERSION_NUMBER && LIBRESSL_VERSION_NUMBER >= 0x30500000L))
  #define HAVE_OPAQUE_STRUCTS 1
- #define FUNC_EVP_MD_CTX_init EVP_MD_CTX_reset
- #define FUNC_EVP_MD_CTX_cleanup EVP_MD_CTX_reset
+ #if OPENSSL_VERSION_NUMBER >= 0x30000000L
+ # include <openssl/provider.h>
 diff --git a/nse_ssl_cert.cc b/nse_ssl_cert.cc
-index 53f3ddaf5a..f63d77b829 100644
+index 8a3a1fe..5a03574 100644
 --- a/nse_ssl_cert.cc
 +++ b/nse_ssl_cert.cc
-@@ -81,7 +81,9 @@
+@@ -79,7 +79,9 @@
  #include <openssl/evp.h>
  #include <openssl/err.h>
  
@@ -65,3 +67,21 @@ index 53f3ddaf5a..f63d77b829 100644
  /* Technically some of these things were added in 0x10100006
   * but that was pre-release. */
  #define HAVE_OPAQUE_STRUCTS 1
+@@ -491,6 +493,7 @@ int lua_push_ecdhparams(lua_State *L, EVP_PKEY *pubkey) {
+     /* According to RFC 5480 section 2.1.1, explicit curves must not be used with
+        X.509. This may change in the future, but for now it doesn't seem worth it
+        to add in code to extract the extra parameters. */
++#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x4000000fL
+     nid = EC_METHOD_get_field_type(EC_GROUP_method_of(group));
+     if (nid == NID_X9_62_prime_field) {
+       lua_pushstring(L, "explicit_prime");
+@@ -502,6 +505,9 @@ int lua_push_ecdhparams(lua_State *L, EVP_PKEY *pubkey) {
+       /* Something weird happened. */
+       lua_pushstring(L, "UNKNOWN");
+     }
++#else
++    lua_pushstring(L, "explicit_prime");
++#endif
+     lua_setfield(L, -2, "ec_curve_type");
+   }
+   lua_setfield(L, -2, "curve_params");
