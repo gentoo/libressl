@@ -57,7 +57,7 @@ DEPEND="
 src_prepare() {
 	local PATCHES=(
 		"${WORKDIR}/${PATCHSET}"
-		"${FILESDIR}"/${PN}-3.10-7.3.17-libressl.patch
+		"${FILESDIR}"/${PN}-3.10-7.3.19-libressl.patch
 	)
 
 	default
