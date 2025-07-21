@@ -114,8 +114,7 @@ Rebased from an OpenBSD patch.
      OSSL_HANDSHAKE_STATE state=SSL_get_state(ssl);
  #else
      int state=SSL_get_state((SSL *)ssl);
-@@ -1622,8 +1622,11 @@ NOEXPORT void info_callback(const SSL *ssl, int where, int ret) {
-@@ -1622,7 +1622,10 @@ NOEXPORT void info_callback(const SSL *ssl, int where, int ret) {
+@@ -1670,7 +1670,10 @@ NOEXPORT void info_callback(const SSL *ssl, int where, int ret) {
          if(state==TLS_ST_SR_CLNT_HELLO) {
  #else
          if(state==SSL3_ST_SR_CLNT_HELLO_A
@@ -160,6 +159,15 @@ Rebased from an OpenBSD patch.
  int CRYPTO_THREAD_read_lock(CRYPTO_RWLOCK *);
 --- a/src/ssl.c
 +++ b/src/ssl.c
+@@ -38,7 +38,7 @@
+ #include "prototypes.h"
+ 
+     /* global OpenSSL initialization: compression, engine, entropy */
+-#if OPENSSL_VERSION_NUMBER>=0x10100000L
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+ NOEXPORT void cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
+         int idx, long argl, void *argp);
+ #else /* OPENSSL_VERSION_NUMBER>=0x10100000L */
 @@ -48,7 +48,7 @@ NOEXPORT int cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
  #if OPENSSL_VERSION_NUMBER>=0x30000000L
  NOEXPORT int cb_dup_addr(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
@@ -187,6 +195,15 @@ Rebased from an OpenBSD patch.
      conf=OPENSSL_INIT_new();
  #ifdef USE_WIN32
      stunnel_dir=tstr2str(stunnel_exe_path);
+@@ -237,7 +237,7 @@ int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g) {
+ #endif
+ #endif
+ 
+-#if OPENSSL_VERSION_NUMBER>=0x10100000L
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+ NOEXPORT void cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
+         int idx, long argl, void *argp) {
+ #else /* OPENSSL_VERSION_NUMBER>=0x10100000L */
 @@ -259,7 +259,7 @@ NOEXPORT int cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
  #if OPENSSL_VERSION_NUMBER>=0x30000000L
  NOEXPORT int cb_dup_addr(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
@@ -289,7 +306,7 @@ Rebased from an OpenBSD patch.
      tls_initialized=1;
      ui_tls=tls_alloc(NULL, NULL, "ui");
 -#if OPENSSL_VERSION_NUMBER>=0x10100000L
-+#if OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && (!defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER>=0x4010000fL)
      CRYPTO_set_mem_functions(str_alloc_detached_debug,
          str_realloc_detached_debug, str_free_debug);
  #else
@@ -298,7 +315,7 @@ Rebased from an OpenBSD patch.
  /**************************************** OpenSSL allocator hook */
  
 -#if OPENSSL_VERSION_NUMBER<0x10100000L
-+#if OPENSSL_VERSION_NUMBER<0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER<0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER<0x4010000fL)
  NOEXPORT void free_function(void *ptr) {
      /* CRYPTO_set_mem_ex_functions() needs a function rather than a macro */
      /* unfortunately, OpenSSL provides no file:line information here */
