@@ -1,0 +1,348 @@
+Rebased from an OpenBSD patch.
+
+--- a/src/client.c
++++ b/src/client.c
+@@ -794,7 +794,7 @@ NOEXPORT void print_cipher(CLI *c) { /* print negotiated cipher */
+ NOEXPORT void transfer(CLI *c) {
+     int timeout; /* s_poll_wait timeout in seconds */
+     int pending; /* either processed on unprocessed TLS data */
+-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
++#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+     int has_pending=0, prev_has_pending;
+ #endif
+     int watchdog=0; /* a counter to detect an infinite loop */
+@@ -841,7 +841,7 @@ NOEXPORT void transfer(CLI *c) {
+ 
+         /****************************** wait for an event */
+         pending=SSL_pending(c->ssl);
+-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
++#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+         /* only attempt to process SSL_has_pending() data once */
+         prev_has_pending=has_pending;
+         has_pending=SSL_has_pending(c->ssl);
+@@ -1264,7 +1264,7 @@ NOEXPORT void transfer(CLI *c) {
+             s_log(LOG_ERR,
+                 "please report the problem to Michal.Trojnara@stunnel.org");
+             stunnel_info(LOG_ERR);
+-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
++#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+             s_log(LOG_ERR, "protocol=%s, SSL_pending=%d, SSL_has_pending=%d",
+                 SSL_get_version(c->ssl),
+                 SSL_pending(c->ssl), SSL_has_pending(c->ssl));
+--- a/src/common.h
++++ b/src/common.h
+@@ -467,7 +467,7 @@ extern char *sys_errlist[];
+ #define OPENSSL_NO_TLS1_2
+ #endif /* OpenSSL older than 1.0.1 || defined(OPENSSL_NO_TLS1) */
+ 
+-#if OPENSSL_VERSION_NUMBER>=0x10100000L
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+ #ifndef OPENSSL_NO_SSL2
+ #define OPENSSL_NO_SSL2
+ #endif /* !defined(OPENSSL_NO_SSL2) */
+@@ -513,7 +513,7 @@ int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g);
+ /* not defined in public headers before OpenSSL 0.9.8 */
+ STACK_OF(SSL_COMP) *SSL_COMP_get_compression_methods(void);
+ #endif /* !defined(OPENSSL_NO_COMP) */
+-#if OPENSSL_VERSION_NUMBER>=0x10101000L
++#if OPENSSL_VERSION_NUMBER>=0x10101000L && !defined(LIBRESSL_VERSION_NUMBER)
+ #include <openssl/storeerr.h>
+ #endif /* OPENSSL_VERSION_NUMBER>=0x10101000L */
+ #if OPENSSL_VERSION_NUMBER>=0x30000000L
+--- a/src/ctx.c
++++ b/src/ctx.c
+@@ -94,7 +94,7 @@ NOEXPORT void set_prompt(const char *);
+ NOEXPORT int ui_retry(void);
+ 
+ /* session tickets */
+-#if OPENSSL_VERSION_NUMBER >= 0x10101000L
++#if OPENSSL_VERSION_NUMBER >= 0x10101000L && !defined(LIBRESSL_VERSION_NUMBER)
+ NOEXPORT int generate_session_ticket_cb(SSL *, void *);
+ NOEXPORT int decrypt_session_ticket_cb(SSL *, SSL_SESSION *,
+     const unsigned char *, size_t, SSL_TICKET_STATUS, void *);
+@@ -109,7 +109,7 @@ NOEXPORT int ssl_tlsext_ticket_key_cb(SSL *, unsigned char *,
+ NOEXPORT int sess_new_cb(SSL *, SSL_SESSION *);
+ NOEXPORT void new_chain(CLI *);
+ NOEXPORT void session_cache_save(CLI *, SSL_SESSION *);
+-#if OPENSSL_VERSION_NUMBER<0x10101000L
++#if OPENSSL_VERSION_NUMBER<0x10101000L || defined(LIBRESSL_VERSION_NUMBER)
+ NOEXPORT SSL_SESSION *SSL_SESSION_dup(SSL_SESSION *);
+ #endif
+ NOEXPORT SSL_SESSION *sess_get_cb(SSL *,
+@@ -138,7 +138,7 @@ NOEXPORT char *get_tls13_cipher_list(STACK_OF(SSL_CIPHER) *);
+ 
+ /**************************************** initialize section->ctx */
+ 
+-#if OPENSSL_VERSION_NUMBER>=0x10100000L
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+ typedef long unsigned SSL_OPTIONS_TYPE;
+ #else
+ typedef long SSL_OPTIONS_TYPE;
+@@ -191,7 +191,7 @@ int context_init(SERVICE_OPTIONS *section) { /* init TLS context */
+     }
+     current_section=section; /* setup current section for callbacks */
+ 
+-#if OPENSSL_VERSION_NUMBER>=0x10100000L
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+     /* set the security level */
+     if(section->security_level>=0) {
+         /* set the user-specified value */
+@@ -292,7 +292,7 @@ int context_init(SERVICE_OPTIONS *section) { /* init TLS context */
+ #endif
+ 
+     /* setup session tickets */
+-#if OPENSSL_VERSION_NUMBER >= 0x10101000L
++#if OPENSSL_VERSION_NUMBER >= 0x10101000L && !defined(LIBRESSL_VERSION_NUMBER)
+     SSL_CTX_set_session_ticket_cb(section->ctx, generate_session_ticket_cb,
+         decrypt_session_ticket_cb, NULL);
+ #endif /* OpenSSL 1.1.1 or later */
+@@ -591,7 +591,7 @@ NOEXPORT int ecdh_init(SERVICE_OPTIONS *section) {
+ /**************************************** initialize OpenSSL CONF */
+ 
+ NOEXPORT int conf_init(SERVICE_OPTIONS *section) {
+-#if OPENSSL_VERSION_NUMBER>=0x10002000L
++#if OPENSSL_VERSION_NUMBER>=0x10002000L && !defined(LIBRESSL_VERSION_NUMBER)
+     SSL_CONF_CTX *cctx;
+     NAME_LIST *curr;
+     char *cmd, *param;
+@@ -1112,7 +1112,7 @@ NOEXPORT int ui_retry(void) {
+ 
+ /**************************************** session tickets */
+ 
+-#if OPENSSL_VERSION_NUMBER >= 0x10101000L
++#if OPENSSL_VERSION_NUMBER >= 0x10101000L && !defined(LIBRESSL_VERSION_NUMBER)
+ 
+ typedef struct {
+     void *session_authenticated;
+@@ -1393,7 +1393,7 @@ NOEXPORT void session_cache_save(CLI *c, SSL_SESSION *sess) {
+     CRYPTO_THREAD_unlock(stunnel_locks[LOCK_SESSION]);
+ }
+ 
+-#if OPENSSL_VERSION_NUMBER<0x10101000L
++#if OPENSSL_VERSION_NUMBER<0x10101000L || defined(LIBRESSL_VERSION_NUMBER)
+ NOEXPORT SSL_SESSION *SSL_SESSION_dup(SSL_SESSION *src) {
+     int der_len;
+     unsigned char *der_data;
+@@ -1622,7 +1622,7 @@ NOEXPORT void info_callback(const SSL *ssl, int where, int ret) {
+     CLI *c;
+     SSL_CTX *ctx;
+     const char *state_string;
+-#if OPENSSL_VERSION_NUMBER>=0x10100000L
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+     OSSL_HANDSHAKE_STATE state=SSL_get_state(ssl);
+ #else
+     int state=SSL_get_state((SSL *)ssl);
+@@ -1671,7 +1671,10 @@ NOEXPORT void info_callback(const SSL *ssl, int where, int ret) {
+         if(state==TLS_ST_SR_CLNT_HELLO) {
+ #else
+         if(state==SSL3_ST_SR_CLNT_HELLO_A
+-                || state==SSL23_ST_SR_CLNT_HELLO_A) {
++#if !defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER < 0x4000000fL
++                || state==SSL23_ST_SR_CLNT_HELLO_A
++#endif
++        ) {
+ #endif
+             /* client hello received after initial handshake,
+              * this means renegotiation -> mark it */
+--- a/src/prototypes.h
++++ b/src/prototypes.h
+@@ -72,7 +72,7 @@ typedef struct servername_list_struct SERVERNAME_LIST;
+     typedef HANDLE THREAD_ID;
+ #endif
+ 
+-#if OPENSSL_VERSION_NUMBER<0x10100004L
++#if OPENSSL_VERSION_NUMBER<0x10100004L || defined(LIBRESSL_VERSION_NUMBER)
+ 
+ #ifdef USE_OS_THREADS
+ 
+@@ -804,7 +804,7 @@ extern CLI *thread_head;
+ 
+ extern CRYPTO_RWLOCK *stunnel_locks[STUNNEL_LOCKS];
+ 
+-#if OPENSSL_VERSION_NUMBER<0x10100004L
++#if OPENSSL_VERSION_NUMBER<0x10100004L || defined(LIBRESSL_VERSION_NUMBER)
+ /* Emulate the OpenSSL 1.1 locking API for older OpenSSL versions */
+ CRYPTO_RWLOCK *CRYPTO_THREAD_lock_new(void);
+ int CRYPTO_THREAD_read_lock(CRYPTO_RWLOCK *);
+--- a/src/ssl.c
++++ b/src/ssl.c
+@@ -38,7 +38,7 @@
+ #include "prototypes.h"
+ 
+     /* global OpenSSL initialization: compression, engine, entropy */
+-#if OPENSSL_VERSION_NUMBER>=0x10100000L
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+ NOEXPORT void cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
+         int idx, long argl, void *argp);
+ #else /* OPENSSL_VERSION_NUMBER>=0x10100000L */
+@@ -48,7 +48,7 @@ NOEXPORT int cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
+ #if OPENSSL_VERSION_NUMBER>=0x30000000L
+ NOEXPORT int cb_dup_addr(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
+     void **from_d, int idx, long argl, void *argp);
+-#elif OPENSSL_VERSION_NUMBER>=0x10100000L
++#elif OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+ NOEXPORT int cb_dup_addr(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
+     void *from_d, int idx, long argl, void *argp);
+ #else
+@@ -108,7 +108,7 @@ int fips_available(void) { /* either FIPS provider or container is available */
+ 
+ /* initialize libcrypto before invoking API functions that require it */
+ void crypto_init(void) {
+-#if OPENSSL_VERSION_NUMBER>=0x10100000L
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+     OPENSSL_INIT_SETTINGS *conf;
+ #endif /* OPENSSL_VERSION_NUMBER>=0x10100000L */
+ #ifdef USE_WIN32
+@@ -151,7 +151,7 @@ void crypto_init(void) {
+ #endif /* USE_WIN32 */
+ 
+     /* initialize OpenSSL */
+-#if OPENSSL_VERSION_NUMBER>=0x10100000L
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+     conf=OPENSSL_INIT_new();
+ #ifdef USE_WIN32
+     stunnel_dir=tstr2str(stunnel_exe_path);
+@@ -237,7 +237,7 @@ int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g) {
+ #endif
+ #endif
+ 
+-#if OPENSSL_VERSION_NUMBER>=0x10100000L
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+ NOEXPORT void cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
+         int idx, long argl, void *argp) {
+ #else /* OPENSSL_VERSION_NUMBER>=0x10100000L */
+@@ -251,7 +251,7 @@ NOEXPORT int cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
+         (char *)argp);
+     if(!CRYPTO_set_ex_data(ad, idx, (void *)(-1)))
+         sslerror("CRYPTO_set_ex_data");
+-#if OPENSSL_VERSION_NUMBER<0x10100000L
++#if OPENSSL_VERSION_NUMBER<0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+     return 1; /* success */
+ #endif /* OPENSSL_VERSION_NUMBER<0x10100000L */
+ }
+@@ -259,7 +259,7 @@ NOEXPORT int cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
+ #if OPENSSL_VERSION_NUMBER>=0x30000000L
+ NOEXPORT int cb_dup_addr(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
+         void **from_d, int idx, long argl, void *argp) {
+-#elif OPENSSL_VERSION_NUMBER>=0x10100000L
++#elif OPENSSL_VERSION_NUMBER>=0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+ NOEXPORT int cb_dup_addr(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
+         void *from_d, int idx, long argl, void *argp) {
+ #else
+--- a/src/sthreads.c
++++ b/src/sthreads.c
+@@ -123,7 +123,7 @@ NOEXPORT void thread_id_init(void) {
+ /**************************************** locking */
+ 
+ /* we only need to initialize locking with OpenSSL older than 1.1.0 */
+-#if OPENSSL_VERSION_NUMBER<0x10100004L
++#if OPENSSL_VERSION_NUMBER<0x10100004L || defined(LIBRESSL_VERSION_NUMBER)
+ 
+ #ifdef USE_PTHREAD
+ 
+@@ -283,7 +283,7 @@ NOEXPORT int s_atomic_add(int *val, int amount, CRYPTO_RWLOCK *lock) {
+ 
+ CRYPTO_RWLOCK *stunnel_locks[STUNNEL_LOCKS];
+ 
+-#if OPENSSL_VERSION_NUMBER<0x10100004L
++#if OPENSSL_VERSION_NUMBER<0x10100004L || defined(LIBRESSL_VERSION_NUMBER)
+ 
+ #ifdef USE_OS_THREADS
+ 
+@@ -391,7 +391,8 @@ int CRYPTO_atomic_add(int *val, int amount, int *ret, CRYPTO_RWLOCK *lock) {
+ 
+ NOEXPORT void locking_init(void) {
+     size_t i;
+-#if defined(USE_OS_THREADS) && OPENSSL_VERSION_NUMBER<0x10100004L
++#if defined(USE_OS_THREADS) && \
++	(OPENSSL_VERSION_NUMBER<0x10100004L || defined(LIBRESSL_VERSION_NUMBER))
+     size_t num;
+ 
+     /* initialize the OpenSSL static locking */
+--- a/src/str.c
++++ b/src/str.c
+@@ -98,7 +98,7 @@ NOEXPORT LEAK_ENTRY leak_hash_table[LEAK_TABLE_SIZE],
+     *leak_results[LEAK_TABLE_SIZE];
+ NOEXPORT int leak_result_num=0;
+ 
+-#if OPENSSL_VERSION_NUMBER >= 0x10101000L
++#if OPENSSL_VERSION_NUMBER >= 0x10101000L && !defined(LIBRESSL_VERSION_NUMBER)
+ DEFINE_STACK_OF(LEAK_ENTRY)
+ #endif /* OpenSSL version >= 1.1.1 */
+ 
+@@ -112,7 +112,7 @@ NOEXPORT ALLOC_LIST *get_alloc_list_ptr(void *, const char *, int);
+ NOEXPORT void str_leak_debug(const ALLOC_LIST *, int);
+ 
+ NOEXPORT LEAK_ENTRY *leak_search(const ALLOC_LIST *);
+-#if OPENSSL_VERSION_NUMBER >= 0x10101000L
++#if OPENSSL_VERSION_NUMBER >= 0x10101000L && !defined(LIBRESSL_VERSION_NUMBER)
+ NOEXPORT int leak_cmp(const LEAK_ENTRY *const *, const LEAK_ENTRY *const *);
+ #endif /* OpenSSL version >= 1.1.1 */
+ NOEXPORT void leak_report(void);
+@@ -563,7 +563,7 @@ NOEXPORT LEAK_ENTRY *leak_search(const ALLOC_LIST *alloc_list) {
+ void leak_table_utilization(void) {
+     int i, utilization=0;
+     int64_t grand_total=0;
+-#if OPENSSL_VERSION_NUMBER >= 0x10101000L
++#if OPENSSL_VERSION_NUMBER >= 0x10101000L && !defined(LIBRESSL_VERSION_NUMBER)
+     STACK_OF(LEAK_ENTRY) *stats;
+ #endif /* OpenSSL version >= 1.1.1 */
+ 
+@@ -580,7 +580,7 @@ void leak_table_utilization(void) {
+     s_log(LOG_DEBUG, "Leak detection table utilization: %d/%d (%05.2f%%)",
+         utilization, LEAK_TABLE_SIZE, 100.0*utilization/LEAK_TABLE_SIZE);
+ 
+-#if OPENSSL_VERSION_NUMBER >= 0x10101000L
++#if OPENSSL_VERSION_NUMBER >= 0x10101000L && !defined(LIBRESSL_VERSION_NUMBER)
+     /* log up to 5 most frequently used heap allocations */
+     stats=sk_LEAK_ENTRY_new_reserve(leak_cmp, utilization);
+     for(i=0; i<LEAK_TABLE_SIZE; ++i)
+@@ -597,7 +597,7 @@ void leak_table_utilization(void) {
+ #endif /* OpenSSL version >= 1.1.1 */
+ }
+ 
+-#if OPENSSL_VERSION_NUMBER >= 0x10101000L
++#if OPENSSL_VERSION_NUMBER >= 0x10101000L && !defined(LIBRESSL_VERSION_NUMBER)
+ NOEXPORT int leak_cmp(const LEAK_ENTRY *const *a, const LEAK_ENTRY *const *b) {
+     int64_t d = (*a)->total - (*b)->total;
+     if(d>0)
+--- a/src/tls.c
++++ b/src/tls.c
+@@ -40,7 +40,7 @@
+ volatile int tls_initialized=0;
+ 
+ NOEXPORT void tls_platform_init(void);
+-#if OPENSSL_VERSION_NUMBER<0x10100000L
++#if OPENSSL_VERSION_NUMBER<0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER<0x4010000fL)
+ NOEXPORT void free_function(void *);
+ #endif
+ 
+@@ -51,7 +51,7 @@ void tls_init(void) {
+     tls_platform_init();
+     tls_initialized=1;
+     ui_tls=tls_alloc(NULL, NULL, "ui");
+-#if OPENSSL_VERSION_NUMBER>=0x10100000L
++#if OPENSSL_VERSION_NUMBER>=0x10100000L && (!defined(LIBRESSL_VERSION_NUMBER) || LIBRESSL_VERSION_NUMBER>=0x4010000fL)
+     CRYPTO_set_mem_functions(str_alloc_detached_debug,
+         str_realloc_detached_debug, str_free_debug);
+ #else
+@@ -184,7 +184,7 @@ TLS_DATA *tls_get(void) {
+ 
+ /**************************************** OpenSSL allocator hook */
+ 
+-#if OPENSSL_VERSION_NUMBER<0x10100000L
++#if OPENSSL_VERSION_NUMBER<0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER<0x4010000fL)
+ NOEXPORT void free_function(void *ptr) {
+     /* CRYPTO_set_mem_ex_functions() needs a function rather than a macro */
+     /* unfortunately, OpenSSL provides no file:line information here */
+--- a/src/verify.c
++++ b/src/verify.c
+@@ -382,7 +382,7 @@ NOEXPORT int cert_check_local(X509_STORE_CTX *callback_ctx) {
+     cert=X509_STORE_CTX_get_current_cert(callback_ctx);
+     subject=X509_get_subject_name(cert);
+ 
+-#if OPENSSL_VERSION_NUMBER<0x10100006L
++#if OPENSSL_VERSION_NUMBER<0x10100006L || defined(LIBRESSL_VERSION_NUMBER)
+ #define X509_STORE_CTX_get1_certs X509_STORE_get1_certs
+ #endif
+     /* modern API allows retrieving multiple matching certificates */
