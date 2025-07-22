@@ -128,15 +128,33 @@ Rebased from an OpenBSD patch.
               * this means renegotiation -> mark it */
 --- a/src/ocsp.c
 +++ b/src/ocsp.c
+@@ -77,7 +77,7 @@ typedef struct {
+ /**************************************** OCSP stapling callbacks */
+ 
+ NOEXPORT int ocsp_client_cb(SSL *, void *);
+-#if OPENSSL_VERSION_NUMBER>=0x10002000L
++#if OPENSSL_VERSION_NUMBER>=0x10002000L && !defined(OPENSSL_NO_PSK)
+ NOEXPORT int ocsp_server_cb(SSL *, void *);
+ #endif /* OpenSSL version 1.0.2 or later */
+ 
 @@ -108,7 +108,7 @@ int ocsp_init(SERVICE_OPTIONS *section) {
          }
          s_log(LOG_DEBUG, "OCSP: Client OCSP stapling enabled");
      } else {
 -#if OPENSSL_VERSION_NUMBER>=0x10002000L
-+#if OPENSSL_VERSION_NUMBER>=0x10002000L && !defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER>=0x10002000L && !defined(OPENSSL_NO_PSK)
          if(!section->psk_keys) {
              if(SSL_CTX_set_tlsext_status_cb(section->ctx, ocsp_server_cb)==TLSEXT_STATUSTYPE_ocsp)
                  s_log(LOG_DEBUG, "OCSP: Server OCSP stapling enabled");
+@@ -279,7 +279,7 @@ cleanup:
+ 
+ /**************************************** OCSP stapling server callback */
+ 
+-#if OPENSSL_VERSION_NUMBER>=0x10002000L
++#if OPENSSL_VERSION_NUMBER>=0x10002000L && !defined(OPENSSL_NO_PSK)
+ /*
+  * This is called when a client includes a certificate status request extension.
+  * The response is either obtained from a cache, or from an OCSP responder.
 --- a/src/prototypes.h
 +++ b/src/prototypes.h
 @@ -72,7 +72,7 @@ typedef struct servername_list_struct SERVERNAME_LIST;
@@ -204,6 +222,15 @@ Rebased from an OpenBSD patch.
  NOEXPORT void cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
          int idx, long argl, void *argp) {
  #else /* OPENSSL_VERSION_NUMBER>=0x10100000L */
+@@ -251,7 +251,7 @@ NOEXPORT int cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
+         (char *)argp);
+     if(!CRYPTO_set_ex_data(ad, idx, (void *)(-1)))
+         sslerror("CRYPTO_set_ex_data");
+-#if OPENSSL_VERSION_NUMBER<0x10100000L
++#if OPENSSL_VERSION_NUMBER<0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
+     return 1; /* success */
+ #endif /* OPENSSL_VERSION_NUMBER<0x10100000L */
+ }
 @@ -259,7 +259,7 @@ NOEXPORT int cb_new_auth(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
  #if OPENSSL_VERSION_NUMBER>=0x30000000L
  NOEXPORT int cb_dup_addr(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
@@ -297,7 +324,7 @@ Rebased from an OpenBSD patch.
  
  NOEXPORT void tls_platform_init(void);
 -#if OPENSSL_VERSION_NUMBER<0x10100000L
-+#if OPENSSL_VERSION_NUMBER<0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER<0x10100000L || (defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER<0x4010000fL)
  NOEXPORT void free_function(void *);
  #endif
  
