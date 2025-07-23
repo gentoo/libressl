@@ -36,7 +36,7 @@ IUSE="+adns +alt-svc brotli debug ech +ftp gnutls gopher +hsts +http2 +http3 +ht
 IUSE+=" mbedtls +openssl +pop3 +psl +quic rtmp rustls samba sasl-scram +smtp ssh ssl static-libs test"
 IUSE+=" telnet +tftp +websockets zstd"
 # These select the default tls implementation / which quic impl to use
-IUSE+=" +curl_quic_openssl curl_quic_ngtcp2 curl_ssl_gnutls curl_ssl_mbedtls +curl_ssl_openssl curl_ssl_rustls"
+IUSE+=" curl_quic_openssl +curl_quic_ngtcp2 curl_ssl_gnutls curl_ssl_mbedtls +curl_ssl_openssl curl_ssl_rustls"
 RESTRICT="!test? ( test )"
 
 # HTTPS RR is technically usable with the threaded resolver, but it still uses c-ares to
@@ -56,10 +56,8 @@ REQUIRED_USE="
 	ech? ( rustls )
 	httpsrr? ( adns )
 	quic? (
-		^^ (
-			curl_quic_openssl
-			curl_quic_ngtcp2
-		)
+		!curl_quic_openssl
+		curl_quic_ngtcp2
 		http3
 		ssl
 	)
@@ -79,10 +77,8 @@ REQUIRED_USE="
 		!rustls
 	)
 	curl_quic_ngtcp2? (
-		curl_ssl_gnutls
 		quic
 		!mbedtls
-		!openssl
 		!rustls
 	)
 	curl_ssl_gnutls? ( gnutls )
@@ -112,7 +108,7 @@ RDEPEND="
 	psl? ( net-libs/libpsl[${MULTILIB_USEDEP}] )
 	quic? (
 		curl_quic_openssl? ( >=dev-libs/openssl-3.3.0:=[quic,${MULTILIB_USEDEP}] )
-		curl_quic_ngtcp2? ( >=net-libs/ngtcp2-1.2.0[gnutls,ssl,-openssl,${MULTILIB_USEDEP}] )
+		curl_quic_ngtcp2? ( >=net-libs/ngtcp2-1.2.0[ssl,openssl,${MULTILIB_USEDEP}] )
 	)
 	rtmp? ( media-video/rtmpdump[${MULTILIB_USEDEP}] )
 	ssh? ( >=net-libs/libssh2-1.2.8[${MULTILIB_USEDEP}] )
