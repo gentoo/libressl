@@ -171,6 +171,8 @@ QA_CONFIG_IMPL_DECL_SKIP=(
 PATCHES=(
 	"${FILESDIR}/${PN}-prefix-5.patch"
 	"${FILESDIR}/${PN}-respect-cflags-3.patch"
+	"${FILESDIR}/${P}-ssl_verifyhost.patch"
+	"${FILESDIR}/${P}-pthread_cancel.patch"
 )
 
 src_prepare() {
