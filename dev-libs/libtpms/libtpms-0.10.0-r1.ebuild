@@ -20,6 +20,7 @@ PATCHES=(
 	"${FILESDIR}/${PN}-0.10.0-Remove-WError.patch"
 	"${FILESDIR}/${PN}-0.10.0-tpm2-Add-padding-to-OBJECT-for-32bit-targets.patch"
 	"${FILESDIR}/${PN}-0.10.0-libressl.patch"
+	"${FILESDIR}/${PN}-0.10.1-libressl.patch"
 )
 
 src_prepare() {

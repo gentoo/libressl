@@ -19,6 +19,7 @@ BDEPEND="virtual/pkgconfig"
 PATCHES=(
 	"${FILESDIR}/${PN}-0.10.0-Remove-WError.patch"
 	"${FILESDIR}/${PN}-0.10.0-libressl.patch"
+	"${FILESDIR}/${PN}-0.10.1-libressl.patch"
 )
 
 src_prepare() {
