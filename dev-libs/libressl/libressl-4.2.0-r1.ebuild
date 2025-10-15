@@ -30,8 +30,6 @@ RDEPEND="netcat? (
 	!net-analyzer/openbsd-netcat
 )"
 
-MULTILIB_WRAPPED_HEADERS=( /usr/include/openssl/opensslconf.h )
-
 # LibreSSL checks for libc features during configure
 QA_CONFIG_IMPL_DECL_SKIP=(
 	__va_copy
