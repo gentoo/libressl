@@ -12,7 +12,7 @@ EAPI=8
 CRATES="
 "
 
-RUST_MIN_VER="1.84.0"
+RUST_MIN_VER="1.85.0"
 
 inherit cargo
 
@@ -42,6 +42,7 @@ RDEPEND="
 	net-libs/libssh2:=
 	net-misc/curl[ssl]
 	sys-libs/zlib
+	dev-db/sqlite:3
 "
 DEPEND="${RDEPEND}"
 
@@ -56,7 +57,7 @@ eapply_crate() {
 }
 
 src_prepare() {
-	eapply_crate openssl-sys-0.9.107 "${FILESDIR}/${PN}-0.10.5-libressl-openssl-sys.patch"
+	eapply_crate openssl-sys-0.9.108 "${FILESDIR}/${PN}-0.10.14-libressl-openssl-sys-1.0.9.patch"
 	default
 }
 
@@ -65,5 +66,6 @@ src_configure() {
 	# Tracker bug #709568
 	export LIBSSH2_SYS_USE_PKG_CONFIG=1
 	export LIBGIT2_NO_VENDOR=1
+	export LIBSQLITE3_SYS_USE_PKG_CONFIG=1
 	export PKG_CONFIG_ALLOW_CROSS=1
 }
