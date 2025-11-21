@@ -1,0 +1,354 @@
+commit 06f3302b521daae3e51272b3931db6a947b31ee3
+Fixes Qt6 build on LibreSSL.
+
+http://cvsweb.openbsd.org/ports/x11/qt6/qtbase/patches/patch-src_network_ssl_qsslsocket_openssl_symbols_cpp?rev=1.8
+http://cvsweb.openbsd.org/ports/x11/qt6/qtbase/patches/patch-src_plugins_tls_openssl_qopenssl_p_h?rev=1.2
+http://cvsweb.openbsd.org/ports/x11/qt6/qtbase/patches/patch-src_plugins_tls_openssl_qsslcontext_openssl_cpp?rev=1.2
+http://cvsweb.openbsd.org/ports/x11/qt6/qtbase/patches/patch-src_plugins_tls_openssl_qsslsocket_openssl_symbols_p_h?rev=1.2
+http://cvsweb.openbsd.org/ports/x11/qt6/qtbase/patches/patch-src_plugins_tls_openssl_qtls_openssl_cpp?rev=1.2
+http://cvsweb.openbsd.org/ports/x11/qt6/qtbase/patches/patch-src_plugins_tls_openssl_qx509_openssl_cpp?rev=1.3
+
+--- a/src/plugins/tls/openssl/qopenssl_p.h
++++ b/src/plugins/tls/openssl/qopenssl_p.h
+@@ -71,6 +71,13 @@
+ 
+ QT_BEGIN_NAMESPACE
+ 
++#ifndef DTLS_ANY_VERSION
++#define DTLS_ANY_VERSION 0x1FFFF
++#endif
++#ifndef TLS_ANY_VERSION
++#define TLS_ANY_VERSION 0x10000
++#endif
++
+ struct QSslErrorEntry {
+     int code = 0;
+     int depth = 0;
+--- a/src/plugins/tls/openssl/qsslcontext_openssl.cpp
++++ b/src/plugins/tls/openssl/qsslcontext_openssl.cpp
+@@ -36,9 +36,9 @@ int q_X509CallbackDirect(int ok, X509_STORE_CTX *ctx);
+ int qt_OCSP_status_server_callback(SSL *ssl, void *);
+ #endif // ocsp
+ 
+-#ifdef TLS1_3_VERSION
++#if defined(TLS1_3_VERSION) && !defined(LIBRESSL_VERSION_NUMBER)
+ int q_ssl_sess_set_new_cb(SSL *context, SSL_SESSION *session);
+-#endif // TLS1_3_VERSION
++#endif // TLS1_3_VERSION && LIBRESSL_VERSION_NUMBER
+ 
+ } // namespace QTlsPrivate
+ 
+@@ -369,9 +369,11 @@ QT_WARNING_POP
+         return;
+     }
+ 
++#ifndef LIBRESSL_VERSION_NUMBER
+     // A nasty hacked OpenSSL using a level that will make our auto-tests fail:
+     if (q_SSL_CTX_get_security_level(sslContext->ctx) > 1 && *forceSecurityLevel())
+         q_SSL_CTX_set_security_level(sslContext->ctx, 1);
++#endif // LIBRESSL_VERSION_NUMBER
+ 
+     const long anyVersion =
+ #if QT_CONFIG(dtls)
+@@ -662,14 +664,14 @@ QT_WARNING_POP
+         q_SSL_CTX_set_verify(sslContext->ctx, verificationMode, verificationCallback);
+     }
+ 
+-#ifdef TLS1_3_VERSION
++#if defined(TLS1_3_VERSION) && !defined(LIBRESSL_VERSION_NUMBER)
+     // NewSessionTicket callback:
+     if (mode == QSslSocket::SslClientMode && !isDtls) {
+         q_SSL_CTX_sess_set_new_cb(sslContext->ctx, QTlsPrivate::q_ssl_sess_set_new_cb);
+         q_SSL_CTX_set_session_cache_mode(sslContext->ctx, SSL_SESS_CACHE_CLIENT);
+     }
+ 
+-#endif // TLS1_3_VERSION
++#endif // TLS1_3_VERSION && LIBRESSL_VERSION_NUMBER
+ 
+ #if QT_CONFIG(dtls)
+     // DTLS cookies:
+@@ -759,6 +761,7 @@ void QSslContext::applyBackendConfig(QSslContext *sslContext)
+     }
+ #endif // ocsp
+ 
++#ifndef LIBRESSL_VERSION_NUMBER
+     QSharedPointer<SSL_CONF_CTX> cctx(q_SSL_CONF_CTX_new(), &q_SSL_CONF_CTX_free);
+     if (cctx) {
+         q_SSL_CONF_CTX_set_ssl_ctx(cctx.data(), sslContext->ctx);
+@@ -802,7 +805,9 @@ void QSslContext::applyBackendConfig(QSslContext *sslContext)
+             sslContext->errorStr = msgErrorSettingBackendConfig(QSslSocket::tr("SSL_CONF_finish() failed"));
+             sslContext->errorCode = QSslError::UnspecifiedError;
+         }
+-    } else {
++    } else
++#endif // LIBRESSL_VERSION_NUMBER
++    {
+         sslContext->errorStr = msgErrorSettingBackendConfig(QSslSocket::tr("SSL_CONF_CTX_new() failed"));
+         sslContext->errorCode = QSslError::UnspecifiedError;
+     }
+--- a/src/plugins/tls/openssl/qsslsocket_openssl_symbols.cpp
++++ b/src/plugins/tls/openssl/qsslsocket_openssl_symbols.cpp
+@@ -115,14 +115,25 @@ DEFINEFUNC2(int, BN_is_word, BIGNUM *a, a, BN_ULONG w, w, return 0, return)
+ DEFINEFUNC(int, EVP_CIPHER_CTX_reset, EVP_CIPHER_CTX *c, c, return 0, return)
+ DEFINEFUNC(int, EVP_PKEY_up_ref, EVP_PKEY *a, a, return 0, return)
+ DEFINEFUNC2(EVP_PKEY_CTX *, EVP_PKEY_CTX_new, EVP_PKEY *pkey, pkey, ENGINE *e, e, return nullptr, return)
++#ifndef LIBRESSL_VERSION_NUMBER
+ DEFINEFUNC(int, EVP_PKEY_param_check, EVP_PKEY_CTX *ctx, ctx, return 0, return)
++#endif
+ DEFINEFUNC(void, EVP_PKEY_CTX_free, EVP_PKEY_CTX *ctx, ctx, return, return)
++#ifndef LIBRESSL_VERSION_NUMBER
+ DEFINEFUNC(int, OPENSSL_sk_num, OPENSSL_STACK *a, a, return -1, return)
+ DEFINEFUNC2(void, OPENSSL_sk_pop_free, OPENSSL_STACK *a, a, void (*b)(void*), b, return, DUMMYARG)
+ DEFINEFUNC(OPENSSL_STACK *, OPENSSL_sk_new_null, DUMMYARG, DUMMYARG, return nullptr, return)
+ DEFINEFUNC2(void, OPENSSL_sk_push, OPENSSL_STACK *a, a, void *b, b, return, DUMMYARG)
+ DEFINEFUNC(void, OPENSSL_sk_free, OPENSSL_STACK *a, a, return, DUMMYARG)
+ DEFINEFUNC2(void *, OPENSSL_sk_value, OPENSSL_STACK *a, a, int b, b, return nullptr, return)
++#else
++DEFINEFUNC(int, sk_num, STACK *a, a, return -1, return)
++DEFINEFUNC2(void, sk_pop_free, STACK *a, a, void (*b)(void*), b, return, DUMMYARG)
++DEFINEFUNC(_STACK *, sk_new_null, DUMMYARG, DUMMYARG, return nullptr, return)
++DEFINEFUNC2(void, sk_push, _STACK *a, a, void *b, b, return, DUMMYARG)
++DEFINEFUNC(void, sk_free, _STACK *a, a, return, DUMMYARG)
++DEFINEFUNC2(void *, sk_value, STACK *a, a, int b, b, return nullptr, return)
++#endif // LIBRESSL_VERSION_NUMBER
+ DEFINEFUNC(int, SSL_session_reused, SSL *a, a, return 0, return)
+ DEFINEFUNC2(qssloptions, SSL_CTX_set_options, SSL_CTX *ctx, ctx, qssloptions op, op, return 0, return)
+ using info_callback = void (*) (const SSL *ssl, int type, int val);
+@@ -156,7 +167,11 @@ DEFINEFUNC2(void, X509_STORE_set_verify_cb, X509_STORE *a, a, X509_STORE_CTX_ver
+ DEFINEFUNC3(int, X509_STORE_set_ex_data, X509_STORE *a, a, int idx, idx, void *data, data, return 0, return)
+ DEFINEFUNC2(void *, X509_STORE_get_ex_data, X509_STORE *r, r, int idx, idx, return nullptr, return)
+ DEFINEFUNC(STACK_OF(X509) *, X509_STORE_CTX_get0_chain, X509_STORE_CTX *a, a, return nullptr, return)
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER >= 0x3090000fL)
+ DEFINEFUNC3(void, CRYPTO_free, void *str, str, const char *file, file, int line, line, return, DUMMYARG)
++#else
++DEFINEFUNC(void, CRYPTO_free, void *a, a, return, DUMMYARG)
++#endif
+ DEFINEFUNC3(int, CRYPTO_memcmp, const void * in_a, in_a, const void * in_b, in_b, size_t len, len, return 1, return);
+ DEFINEFUNC(long, OpenSSL_version_num, void, DUMMYARG, return 0, return)
+ DEFINEFUNC(const char *, OpenSSL_version, int a, a, return nullptr, return)
+@@ -291,12 +306,14 @@ DEFINEFUNC3(int, SSL_CTX_use_certificate_file, SSL_CTX *a, a, const char *b, b,
+ DEFINEFUNC2(int, SSL_CTX_use_PrivateKey, SSL_CTX *a, a, EVP_PKEY *b, b, return -1, return)
+ DEFINEFUNC3(int, SSL_CTX_use_PrivateKey_file, SSL_CTX *a, a, const char *b, b, int c, c, return -1, return)
+ DEFINEFUNC(X509_STORE *, SSL_CTX_get_cert_store, const SSL_CTX *a, a, return nullptr, return)
++#ifndef LIBRESSL_VERSION_NUMBER
+ DEFINEFUNC(SSL_CONF_CTX *, SSL_CONF_CTX_new, DUMMYARG, DUMMYARG, return nullptr, return);
+ DEFINEFUNC(void, SSL_CONF_CTX_free, SSL_CONF_CTX *a, a, return ,return);
+ DEFINEFUNC2(void, SSL_CONF_CTX_set_ssl_ctx, SSL_CONF_CTX *a, a, SSL_CTX *b, b, return, return);
+ DEFINEFUNC2(unsigned int, SSL_CONF_CTX_set_flags, SSL_CONF_CTX *a, a, unsigned int b, b, return 0, return);
+ DEFINEFUNC(int, SSL_CONF_CTX_finish, SSL_CONF_CTX *a, a, return 0, return);
+ DEFINEFUNC3(int, SSL_CONF_cmd, SSL_CONF_CTX *a, a, const char *b, b, const char *c, c, return 0, return);
++#endif
+ DEFINEFUNC(void, SSL_free, SSL *a, a, return, DUMMYARG)
+ DEFINEFUNC(STACK_OF(SSL_CIPHER) *, SSL_get_ciphers, const SSL *a, a, return nullptr, return)
+ DEFINEFUNC(const SSL_CIPHER *, SSL_get_current_cipher, SSL *a, a, return nullptr, return)
+@@ -870,14 +887,25 @@ bool q_resolveOpenSslSymbols()
+         RESOLVEFUNC(AUTHORITY_INFO_ACCESS_free)
+         RESOLVEFUNC(EVP_PKEY_up_ref)
+         RESOLVEFUNC(EVP_PKEY_CTX_new)
++#ifndef LIBRESSL_VERSION_NUMBER
+         RESOLVEFUNC(EVP_PKEY_param_check)
++#endif
+         RESOLVEFUNC(EVP_PKEY_CTX_free)
++#ifndef LIBRESSL_VERSION_NUMBER
+         RESOLVEFUNC(OPENSSL_sk_new_null)
+         RESOLVEFUNC(OPENSSL_sk_push)
+         RESOLVEFUNC(OPENSSL_sk_free)
+         RESOLVEFUNC(OPENSSL_sk_num)
+         RESOLVEFUNC(OPENSSL_sk_pop_free)
+         RESOLVEFUNC(OPENSSL_sk_value)
++#else
++        RESOLVEFUNC(sk_new_null)
++        RESOLVEFUNC(sk_push)
++        RESOLVEFUNC(sk_free)
++        RESOLVEFUNC(sk_num)
++        RESOLVEFUNC(sk_pop_free)
++        RESOLVEFUNC(sk_value)
++#endif
+         RESOLVEFUNC(SSL_CTX_set_options)
+         RESOLVEFUNC(SSL_set_info_callback)
+         RESOLVEFUNC(SSL_alert_type_string)
+@@ -1060,12 +1088,14 @@ bool q_resolveOpenSslSymbols()
+         RESOLVEFUNC(SSL_CTX_use_PrivateKey)
+         RESOLVEFUNC(SSL_CTX_use_PrivateKey_file)
+         RESOLVEFUNC(SSL_CTX_get_cert_store);
++#ifndef LIBRESSL_VERSION_NUMBER
+         RESOLVEFUNC(SSL_CONF_CTX_new);
+         RESOLVEFUNC(SSL_CONF_CTX_free);
+         RESOLVEFUNC(SSL_CONF_CTX_set_ssl_ctx);
+         RESOLVEFUNC(SSL_CONF_CTX_set_flags);
+         RESOLVEFUNC(SSL_CONF_CTX_finish);
+         RESOLVEFUNC(SSL_CONF_cmd);
++#endif
+         RESOLVEFUNC(SSL_accept)
+         RESOLVEFUNC(SSL_clear)
+         RESOLVEFUNC(SSL_connect)
+--- a/src/plugins/tls/openssl/qsslsocket_openssl_symbols_p.h
++++ b/src/plugins/tls/openssl/qsslsocket_openssl_symbols_p.h
+@@ -47,6 +47,12 @@ QT_BEGIN_NAMESPACE
+ 
+ #define DUMMYARG
+ 
++#ifdef LIBRESSL_VERSION_NUMBER
++typedef _STACK STACK;
++typedef STACK OPENSSL_STACK;
++typedef void OPENSSL_INIT_SETTINGS;
++#endif
++
+ #if !defined QT_LINKED_OPENSSL
+ // **************** Shared declarations ******************
+ // ret func(arg)
+@@ -206,6 +212,7 @@ int q_EVP_CIPHER_CTX_reset(EVP_CIPHER_CTX *c);
+ int q_EVP_PKEY_up_ref(EVP_PKEY *a);
+ EVP_PKEY_CTX *q_EVP_PKEY_CTX_new(EVP_PKEY *pkey, ENGINE *e);
+ void q_EVP_PKEY_CTX_free(EVP_PKEY_CTX *ctx);
++#ifndef LIBRESSL_VERSION_NUMBER
+ int q_EVP_PKEY_param_check(EVP_PKEY_CTX *ctx);
+ int q_OPENSSL_sk_num(OPENSSL_STACK *a);
+ void q_OPENSSL_sk_pop_free(OPENSSL_STACK *a, void (*b)(void *));
+@@ -213,6 +220,20 @@ OPENSSL_STACK *q_OPENSSL_sk_new_null();
+ void q_OPENSSL_sk_push(OPENSSL_STACK *st, void *data);
+ void q_OPENSSL_sk_free(OPENSSL_STACK *a);
+ void * q_OPENSSL_sk_value(OPENSSL_STACK *a, int b);
++#else // LIBRESSL_VERSION_NUMBER
++int q_sk_num(STACK *a);
++#define q_OPENSSL_sk_num(a) q_sk_num(a)
++void q_sk_pop_free(STACK *a, void (*b)(void *));
++#define q_OPENSSL_sk_pop_free(a, b) q_sk_pop_free(a, b)
++STACK *q_sk_new_null();
++#define q_OPENSSL_sk_new_null() q_sk_new_null()
++void q_sk_push(STACK *st, void *data);
++#define q_OPENSSL_sk_push(st, data) q_sk_push(st, data)
++void q_sk_free(STACK *a);
++#define q_OPENSSL_sk_free q_sk_free
++void * q_sk_value(STACK *a, int b);
++#define q_OPENSSL_sk_value(a, b) q_sk_value(a, b)
++#endif // LIBRESSL_VERSION_NUMBER
+ int q_SSL_session_reused(SSL *a);
+ qssloptions q_SSL_CTX_set_options(SSL_CTX *ctx, qssloptions op);
+ int q_OPENSSL_init_ssl(uint64_t opts, const OPENSSL_INIT_SETTINGS *settings);
+@@ -238,8 +259,13 @@ STACK_OF(X509) *q_X509_STORE_CTX_get0_chain(X509_STORE_CTX *ctx);
+ # define q_SSL_load_error_strings() q_OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS \
+                                                        | OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL)
+ 
++#ifndef LIBRESSL_VERSION_NUMBER
+ #define q_SKM_sk_num(st) q_OPENSSL_sk_num((OPENSSL_STACK *)st)
+ #define q_SKM_sk_value(type, st,i) (type *)q_OPENSSL_sk_value((OPENSSL_STACK *)st, i)
++#else // LIBRESSL_VERSION_NUMBER
++#define q_SKM_sk_num(type, st) ((int (*)(const STACK_OF(type) *))q_sk_num)(st)
++#define q_SKM_sk_value(type, st,i) ((type * (*)(const STACK_OF(type) *, int))q_sk_value)(st, i)
++#endif // LIBRESSL_VERSION_NUMBER
+ 
+ #define q_OPENSSL_add_all_algorithms_conf()  q_OPENSSL_init_crypto(OPENSSL_INIT_ADD_ALL_CIPHERS \
+                                                                    | OPENSSL_INIT_ADD_ALL_DIGESTS \
+@@ -424,12 +450,14 @@ int q_SSL_CTX_use_certificate_file(SSL_CTX *a, const char *b, int c);
+ int q_SSL_CTX_use_PrivateKey(SSL_CTX *a, EVP_PKEY *b);
+ int q_SSL_CTX_use_PrivateKey_file(SSL_CTX *a, const char *b, int c);
+ X509_STORE *q_SSL_CTX_get_cert_store(const SSL_CTX *a);
++#ifndef LIBRESSL_VERSION_NUMBER
+ SSL_CONF_CTX *q_SSL_CONF_CTX_new();
+ void q_SSL_CONF_CTX_free(SSL_CONF_CTX *a);
+ void q_SSL_CONF_CTX_set_ssl_ctx(SSL_CONF_CTX *a, SSL_CTX *b);
+ unsigned int q_SSL_CONF_CTX_set_flags(SSL_CONF_CTX *a, unsigned int b);
+ int q_SSL_CONF_CTX_finish(SSL_CONF_CTX *a);
+ int q_SSL_CONF_cmd(SSL_CONF_CTX *a, const char *b, const char *c);
++#endif // LIBRESSL_VERSION_NUMBER
+ void q_SSL_free(SSL *a);
+ STACK_OF(SSL_CIPHER) *q_SSL_get_ciphers(const SSL *a);
+ const SSL_CIPHER *q_SSL_get_current_cipher(SSL *a);
+@@ -538,14 +566,26 @@ void q_PKCS12_free(PKCS12 *pkcs12);
+ #define q_BIO_get_mem_data(b, pp) (int)q_BIO_ctrl(b,BIO_CTRL_INFO,0,(char *)pp)
+ #define q_BIO_pending(b) (int)q_BIO_ctrl(b,BIO_CTRL_PENDING,0,NULL)
+ #define q_SSL_CTX_set_mode(ctx,op) q_SSL_CTX_ctrl((ctx),SSL_CTRL_MODE,(op),NULL)
++#ifndef LIBRESSL_VERSION_NUMBER
+ #define q_sk_GENERAL_NAME_num(st) q_SKM_sk_num((st))
++#else
++#define q_sk_GENERAL_NAME_num(st) q_SKM_sk_num(GENERAL_NAME, (st))
++#endif
+ #define q_sk_GENERAL_NAME_value(st, i) q_SKM_sk_value(GENERAL_NAME, (st), (i))
+ 
+ void q_GENERAL_NAME_free(GENERAL_NAME *a);
+ 
++#ifndef LIBRESSL_VERSION_NUMBER
+ #define q_sk_X509_num(st) q_SKM_sk_num((st))
++#else
++#define q_sk_X509_num(st) q_SKM_sk_num(X509, (st))
++#endif
+ #define q_sk_X509_value(st, i) q_SKM_sk_value(X509, (st), (i))
++#ifndef LIBRESSL_VERSION_NUMBER
+ #define q_sk_SSL_CIPHER_num(st) q_SKM_sk_num((st))
++#else
++#define q_sk_SSL_CIPHER_num(st)   q_SKM_sk_num(SSL_CIPHER, (st))
++#endif
+ #define q_sk_SSL_CIPHER_value(st, i) q_SKM_sk_value(SSL_CIPHER, (st), (i))
+ #define q_SSL_CTX_add_extra_chain_cert(ctx,x509) \
+         q_SSL_CTX_ctrl(ctx,SSL_CTRL_EXTRA_CHAIN_CERT,0,(char *)x509)
+@@ -666,8 +706,13 @@ int q_OCSP_id_cmp(OCSP_CERTID *a, OCSP_CERTID *b);
+ 
+ void *q_CRYPTO_malloc(size_t num, const char *file, int line);
+ #define q_OPENSSL_malloc(num) q_CRYPTO_malloc(num, "", 0)
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER >= 0x3090000fL)
+ void q_CRYPTO_free(void *str, const char *file, int line);
+ # define q_OPENSSL_free(addr) q_CRYPTO_free(addr, "", 0)
++#else
++void q_CRYPTO_free(void *a);
++# define q_OPENSSL_free(addr) q_CRYPTO_free(addr)
++#endif
+ int q_CRYPTO_memcmp(const void * in_a, const void * in_b, size_t len);
+ 
+ void q_SSL_set_info_callback(SSL *ssl, void (*cb) (const SSL *ssl, int type, int val));
+--- a/src/plugins/tls/openssl/qtls_openssl.cpp
++++ b/src/plugins/tls/openssl/qtls_openssl.cpp
+@@ -1435,13 +1435,13 @@ bool TlsCryptographOpenSSL::initSslContext()
+     else if (mode == QSslSocket::SslServerMode)
+         q_SSL_set_psk_server_callback(ssl, &q_ssl_psk_server_callback);
+ 
+-#if OPENSSL_VERSION_NUMBER >= 0x10101006L
++#if OPENSSL_VERSION_NUMBER >= 0x10101006L && !defined(LIBRESSL_VERSION_NUMBER)
+     // Set the client callback for TLSv1.3 PSK
+     if (mode == QSslSocket::SslClientMode
+         && QSslSocket::sslLibraryBuildVersionNumber() >= 0x10101006L) {
+         q_SSL_set_psk_use_session_callback(ssl, &q_ssl_psk_use_session_callback);
+     }
+-#endif // openssl version >= 0x10101006L
++#endif // OPENSSL_VERSION_NUMBER >= 0x10101006L && !defined(LIBRESSL_VERSION_NUMBER)
+ 
+ #endif // OPENSSL_NO_PSK
+ 
+--- a/src/plugins/tls/openssl/qx509_openssl.cpp
++++ b/src/plugins/tls/openssl/qx509_openssl.cpp
+@@ -65,7 +65,11 @@ QMultiMap<QByteArray, QString> mapFromX509Name(X509_NAME *name)
+         unsigned char *data = nullptr;
+         int size = q_ASN1_STRING_to_UTF8(&data, q_X509_NAME_ENTRY_get_data(e));
+         info.insert(name, QString::fromUtf8((char*)data, size));
++#if !defined(LIBRESSL_VERSION_NUMBER) || (LIBRESSL_VERSION_NUMBER >= 0x3090000fL)
+         q_CRYPTO_free(data, nullptr, 0);
++#else
++	q_CRYPTO_free(data);
++#endif
+     }
+ 
+     return info;
+@@ -191,7 +195,11 @@ QVariant x509UnknownExtensionToValue(X509_EXTENSION *ext)
+         QVariantList list;
+         bool isMap = false;
+ 
++#if defined(LIBRESSL_VERSION_NUMBER)
++        for (int j = 0; j < q_SKM_sk_num(CONF_VALUE, val); j++) {
++#else
+         for (int j = 0; j < q_SKM_sk_num(val); j++) {
++#endif
+             CONF_VALUE *nval = q_SKM_sk_value(CONF_VALUE, val, j);
+             if (nval->name && nval->value) {
+                 isMap = true;
+@@ -287,7 +295,11 @@ QVariant x509ExtensionToValue(X509_EXTENSION *ext)
+             if (!info)
+                 return {};
+             QVariantMap result;
++#if defined(LIBRESSL_VERSION_NUMBER)
++            for (int i=0; i < q_SKM_sk_num(ACCESS_DESCRIPTION, info); i++) {
++#else
+             for (int i=0; i < q_SKM_sk_num(info); i++) {
++#endif
+                 ACCESS_DESCRIPTION *ad = q_SKM_sk_value(ACCESS_DESCRIPTION, info, i);
+ 
+                 GENERAL_NAME *name = ad->location;
