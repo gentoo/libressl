@@ -42,7 +42,7 @@ BDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}/${PN}-2.3.4-libressl.patch"
+	"${FILESDIR}/${PN}-2.3.10-libressl.patch"
 	"${FILESDIR}/${PN}-disable-pgp-test.patch"
 )
 
