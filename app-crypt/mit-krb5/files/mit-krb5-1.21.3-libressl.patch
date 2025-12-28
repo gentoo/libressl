@@ -1,0 +1,52 @@
+--- a/plugins/preauth/pkinit/pkinit_crypto_openssl.c
++++ b/plugins/preauth/pkinit/pkinit_crypto_openssl.c
+@@ -146,6 +146,10 @@ wrap_signeddata(unsigned char *data, unsigned int data_len,
+ static const char *
+ pkcs11err(int err);
+ 
++#ifdef LIBRESSL_VERSION_NUMBER
++#define EVP_PKEY_DHX EVP_PKEY_DH
++#define d2i_DHxparams d2i_DHparams
++#endif
+ 
+ #if OPENSSL_VERSION_NUMBER < 0x10100000L
+ 
+@@ -283,7 +287,7 @@ decode_bn_der(const uint8_t *der, size_t len)
+     return bn;
+ }
+ 
+-#if OPENSSL_VERSION_NUMBER >= 0x10100000L
++#if OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+ static int
+ params_valid(EVP_PKEY *params)
+ {
+@@ -545,13 +549,13 @@ cleanup:
+ 
+ /* Attempt to specify padded Diffie-Hellman result derivation.  Don't error out
+  * if this fails since we also detect short results and adjust them. */
+-#if OPENSSL_VERSION_NUMBER >= 0x30000000L
++#if OPENSSL_VERSION_NUMBER >= 0x30000000L && !defined(LIBRESSL_VERSION_NUMBER)
+ static void
+ set_padded_derivation(EVP_PKEY_CTX *ctx)
+ {
+     EVP_PKEY_CTX_set_dh_pad(ctx, 1);
+ }
+-#elif OPENSSL_VERSION_NUMBER >= 0x10100000L
++#elif OPENSSL_VERSION_NUMBER >= 0x10100000L && !defined(LIBRESSL_VERSION_NUMBER)
+ static void
+ set_padded_derivation(EVP_PKEY_CTX *ctx)
+ {
+@@ -5636,8 +5640,11 @@ pkcs7_decrypt(krb5_context context,
+     evp_ctx = EVP_CIPHER_CTX_new();
+     if (evp_ctx == NULL)
+         goto cleanup;
+-    if (!EVP_DecryptInit(evp_ctx, evp_cipher, NULL, NULL) ||
+-        EVP_CIPHER_asn1_to_param(evp_ctx, enc_alg->parameter) <= 0)
++    if (!EVP_DecryptInit(evp_ctx, evp_cipher, NULL, NULL)
++#ifndef LIBRESSL_VERSION_NUMBER
++        || EVP_CIPHER_asn1_to_param(evp_ctx, enc_alg->parameter) <= 0
++#endif
++     )
+         goto cleanup;
+ 
+     /* Generate a random symmetric key to avoid exposing timing data if RSA
