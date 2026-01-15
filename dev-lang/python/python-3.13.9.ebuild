@@ -370,7 +370,7 @@ src_configure() {
 			# Fails with LibreSSL
 			# https://github.com/libressl/portable/issues/1133
 			-x test_hashlib
-			-x test_ssl[
+			-x test_ssl
 		)
 
 		if has_version "app-arch/rpm" ; then
