@@ -1,13 +1,8 @@
 From OpenBSD:
 
-https://cvsweb.openbsd.org/cgi-bin/cvsweb/ports/net/freeradius/patches/patch-src_main_cb_c
-https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_main_tls_c
-https://cvsweb.openbsd.org/cgi-bin/cvsweb/ports/net/freeradius/patches/patch-src_modules_rlm_eap_types_rlm_eap_fast_rlm_eap_fast_c
-https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_modules_rlm_pap_rlm_pap_c
-
 --- a/src/main/cb.c
 +++ b/src/main/cb.c
-@@ -61,7 +61,7 @@ void cbtls_info(SSL const *s, int where, int ret)
+@@ -62,7 +62,7 @@ void cbtls_info(SSL const *s, int where, int ret)
  			/*
  			 *	After a ClientHello, list all the proposed ciphers from the client
  			 */
@@ -16,7 +11,7 @@ https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_mo
  			if (SSL_get_state(s) == TLS_ST_SR_CLNT_HELLO) {
  				int i;
  				int num_ciphers;
-@@ -121,7 +121,7 @@ void cbtls_info(SSL const *s, int where, int ret)
+@@ -122,7 +122,7 @@ void cbtls_info(SSL const *s, int where, int ret)
  				return;
  			}
  			RERROR("(TLS) %s - %s: Error in %s", conf->name, role, state);
@@ -25,7 +20,7 @@ https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_mo
  			if (RDEBUG_ENABLED3 && (SSL_get_state(s) == TLS_ST_SR_CLNT_HELLO)) goto report_ciphers;
  #endif
  		}
-@@ -208,7 +208,7 @@ void cbtls_msg(int write_p, int msg_version, int content_type,
+@@ -209,7 +209,7 @@ void cbtls_msg(int write_p, int msg_version, int conte
  		state->info.alert_level = 0x00;
  		state->info.alert_description = 0x00;
  
@@ -36,7 +31,7 @@ https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_mo
  		state->info.content_type = SSL3_RT_HANDSHAKE;
 --- a/src/main/tls.c
 +++ b/src/main/tls.c
-@@ -701,7 +701,7 @@ tls_session_t *tls_new_session(TALLOC_CTX *ctx, fr_tls_server_conf_t *conf, REQU
+@@ -605,7 +605,7 @@ tls_session_t *tls_new_session(TALLOC_CTX *ctx, fr_tls
  				/*
  				 * Swap empty store with the old one.
  				 */
@@ -45,7 +40,7 @@ https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_mo
  				conf->old_x509_store = SSL_CTX_get_cert_store(conf->ctx);
  				/* Bump refcnt so the store is kept allocated till next store replacement */
  				X509_STORE_up_ref(conf->old_x509_store);
-@@ -2069,7 +2069,7 @@ done:
+@@ -1978,7 +1978,7 @@ done:
  	return 0;
  }
  
@@ -54,7 +49,7 @@ https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_mo
  static SSL_SESSION *cbtls_get_session(SSL *ssl, unsigned char *data, int len, int *copy)
  #else
  static SSL_SESSION *cbtls_get_session(SSL *ssl, const unsigned char *data, int len, int *copy)
-@@ -2453,7 +2453,7 @@ static int cbtls_cache_refresh(SSL *ssl, SSL_SESSION *sess)
+@@ -2362,7 +2362,7 @@ static int cbtls_cache_refresh(SSL *ssl, SSL_SESSION *
  	return 0;
  }
  
@@ -63,7 +58,7 @@ https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_mo
  static SSL_SESSION *cbtls_cache_load(SSL *ssl, unsigned char *data, int len, int *copy)
  #else
  static SSL_SESSION *cbtls_cache_load(SSL *ssl, const unsigned char *data, int len, int *copy)
-@@ -2985,7 +2985,7 @@ int cbtls_verify(int ok, X509_STORE_CTX *ctx)
+@@ -2932,7 +2932,7 @@ int cbtls_verify(int ok, X509_STORE_CTX *ctx)
  	char		cn_str[1024];
  	char		buf[64];
  	X509		*client_cert;
@@ -72,7 +67,7 @@ https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_mo
  	const STACK_OF(X509_EXTENSION) *ext_list;
  #else
  	STACK_OF(X509_EXTENSION) *ext_list;
-@@ -3220,7 +3220,7 @@ int cbtls_verify(int ok, X509_STORE_CTX *ctx)
+@@ -3207,7 +3207,7 @@ int cbtls_verify(int ok, X509_STORE_CTX *ctx)
  	}
  
  	if (lookup == 0) {
@@ -81,7 +76,7 @@ https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_mo
  		ext_list = X509_get0_extensions(client_cert);
  #else
  		X509_CINF	*client_inf;
-@@ -3273,7 +3273,7 @@ int cbtls_verify(int ok, X509_STORE_CTX *ctx)
+@@ -3260,7 +3260,7 @@ int cbtls_verify(int ok, X509_STORE_CTX *ctx)
  				value[0] = '0';
  				value[1] = 'x';
  				const unsigned char *srcp;
@@ -90,7 +85,7 @@ https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_mo
  				const ASN1_STRING *srcasn1p;
  				srcasn1p = X509_EXTENSION_get_data(ext);
  				srcp = ASN1_STRING_get0_data(srcasn1p);
-@@ -4346,7 +4346,7 @@ post_ca:
+@@ -4351,7 +4351,7 @@ post_ca:
  		}
  	}
  
@@ -101,7 +96,16 @@ https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_mo
  
 --- a/src/modules/rlm_eap/types/rlm_eap_fast/rlm_eap_fast.c
 +++ b/src/modules/rlm_eap/types/rlm_eap_fast/rlm_eap_fast.c
-@@ -224,7 +224,7 @@ static int _session_secret(SSL *s, void *secret, int *secret_len,
+@@ -200,7 +200,7 @@ static void eap_fast_session_ticket(tls_session_t *tls
+ }
+ 
+ // hostap:src/crypto/tls_openssl.c:tls_sess_sec_cb()
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER < 0x10100000L
+ static int _session_secret(SSL *s, void *secret, int *secret_len,
+ 			   UNUSED STACK_OF(SSL_CIPHER) *peer_ciphers,
+ 			   UNUSED SSL_CIPHER **cipher, void *arg)
+@@ -224,7 +224,7 @@ static int _session_secret(SSL *s, void *secret, int *
  
  	RDEBUG("processing PAC-Opaque");
  
@@ -112,7 +116,7 @@ https://github.com/openbsd/ports/blob/master/net/freeradius/patches/patch-src_mo
  	uint8_t client_random[SSL3_RANDOM_SIZE];
 --- a/src/modules/rlm_pap/rlm_pap.c
 +++ b/src/modules/rlm_pap/rlm_pap.c
-@@ -934,7 +934,7 @@ static inline rlm_rcode_t CC_HINT(nonnull) pap_auth_pbkdf2_parse(REQUEST *reques
+@@ -912,7 +912,7 @@ static inline rlm_rcode_t CC_HINT(nonnull) pap_auth_pb
  		digest_len = SHA512_DIGEST_LENGTH;
  		break;
  
