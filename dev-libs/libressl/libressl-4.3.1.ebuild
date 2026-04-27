@@ -4,7 +4,7 @@
 EAPI=8
 
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/libressl.asc
-inherit autotools multilib-minimal verify-sig
+inherit autotools multilib-minimal verify-sig toolchain-funcs flag-o-matic
 
 DESCRIPTION="Free version of the SSL/TLS protocol forked from OpenSSL"
 HOMEPAGE="https://www.libressl.org/"
@@ -58,6 +58,8 @@ multilib_src_configure() {
 		$(use_enable netcat nc)
 		$(use_enable test tests)
 	)
+	append-cflags -Wa,--noexecstack
+	append-cxxflags -Wa,--noexecstack
 	econf "${args[@]}"
 }
 
