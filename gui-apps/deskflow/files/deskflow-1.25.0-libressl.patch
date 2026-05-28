@@ -1,0 +1,78 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -102,7 +102,7 @@ unset(DESKFLOW_VERSION_TWEAK)
+ message(STATUS "Building ${CMAKE_PROJECT_NAME}-${CMAKE_PROJECT_VERSION}")
+ 
+ # Set lib versions
+-set(REQUIRED_OPENSSL_VERSION 3.0)
++set(REQUIRED_OPENSSL_VERSION 2.0)
+ set(REQUIRED_LIBEI_VERSION 1.3)
+ set(REQUIRED_LIBPORTAL_VERSION 0.8)
+ set(REQUIRED_QT_VERSION 6.7.0)
+--- a/src/lib/net/SecureSocket.cpp
++++ b/src/lib/net/SecureSocket.cpp
+@@ -355,10 +355,11 @@ void SecureSocket::initContext(bool server)
+ 
+   // Prevent the usage of of all version prior to TLSv1.2 as they are known to
+   // be vulnerable
+-  SSL_CTX_set_options(
+-      m_ssl->m_context,
+-      SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1 | SSL_OP_IGNORE_UNEXPECTED_EOF
+-  );
++  long sslOptions = SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1;
++#ifdef SSL_OP_IGNORE_UNEXPECTED_EOF
++  sslOptions |= SSL_OP_IGNORE_UNEXPECTED_EOF;
++#endif
++  SSL_CTX_set_options(m_ssl->m_context, sslOptions);
+ 
+   if (m_ssl->m_context == nullptr) {
+     SslLogger::logError();
+--- a/src/lib/net/SecureUtils.cpp
++++ b/src/lib/net/SecureUtils.cpp
+@@ -22,6 +22,35 @@ namespace deskflow {
+ 
+ namespace {
+ 
++#ifdef LIBRESSL_VERSION_NUMBER
++
++#define EVP_PKEY_get_bits(pkey) EVP_PKEY_bits(pkey)
++
++static EVP_PKEY *EVP_RSA_gen(int bits)
++{
++  EVP_PKEY_CTX *ctx = NULL;
++  EVP_PKEY *pkey = NULL;
++
++  ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
++  if (!ctx)
++    goto err;
++
++  if (EVP_PKEY_keygen_init(ctx) <= 0)
++    goto err;
++
++  if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, bits) <= 0)
++    goto err;
++
++  if (EVP_PKEY_keygen(ctx, &pkey) <= 0)
++    goto err;
++
++err:
++  EVP_PKEY_CTX_free(ctx);
++  return pkey;
++}
++
++#endif
++
+ const EVP_MD *digestForType(Fingerprint::Type type)
+ {
+   switch (type) {
+--- a/src/lib/net/SslLogger.cpp
++++ b/src/lib/net/SslLogger.cpp
+@@ -44,7 +44,7 @@ void logLocalSecureCipherInfo(const SSL *ssl)
+ 
+ void logRemoteSecureCipherInfo(const SSL *ssl)
+ {
+-#if OPENSSL_VERSION_NUMBER < 0x10100000L || defined(LIBRESSL_VERSION_NUMBER)
++#if OPENSSL_VERSION_NUMBER < 0x10100000L
+   // ssl->session->ciphers is not forward compatable,
+   // In future release of OpenSSL, it's not visible,
+   // however, LibreSSL still uses this.
