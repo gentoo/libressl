@@ -357,6 +357,7 @@ src_prepare() {
 	eapply_crate openssl-sys-0.9.92 "${FILESDIR}"/1.72.0-libressl-openssl-sys.patch
 	eapply_crate openssl-sys-0.9.107 "${FILESDIR}"/1.84.0-libressl-openssl-sys-0.9.104.patch
 	eapply_crate openssl-sys-0.9.109 "${FILESDIR}"/1.88.0-libressl-openssl-sys-0.9.108.patch
+	eapply_crate openssl-sys-0.9.111 "${FILESDIR}"/1.94.0-libressl-openssl-sys-0.9.110.patch
 
 	# Commit patches to the appropriate branch in proj/rust-patches.git
 	# then cut a new tag / tarball. Don't add patches to ${FILESDIR}
