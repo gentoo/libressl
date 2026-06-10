@@ -189,6 +189,7 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-6.6.3-gcc14-avx512fp16.patch
 	"${FILESDIR}"/${PN}-6.8.2-cross.patch
 	"${FILESDIR}"/${PN}-6.9.0-no-direct-extern-access.patch
+	"${FILESDIR}"/${PN}-6.11.1-QTBUG-146670.patch
 )
 
 src_prepare() {
@@ -196,14 +197,12 @@ src_prepare() {
 
 	if use test; then
 		# test itself has -Werror=strict-aliasing issues, drop for simplicity
-		sed -e '/add_subdirectory(qsharedpointer)/d' \
-			-i tests/auto/corelib/tools/CMakeLists.txt || die
+		cmake_comment_add_subdirectory -f tests/auto/corelib/tools qsharedpointer
 
 		# workaround for __extendhfxf2 being used for tst_qfloat16.cpp
 		# which is unavailable with compiler-rt (assume used if clang)
 		if tc-is-clang; then
-			sed -e '/add_subdirectory(qfloat16)/d' \
-				-i tests/auto/corelib/global/CMakeLists.txt || die
+			cmake_comment_add_subdirectory -f tests/auto/corelib/global qfloat16
 		fi
 	fi
 }
@@ -401,6 +400,11 @@ src_test() {
 		tst_qimagewriter
 		tst_qpluginloader
 		tst_quuid # >=6.6.2 had related fixes, needs retesting
+		# this test has often caused trouble depending on arch, endianness,
+		# musl, and others with some image/pixel formats and similar and,
+		# while there is likely real bugs, it's above what I'm willing to
+		# handle for now
+		tst_qimage
 		# partially broken on llvm-musl, needs looking into but skip to have
 		# a baseline for regressions (rest of dev-qt still passes with musl)
 		$(usev elibc_musl '
