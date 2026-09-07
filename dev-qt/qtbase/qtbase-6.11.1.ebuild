@@ -208,6 +208,9 @@ src_prepare() {
 }
 
 src_configure() {
+	use elibc_musl && #980330
+		append-ldflags $(test-flags-CCLD -Wl,-z,stack-size=0x100000)
+
 	if use gtk; then
 		# defang automagic dependencies (bug #624960)
 		use X || append-cxxflags -DGENTOO_GTK_HIDE_X11
@@ -410,7 +413,6 @@ src_test() {
 		$(usev elibc_musl '
 			tst_qicoimageformat
 			tst_qimagereader
-			tst_qimage
 		')
 		# fails due to hppa's NaN handling, needs looking into (bug #914371)
 		$(usev hppa '
