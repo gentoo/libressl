@@ -1,0 +1,25 @@
+Source: OpenBSD ports
+
+--- a/buckets/ssl_buckets.c.orig
++++ b/buckets/ssl_buckets.c
+@@ -1156,7 +1156,7 @@ static void init_ssl_libraries(void)
+         }
+ #endif
+ 
+-#ifdef USE_OPENSSL_1_1_API
++#if defined(USE_OPENSSL_1_1_API) && !defined(LIBRESSL_VERSION_NUMBER)
+         OPENSSL_malloc_init();
+ #else
+         CRYPTO_malloc_init();
+
+--- a/test/server/test_sslserver.c.orig
++++ b/test/server/test_sslserver.c
+@@ -228,7 +228,7 @@ init_ssl_context(serv_ctx_t *serv_ctx,
+     /* Init OpenSSL globally */
+     if (!init_done)
+     {
+-#ifdef USE_OPENSSL_1_1_API
++#if defined(USE_OPENSSL_1_1_API) && !defined(LIBRESSL_VERSION_NUMBER)
+         OPENSSL_malloc_init();
+ #else
+         CRYPTO_malloc_init();
