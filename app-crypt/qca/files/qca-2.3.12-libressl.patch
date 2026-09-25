@@ -1,0 +1,49 @@
+https://github.com/openbsd/ports/blob/4015c1b7d9ac2701a8cc648392d433636bffa16f/security/qca-qt6/patches/patch-plugins_qca-ossl_qca-ossl_cpp
+
+Fix compilation with LibreSSL
+
+https://invent.kde.org/libraries/qca/-/merge_requests/133
+https://invent.kde.org/libraries/qca/-/merge_requests/134
+
+Index: plugins/qca-ossl/qca-ossl.cpp
+--- a/plugins/qca-ossl/qca-ossl.cpp.orig
++++ b/plugins/qca-ossl/qca-ossl.cpp
+@@ -47,6 +47,11 @@
+ 
+ #include <openssl/kdf.h>
+ 
++#ifndef RSA_F_RSA_OSSL_PRIVATE_DECRYPT
++#define RSA_F_RSA_OSSL_PRIVATE_DECRYPT RSA_F_RSA_EAY_PRIVATE_DECRYPT
++#define SSL_CIPHER_standard_name SSL_CIPHER_get_name
++#endif
++
+ using namespace QCA;
+ 
+ namespace {
+@@ -3753,7 +3758,7 @@ class MyCertContext : public CertContext (public)
+             const int byte_len = ASN1_STRING_length((const ASN1_STRING *)signature);
+             p.sig              = QByteArray(byte_len, 0);
+             for (int i = 0; i < byte_len; i++)
+-                p.sig[i] = ASN1_BIT_STRING_get_bit(signature, i);
++                p.sig[i] = ASN1_STRING_get0_data(signature)[i];
+         }
+ 
+         switch (X509_get_signature_nid(x)) {
+@@ -6502,7 +6507,7 @@ static QStringList all_hash_types()
+         list += QStringLiteral("md2");
+ #endif
+         list += QStringLiteral("md4");
+-#ifdef OBJ_whirlpool
++#ifndef OPENSSL_NO_WHIRLPOOL
+         list += QStringLiteral("whirlpool");
+ #endif
+     }
+@@ -6968,7 +6973,7 @@ class opensslProvider : public Provider (public)
+ #endif
+             else if (type == QLatin1String("md4"))
+                 return new opensslHashContext(EVP_md4(), this, type);
+-#ifdef OBJ_whirlpool
++#ifndef OPENSSL_NO_WHIRLPOOL
+             else if (type == QLatin1String("whirlpool"))
+                 return new opensslHashContext(EVP_whirlpool(), this, type);
+ #endif
